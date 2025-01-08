@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+robotpy = { version="<2025", extras=["navx","rev","pathplannerlib","phoenix5","phoenix6"]}
+numpy = "*"
+
+[dev-packages]
+flake8 = "*"
+pytest = "*"
+black = "*"
+
+[requires]
+python_version = "3.12"

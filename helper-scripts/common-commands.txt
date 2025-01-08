@@ -1,0 +1,5 @@
+All of these commands should be run while in the directory 'C:\repos\FRC-2025'
+
+run simulation: 'py -m robotpy --main src sim'
+deploy code: 'py -m robotpy --main src deploy'
+sync packages: 'py -m robotpy --main src sync'

@@ -1,0 +1,137 @@
+installation process expects device to be Windows 11 & 64 bit device
+
+run PowerShell as Administrator and run: "Set-ExecutionPolicy RemoteSigned"
+
+
+install VSCode at https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user
+launch from downloads folder
+- License Agreement
+	- accept
+- Select Additional Tasks
+	select the following boxes
+	- Create a desktop icon
+	- Register Code as an editor for supported file types
+	- Add to PATH (requires shell restart)
+ - Ready to Install
+	-Install
+- Finish
+
+add folowing extensions to vscode enviroment: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance, https://marketplace.visualstudio.com/items?itemName=ms-python.python, https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+
+
+
+install git at https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/Git-2.43.0-64-bit.exe
+- Go to downloads folder and launch
+- Information 
+    - next
+
+- Select destination 
+    - set path to C:\Program Files\Git
+
+- Select Components 
+    check flowing boxes
+    - Windows explorer integration
+        - open git bash here
+        - open git gui here
+    - Git LFS (Large File Support)
+    - Associate .git* configuration files with the default text editor
+    - Associate .sh files to be run with bash
+
+- Select Start Menue Folder
+    - Set folder name to "Git"
+
+- Choosing the default editor used by git 
+    - Set drop down to Use Visual Studio Code as Gits default editor
+
+- Adjusting the name of the initial branch in new repositories
+    - Select Let Git decide
+
+- Adjusting your PATH enviroment 
+    - Select Git from the command line and also from 3-rd party software
+
+- Choosing the SSH executable
+    - Select Use bundled openSSH
+
+- Choosing HTTPS transport backend 
+    - Select Use the OpenSSH library
+
+- Configuring the line ending conversions
+    - Select Chechout Windows-style, commit Unix-style line endings
+
+- Configuring the terminalemulator to use with Git bash
+    - Select Use MinTTY (the default terminal of MSYS2)
+
+- Choose the default behavior of git pull
+    - Select Fast-forward or merge
+
+- Choose a credential helper
+    - Select Git Credential Manager
+
+- Configuring extra options
+    - Select Enable file system caching
+
+- Configuring experimental options
+    - Select nothing
+
+- After install is done click finish
+
+
+
+
+
+install python version 3.12.1 at https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe
+- Go to downloads folder and launch
+- First page
+    - Select Add python.exe to PATH
+    - Then click Install now
+- Setup was successful
+    - Click Disable path length limit
+- Click close
+
+
+To setup the git repository go to c:\ and make a new folder named "repos" 
+open a cmd in the directory "c:\repos" and run the command "git clone https://github.com/Team-4536/FRC-2024.git"
+
+
+
+
+
+
+install ni tools at https://www.ni.com/en/support/downloads/drivers/download/packaged.frc-game-tools.500107.html
+this is only needed for deploying code; recomemded if the computer is used at meetings
+Goto the downloads folder and launch
+
+- Select tab
+    - Check box NI Certificates Installer
+- Agree tab
+    - Accept license agreements
+- Review tab
+    the following should apear
+    - FRC Game Tools 2024
+    - LabVIEW Runtime (32-bit) 2023 Q1
+    - Vision Common Resources 2023 Q1
+    - NI Certificates Installer 21.5.0
+- Finish tab
+    - After finishing installing click reboot now
+
+
+
+install wpitools at https://packages.wpilib.workers.dev/installer/v2024.2.1/Win64/WPILib_Windows-2024.2.1.iso
+click on the item in the downloads folder and mount it
+if promted with a security warning then click open
+in the file run wpilibinstaller.exe
+if a security page opens click more options and run anyways
+
+- Select the install mode you would like
+    - Select Everything
+    - Click Install for this user
+- VS code page
+    - choose download for this computer
+- Finished
+    - Click Finish
+
+
+Install pipenv by running: py -m pip install pipenv
+
+run the helper scripts/venvsetup.bat file in a non activated terminal.
+To test that enviroment is set up properly run "py -m robotpy sim"

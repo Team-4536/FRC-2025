@@ -1,0 +1,26 @@
+networktables.json
+simgui-ds.json
+simgui-window.json
+simgui.json
+
+__pycache__/
+Sundial/res/log.txt
+CppSundial/sunLog.log
+CppSundial/path.txt
+ctre_sim/
+
+*.o
+*.exe
+*.log
+
+ctre_sim/*.dat
+
+# emacs
+*~
+\#*
+.\#*
+
+# virtualenv
+.venv/
+
+.vscode
