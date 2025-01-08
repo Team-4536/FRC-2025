@@ -1,9 +1,9 @@
-installation process expects device to be Windows 11 & 64 bit device
+installation process expects device to be Windows 10 or 11 & 64 bit device
 
 run PowerShell as Administrator and run: "Set-ExecutionPolicy RemoteSigned"
 
 
-install VSCode at https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user
+install VSCode at https://code.visualstudio.com/download# select the x64 option under windows
 launch from downloads folder
 - License Agreement
 	- accept
@@ -20,7 +20,7 @@ add folowing extensions to vscode enviroment: https://marketplace.visualstudio.c
 
 
 
-install git at https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/Git-2.43.0-64-bit.exe
+install git at https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe
 - Go to downloads folder and launch
 - Information 
     - next
@@ -79,7 +79,7 @@ install git at https://github.com/git-for-windows/git/releases/download/v2.43.0.
 
 
 
-install python version 3.12.1 at https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe
+install python version 3.12 at https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe
 - Go to downloads folder and launch
 - First page
     - Select Add python.exe to PATH
@@ -90,11 +90,7 @@ install python version 3.12.1 at https://www.python.org/ftp/python/3.12.1/python
 
 
 To setup the git repository go to c:\ and make a new folder named "repos" 
-open a cmd in the directory "c:\repos" and run the command "git clone https://github.com/Team-4536/FRC-2024.git"
-
-
-
-
+open a cmd in the directory "c:\repos" and run the command "git clone https://github.com/Team-4536/FRC-2025.git"
 
 
 install ni tools at https://www.ni.com/en/support/downloads/drivers/download/packaged.frc-game-tools.500107.html
@@ -116,7 +112,8 @@ Goto the downloads folder and launch
 
 
 
-install wpitools at https://packages.wpilib.workers.dev/installer/v2024.2.1/Win64/WPILib_Windows-2024.2.1.iso
+install wpitools at https://packages.wpilib.workers.dev/installer/v2025.1.1/Win64/WPILib_Windows-2025.1.1.iso
+WARNING: this is a large file; try to only have to download once
 click on the item in the downloads folder and mount it
 if promted with a security warning then click open
 in the file run wpilibinstaller.exe
@@ -129,9 +126,3 @@ if a security page opens click more options and run anyways
     - choose download for this computer
 - Finished
     - Click Finish
-
-
-Install pipenv by running: py -m pip install pipenv
-
-run the helper scripts/venvsetup.bat file in a non activated terminal.
-To test that enviroment is set up properly run "py -m robotpy sim"
