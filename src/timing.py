@@ -1,5 +1,6 @@
 import wpilib
 
+
 class TimeData:
     def __init__(self, prev) -> None:
         time = wpilib.getTime()

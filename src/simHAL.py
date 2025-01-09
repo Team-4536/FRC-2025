@@ -9,7 +9,7 @@ from timing import TimeData
 from wpimath.geometry import Rotation2d, Translation2d
 
 
-class RobotSimHAL():
+class RobotSimHAL:
     def __init__(self):
         self.prev = RobotHALBuffer()
 

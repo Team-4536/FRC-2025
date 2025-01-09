@@ -6,7 +6,6 @@ import numpy
 from wpimath.geometry import Rotation2d, Translation2d
 
 
-
 class Scalar:
     def __init__(self, deadZone=0.1, exponent=1):
         self.deadzone = deadZone
@@ -29,7 +28,7 @@ class Scalar:
 
     def setExponent(self, exponent):
         self.exponent = exponent
-        
+
     @deadzone.setter
     def deadzone(self, deadZone):
         deadZone = abs(deadZone)
@@ -43,6 +42,7 @@ class Scalar:
     @exponent.setter
     def exponent(self, exponent):
         self._exponent = exponent
+
 
 class CircularScalar:
     def __init__(self, deadzone: float, exponent: int):

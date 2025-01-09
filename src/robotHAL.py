@@ -9,7 +9,7 @@ from phoenix6.hardware import CANcoder
 from timing import TimeData
 
 
-class RobotHALBuffer():
+class RobotHALBuffer:
     def __init__(self) -> None:
         pass
 
@@ -22,7 +22,8 @@ class RobotHALBuffer():
     def publish(self, table: ntcore.NetworkTable) -> None:
         pass
 
-class RobotHAL():
+
+class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
 

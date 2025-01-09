@@ -10,7 +10,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 
-class RobotInputs():
+class RobotInputs:
     def __init__(self) -> None:
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
@@ -18,6 +18,7 @@ class RobotInputs():
 
     def update(self) -> None:
         pass
+
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -59,6 +60,7 @@ class Robot(wpilib.TimedRobot):
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
+
 
 if __name__ == "__main__":
     wpilib.run(Robot)

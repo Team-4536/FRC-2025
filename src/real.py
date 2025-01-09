@@ -4,11 +4,11 @@ import math
 
 
 def lerp(a: float, b: float, t: float) -> float:
-    return a + (b-a)*t
+    return a + (b - a) * t
 
 
 def invLerp(a, b, pt):
-    return (pt-a)/(b-a)
+    return (pt - a) / (b - a)
 
 
 # CLEANUP: this
@@ -20,5 +20,6 @@ def angleWrap(a: float) -> float:
         a += math.pi * 2
     return a
 
+
 def signum(x: float) -> float:
- return float((x > 0) - (x < 0))
+    return float((x > 0) - (x < 0))

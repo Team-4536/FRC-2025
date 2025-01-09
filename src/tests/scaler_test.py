@@ -12,7 +12,9 @@ def test_scaler_default():
     assert s(-s.deadzone) == 0, "expecting 0 at deadzone threshold"
 
     assert s(s.deadzone + 0.01) > 0, "expecting > 0 beyond deadzone threshold"
-    assert s(-(s.deadzone + 0.01)) < 0, "expecting < 0 beyond negative deadzone threshold"
+    assert (
+        s(-(s.deadzone + 0.01)) < 0
+    ), "expecting < 0 beyond negative deadzone threshold"
 
     assert abs(s(0.55) - 0.5) < 0.0001
     assert abs(s(-0.55) + 0.5) < 0.0001

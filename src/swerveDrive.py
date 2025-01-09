@@ -14,8 +14,10 @@ from wpimath.kinematics import (
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
-class SwerveDrive():
-    def __init__(self, angle: Rotation2d, pose: Pose2d, wheelStates: list[SwerveModulePosition]) -> None:
+class SwerveDrive:
+    def __init__(
+        self, angle: Rotation2d, pose: Pose2d, wheelStates: list[SwerveModulePosition]
+    ) -> None:
         pass
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
