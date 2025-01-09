@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-#this is my comment 2
+# this is my comment 2
 import math
+
+# Hello Peoples -JN
 
 
 def lerp(a: float, b: float, t: float) -> float:
