@@ -9,12 +9,12 @@ from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
-#djo test
 class RobotInputs:
     def __init__(self) -> None:
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
+        self.myJoy = wpilib.Joystick(0)
 
     def update(self) -> None:
         pass
@@ -40,6 +40,9 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(self.time)
 
         self.hal.publish(self.table)
+
+        # Telemetry Access Test
+        self.table.putNumber("djoTest", self.input.myJoy.getRawAxis(0))
 
         self.hal.stopMotors()
 
