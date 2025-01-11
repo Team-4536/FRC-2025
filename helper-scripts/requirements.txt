@@ -16,7 +16,7 @@ launch from downloads folder
 	-Install
 - Finish
 
-add folowing extensions to vscode enviroment: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance, https://marketplace.visualstudio.com/items?itemName=ms-python.python, https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+add folowing extensions to vscode enviroment: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance, https://marketplace.visualstudio.com/items?itemName=ms-python.python, https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens, https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
 
 
 
