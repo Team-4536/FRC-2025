@@ -8,13 +8,13 @@ from simHAL import RobotSimHAL
 from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
-
+from robotHAL import RobotHAL
 
 class RobotInputs:
     def __init__(self) -> None:
-        self.driveCtrlr = wpilib.XboxController(0)
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
+        
+
+        pass
 
     def update(self) -> None:
         pass
@@ -22,6 +22,11 @@ class RobotInputs:
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
+
+        self.driveCtrlr = wpilib.XboxController(0)
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
+
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
@@ -38,17 +43,19 @@ class Robot(wpilib.TimedRobot):
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-
+        self.table.putNumber("leftJoyY", self.hal.driveVolts)
         self.hal.publish(self.table)
-
+        self.input.update()
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
+        
         pass
 
     def teleopPeriodic(self) -> None:
-        pass
-
+        self.hal.driveVolts = self.driveCtrlr.getLeftY()
+        self.hal.stopMotors()
+        self.hardware.update(self.hal, self.time)
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()
 

@@ -16,26 +16,28 @@ from wpimath.kinematics import (
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
 
-    oneftInMeters = 0.3048
-    modPos = list[Translation2d] = [
-        Translation2d(oneftInMeters, oneftInMeters),
-        Translation2d(oneftInMeters, -oneftInMeters),
-        Translation2d(-oneftInMeters, oneftInMeters),
-        Translation2d(-oneftInMeters,-oneftInMeters)]
-
+    #oneftInMeters = 0.3048
+    #modPos = list[Translation2d] = [
+     #   Translation2d(oneftInMeters, oneftInMeters),
+      #  Translation2d(oneftInMeters, -oneftInMeters),
+       # Translation2d(-oneftInMeters, oneftInMeters),
+        #Translation2d(-oneftInMeters,-oneftInMeters)]
+        
 
     def __init__(
         self, angle: Rotation2d, pose: Pose2d, wheelStates: list[SwerveModulePosition]
     ) -> None:
         
-        self.kinematics = SwerveDrive4Kinematics(self.modPos)
-        self.odometry = SwerveDrive4Odometry(self.kinematics, angle, pose)
-        self.wheelStates = wheelStates
+        #self.kinematics = SwerveDrive4Kinematics(self.modPos)
+        #self.odometry = SwerveDrive4Odometry(self.kinematics, angle, pose)
+        #self.wheelStates = wheelStates
+        pass
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
 
     def update(self, dt: float, hal: robotHAL.RobotHALBuffer, speed: ChassisSpeeds):
+        
         pass
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
