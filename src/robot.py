@@ -49,7 +49,7 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        pass
+        self.photonCamera.update()
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()
