@@ -15,6 +15,9 @@ class RobotInputs:
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
+        
+        
+       
 
     def update(self) -> None:
         pass
@@ -39,15 +42,17 @@ class Robot(wpilib.TimedRobot):
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
 
-        self.hal.publish(self.table)
-
+        
         self.hal.stopMotors()
+
+        
 
     def teleopInit(self) -> None:
         pass
 
     def teleopPeriodic(self) -> None:
-        pass
+        self.hardware.update(self.hal, self.time)
+        self.hal.publish(self.table)
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()

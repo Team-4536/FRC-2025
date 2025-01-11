@@ -11,7 +11,8 @@ from timing import TimeData
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-        pass
+        self.ringSensorValue = False
+        self.limitSwitchValue = False
 
     def resetEncoders(self) -> None:
         pass
@@ -20,12 +21,21 @@ class RobotHALBuffer:
         pass
 
     def publish(self, table: ntcore.NetworkTable) -> None:
-        pass
+        table.putBoolean("ringin", self.ringSensorValue)
+        table.putBoolean("limit switch", self.limitSwitchValue)
+
+
 
 
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
+        self.ringSensor = wpilib.DigitalInput(2)
+        self.limitSwitch = wpilib.DigitalInput(0)
+        self.myMotorFun = rev.CANSparkMax(1)
+
+
+
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -37,3 +47,6 @@ class RobotHAL:
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
+
+        buf.ringSensorValue = self.ringSensor.get()
+        buf.limitSwitchValue = self.limitSwitch.get()
