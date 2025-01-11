@@ -10,16 +10,6 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 
-class RobotInputs:
-    def __init__(self) -> None:
-        self.driveCtrlr = wpilib.XboxController(0)
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
-
-    def update(self) -> None:
-        pass
-
-
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
         self.time = TimeData(None)
@@ -34,7 +24,9 @@ class Robot(wpilib.TimedRobot):
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-        self.input = RobotInputs()
+        self.driveCtrlr = wpilib.XboxController(0)
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
