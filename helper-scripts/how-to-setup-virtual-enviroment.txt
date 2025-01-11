@@ -22,3 +22,5 @@ to make sure that the virtual enviroment is active run the activate script from 
 
 another way to check is to run 'where.exe python'
 if the first result is 'C:\repos\FRC-2025\.venv\Scripts\python.exe' then it is activated
+
+Howdy! Kai Beck was here!
