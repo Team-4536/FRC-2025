@@ -11,10 +11,8 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 class RobotInputs:
     def __init__(self) -> None:
-        self.driveCtrlr = wpilib.XboxController(0)
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
-        self.myJoy = wpilib.Joystick(0)
+        pass
+
 
     def update(self) -> None:
         pass
@@ -24,6 +22,11 @@ class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
+        
+        self.driveCtrlr = wpilib.XboxController(0)
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
+
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
         if self.isSimulation():
             self.hardware = RobotSimHAL()
@@ -43,8 +46,7 @@ class Robot(wpilib.TimedRobot):
 
         # Telemetry Access Test
         self.table.putNumber("djoTest", self.input.myJoy.getRawAxis(0))
-
-        self.hal.stopMotors()
+        self.table.putNumber("LeftJoystickY",self.driveCtrlr.getLeftY())
 
     def teleopInit(self) -> None:
         pass
@@ -54,7 +56,6 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()
-
         self.hardware.update(self.hal, self.time)
 
     def disabledInit(self) -> None:
