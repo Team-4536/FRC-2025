@@ -53,4 +53,12 @@ class RobotHAL:
         self.driveMotorFL.set(buf.driveVolts*0.1)
         self.table.putNumber('hal drive volts', buf.driveVolts)
 
+        bob = self.driveMotorFL.getEncoder()
+        SpeedOfMotor = bob.getVelocity()
+        self.table.putNumber("My Speeds Title in DashBoard",SpeedOfMotor)
+        PositionOfMotor = bob.getPosition()
+        self.table.putNumber("My Position Title in DashBoard",PositionOfMotor)
+
+        
+
 
