@@ -33,7 +33,11 @@ class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
 
-        self.driveMotor = rev.SparkMax(2, rev.SparkLowLevel.MotorType.kBrushless)
+        self.driveMotorFL = rev.SparkMax(2, rev.SparkLowLevel.MotorType.kBrushless)
+        self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
+        self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
+        self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
+
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -46,7 +50,7 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        self.driveMotor.set(buf.driveVolts*0.1)
+        self.driveMotorFL.set(buf.driveVolts*0.1)
         self.table.putNumber('hal drive volts', buf.driveVolts)
 
 
