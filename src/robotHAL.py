@@ -50,7 +50,28 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        self.driveMotorFL.set(buf.driveVolts*0.1)
+        self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
         self.table.putNumber('hal drive volts', buf.driveVolts)
+
+        FL_Encoder = self.driveMotorFL.getEncoder()
+        FL_PercentVoltage = self.driveMotorFL.getAppliedOutput()
+        FL_Speed = FL_Encoder.getVelocity()
+        FL_Position = FL_Encoder.getPosition()
+        self.table.putNumber("DriveMotorFL Speed", FL_Speed)
+        self.table.putNumber("DriveMotorFL Position", FL_Position)
+        self.table.putNumber("DriveMotor percent voltage", FL_PercentVoltage)
+        
+        FL_Voltage = self.driveMotorFL.getAppliedOutput()*self.driveMotorFL.getBusVoltage()
+        self.table.putNumber("DriveMotorFL voltage", FL_Voltage )
+
+        myConfig = rev.SparkBaseConfig()
+        myConfig.closedLoop.pid(.0001, 0, 0, rev.ClosedLoopSlot.kSlot0)
+        # self.driveMotorFL.configure(
+        #     myConfig, 
+        #     rev.SparkBase.ResetMode.kNoResetSafeParameters, 
+        #     rev.SparkBase.PersistMode.kNoPersistParameters)
+        # #self.driveMotorFL.
+
+
 
 
