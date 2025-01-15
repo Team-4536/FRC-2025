@@ -11,7 +11,7 @@ from timing import TimeData
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-        pass
+        self.limitSwitchValue = False
 
     def resetEncoders(self) -> None:
         pass
@@ -26,6 +26,7 @@ class RobotHALBuffer:
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
+        self.limitSwitch = wpilib.DigitalInput(0)
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -37,3 +38,5 @@ class RobotHAL:
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
+
+        buf.limitSwitchValue = self.limitSwitch.get()

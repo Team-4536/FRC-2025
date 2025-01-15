@@ -31,6 +31,8 @@ class Robot(wpilib.TimedRobot):
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
 
+        self.table.putBoolean("Limit Switch", self.hal.limitSwitchValue)
+
         self.hal.publish(self.table)
 
         self.hal.stopMotors()
