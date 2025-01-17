@@ -39,15 +39,18 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        self.hal.stopMotors()
+        self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
+        # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
 
     def autonomousPeriodic(self) -> None:
-        self.hal.stopMotors()
+        self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.hardware.update(self.hal, self.time)
+        self.hardware.update(
+            self.hal, self.time
+        )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
