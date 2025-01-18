@@ -1,5 +1,5 @@
 import math
-from photonOdometry import phtonVision
+from photonOdometry import photonVision
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -36,7 +36,7 @@ class Robot(wpilib.TimedRobot):
 
         self.input = RobotInputs()
 
-        self.photonCamera = phtonVision("Camera1")
+        self.photonCamera = photonVision("Camera1")
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)

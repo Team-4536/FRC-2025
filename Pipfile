@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-robotpy = { version="<2025", extras=["navx","rev","pathplannerlib","phoenix5","phoenix6"]}
+robotpy = { version="<2025", extras=["navx","rev","pathplannerlib","phoenix5","phoenix6", "apriltag"]}
+photonlibpy = "*"
 numpy = "*"
 
 [dev-packages]
