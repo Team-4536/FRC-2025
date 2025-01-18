@@ -11,7 +11,10 @@ from timing import TimeData
 
 class RobotHALBuffer:
     def __init__(self) -> None:
+        self.sensorvalue = False
+        self.motorvolts = 0
         pass
+
 
     def resetEncoders(self) -> None:
         pass
@@ -26,6 +29,8 @@ class RobotHALBuffer:
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
+        self.limitswitch = wpilib.DigitalInput(0)
+        self.motor = rev.SparkMax(1,rev.SparkMax.MotorType.kBrushless)
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -37,3 +42,6 @@ class RobotHAL:
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
+        buf.sensorvalue = self.limitswitch.get()
+        self.motor.setVoltage(buf.motorvolts)
+        

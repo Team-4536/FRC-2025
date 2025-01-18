@@ -27,6 +27,7 @@ class Robot(wpilib.TimedRobot):
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
+        
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -40,6 +41,7 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+        
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
