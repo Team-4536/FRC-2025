@@ -58,8 +58,7 @@ class Robot(wpilib.TimedRobot):
         else:
             self.hal.rollerVoltage = 0
 
-        self.ringSubsystem.update(self.hal, self.mechCtrlr.getYButton())
-        self.ringSubsystem.update(self.hal, self.mechCtrlr.getXButton())
+        self.ringSubsystem.update(self.hal, self.mechCtrlr.getYButton(), self.mechCtrlr.getXButton(), self.time, wpilib)
 
         self.table.putNumber("Roller Voltage", self.hal.rollerVoltage)
 

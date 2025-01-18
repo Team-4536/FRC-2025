@@ -18,8 +18,7 @@ class RobotHALBuffer:
         
         self.intakeVoltage = 0
         self.intakeVoltageTwo = 0
-        self.ejectVoltage = 0
-        self.ejectVoltageTwo = 0
+        
 
         
 
@@ -30,8 +29,7 @@ class RobotHALBuffer:
         self.intakeVoltage = 0
         self.intakeVoltageTwo = 0
         self.rollerVoltage = 0
-        self.ejectVoltage = 0
-        self.ejectVoltageTwo = 0
+        
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putBoolean("ringin", self.ringSensorValue)
@@ -53,8 +51,7 @@ class RobotHAL:
 
         self.intakeMotor = rev.SparkMax(12,rev.SparkLowLevel.MotorType.kBrushless)
         self.intakeMotorTwo = rev.SparkMax(11,rev.SparkLowLevel.MotorType.kBrushless)
-        self.ejectMotor = rev.SparkMax(12,rev.SparkLowLevel.MotorType.kBrushless)
-        self.ejectMotorTwo = rev.SparkMax(11,rev.SparkLowLevel.MotorType.kBrushless)
+       
 
 
     # angle expected in CCW rads
@@ -75,5 +72,4 @@ class RobotHAL:
 
         self.intakeMotor.setVoltage(buf.intakeVoltage)
         self.intakeMotorTwo.setVoltage(buf.intakeVoltageTwo)
-        self.ejectMotor.setVoltage(buf.ejectVoltage)
-        self.ejectMotorTwo.setVoltage(buf.ejectVoltageTwo)
+        
