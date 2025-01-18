@@ -39,6 +39,11 @@ class RobotHAL:
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.driveMotorFLP = 0
+        self.table.putNumber("MotorFL_P", self.driveMotorFLP)
+        self.desiredSpeed = 0
+        self.table.putNumber("desiredSpeed", self.desiredSpeed)
+        self.FL_Controller = self.driveMotorFL.getClosedLoopController()
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -64,13 +69,19 @@ class RobotHAL:
         FL_Voltage = self.driveMotorFL.getAppliedOutput()*self.driveMotorFL.getBusVoltage()
         self.table.putNumber("DriveMotorFL voltage", FL_Voltage )
 
+        self.driveMotorFLP = self.table.getNumber("FL_P", self.driveMotorFLP)
+        self.desiredSpeed = self.table.getNumber("desiredSpeed", self.desiredSpeed)
         myConfig = rev.SparkBaseConfig()
-        myConfig.closedLoop.pid(.0001, 0, 0, rev.ClosedLoopSlot.kSlot0)
-        # self.driveMotorFL.configure(
-        #     myConfig, 
-        #     rev.SparkBase.ResetMode.kNoResetSafeParameters, 
-        #     rev.SparkBase.PersistMode.kNoPersistParameters)
-        # #self.driveMotorFL.
+        myConfig.closedLoop.pidf(self.driveMotorFLP, 0, 0, 1/473, rev.ClosedLoopSlot.kSlot0)
+        #myConfig.closedLoop.P(self.driveMotorFLP)
+        self.driveMotorFL.configure(
+            myConfig, 
+            rev.SparkBase.ResetMode.kNoResetSafeParameters, 
+            rev.SparkBase.PersistMode.kNoPersistParameters)
+        
+        self.FL_Controller.setReference(self.desiredSpeed, rev.SparkBase.ControlType.kVelocity)
+        self.table.putNumber("desiredSpeedConfirm", self.desiredSpeed)
+    
 
 
 
