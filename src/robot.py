@@ -37,7 +37,6 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(self.time)
         self.table.putNumber("leftJoyY", self.hal.driveVolts)
         self.hal.publish(self.table)
-        self.input.update()
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
