@@ -1,5 +1,5 @@
 import math
-
+import rev
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -56,9 +56,11 @@ class Robot(wpilib.TimedRobot):
         self.hal.driveVolts = self.driveCtrlr.getLeftY()
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
+        
+
+        
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()
-
         self.hardware.update(self.hal, self.time)
 
     def disabledInit(self) -> None:
