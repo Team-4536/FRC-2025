@@ -10,16 +10,6 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 
-class RobotInputs:
-    def __init__(self) -> None:
-        self.driveCtrlr = wpilib.XboxController(0)
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
-
-    def update(self) -> None:
-        pass
-
-
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
         self.time = TimeData(None)
@@ -34,7 +24,9 @@ class Robot(wpilib.TimedRobot):
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-        self.input = RobotInputs()
+        self.driveCtrlr = wpilib.XboxController(0)
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
 
         self.photonCamera = photonVision("Camera1")
 
@@ -50,12 +42,18 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        pass
+        self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+
+        # Keep the lines below at the bottom of teleopPeriodic
+        self.hal.publish(self.table)
+        self.hardware.update(self.hal, self.time)
 
     def autonomousPeriodic(self) -> None:
-        self.hal.stopMotors()
+        self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.hardware.update(self.hal, self.time)
+        self.hardware.update(
+            self.hal, self.time
+        )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
