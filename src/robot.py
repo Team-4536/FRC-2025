@@ -8,6 +8,7 @@ from simHAL import RobotSimHAL
 from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+from casiosubsystem import Cassiosubsystem
 
 
 class Robot(wpilib.TimedRobot):
@@ -27,6 +28,8 @@ class Robot(wpilib.TimedRobot):
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
+
+        self.casioSubsystem = Cassiosubsystem()
         
 
     def robotPeriodic(self) -> None:
@@ -41,7 +44,9 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+        self.casioSubsystem.update(self.mechCtrlr.getXButton(), self.hal)
         
+
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
