@@ -10,9 +10,9 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 from robotHAL import RobotHAL
 
+
 class RobotInputs:
     def __init__(self) -> None:
-        
 
         pass
 
@@ -34,6 +34,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware = RobotSimHAL()
         else:
             self.hardware = robotHAL.RobotHAL()
+        # self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -49,16 +50,14 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
-        
+
         pass
 
     def teleopPeriodic(self) -> None:
         self.hal.driveVolts = self.driveCtrlr.getLeftY()
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
-        
 
-        
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
