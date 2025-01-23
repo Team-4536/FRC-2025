@@ -10,6 +10,7 @@ import wpilib
 from phoenix6.hardware import CANcoder
 from timing import TimeData
 from ntcore import NetworkTableInstance
+from rev import SparkMax, SparkClosedLoopController
 
 
 class RobotHALBuffer:
@@ -162,12 +163,95 @@ class RobotHAL:
         # self.table.putNumber("read p value", driveUniversalConfig.closedLoop.)
 
     class PIDs:
-
-        def __init__(self) -> None:
+        def __init__(
+            self,
+            name: str,
+            motorRefrence: SparkMax,
+            controlMode: SparkMax.ControlType,
+            config: rev.SparkBaseConfig,
+        ) -> None:
             self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-        def __periodic_(self) -> None:
-            pass
+            self.motorReference: SparkMax = motorRefrence
+            self.closedLoopController: SparkClosedLoopController = (
+                self.motorReference.getClosedLoopController()
+            )
 
-        def update(self) -> None:
-            pass
+            self.controlMode: SparkMax.ControlType = controlMode
+            self.setpiont = 0
+
+            self.motorReference.configure(
+                config,
+                rev.SparkMax.ResetMode.kNoResetSafeParameters,
+                rev.SparkMax.PersistMode.kNoPersistParameters,
+            )
+
+            self.config = config
+
+            # self.kP = self.motorReference.configAccessor.closedLoop.getP()
+            # self.kI = self.motorReference.configAccessor.closedLoop.getI()
+            # self.kD = self.motorReference.configAccessor.closedLoop.getD()
+            # self.kFF = self.motorReference.configAccessor.closedLoop.getFF()
+
+            # self.table.putNumber(self.name + "kP", self.kP)
+            # self.table.putNumber(self.name + "kI", self.kI)
+            # self.table.putNumber(self.name + "kD", self.kD)
+            # self.table.putNumber(self.name + "kFF", self.kFF)
+
+            # the key will be used for values on the network table
+            # not that all network table values will be labeled self.name + key
+            self.configurationVars: dict = {
+                "kP": self.motorReference.configAccessor.closedLoop.getP(),
+                "kI": self.motorReference.configAccessor.closedLoop.getI(),
+                "kD": self.motorReference.configAccessor.closedLoop.getD(),
+                "kFF": self.motorReference.configAccessor.closedLoop.getFF(),
+            }
+
+            for key, value in zip(
+                self.configurationVars.keys(), self.configurationVars.values()
+            ):
+                self.table.putNumber(self.name + key, value)
+
+        def liveConfig(self) -> None:
+            tuneErr = 0.00001
+
+            reconfigureFlag = False
+
+            for key, value in zip(
+                self.configurationVars.keys(), self.configurationVars.values()
+            ):
+                if abs(value - self.table.getNumber(self.name + key, value)) > tuneErr:
+                    reconfigureFlag = True
+                    break
+
+            if reconfigureFlag:
+                self.config.closedLoop.pidf(
+                    self.table.getNumber(self.name + "kP"),
+                    self.table.getNumber(self.name + "kI"),
+                    self.table.getNumber(self.name + "kD"),
+                    self.table.getNumber(self.name + "kFF"),
+                )
+
+                self.motorReference.configure(self.config)
+
+            # if (
+            #     abs(self.table.getNumber(self.name + "kP") - self.kP) > tuneErr
+            #     or abs(self.table.getNumber(self.name + "kI") - self.kI) > tuneErr
+            #     or abs(self.table.getNumber(self.name + "kD") - self.kD) > tuneErr
+            #     or abs(self.table.getNumber(self.name + "kFF") - self.kFF) > tuneErr
+            # ):
+            #     self.config.closedLoop.pidf(
+            #         self.table.getNumber(self.name + "kP"),
+            #         self.table.getNumber(self.name + "kI"),
+            #         self.table.getNumber(self.name + "kD"),
+            #         self.table.getNumber(self.name + "kFF"),
+            #     )
+
+            #     self.motorReference.configure(self.config)
+
+        def update(self, setpoint: float) -> None:
+            self.closedLoopController.setReference(setpoint, self.controlMode)
+            self.setpiont = setpoint
+
+        def publish(self) -> None:
+            self.table.putNumber(self.name + " setpoint", self.setpiont)
