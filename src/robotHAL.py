@@ -76,6 +76,14 @@ class RobotHAL:
         self.driveFLClosedLoopController = self.driveMotorFL.getClosedLoopController()
         self.driveFLEncoder = self.driveMotorFL.getEncoder()
 
+        self.profilingStart = 0
+
+    def startProfile(self):
+        self.profilingStart = wpilib.getTime()
+
+    def endProfile(self, name: str):
+        self.table.putNumber(name + " time", wpilib.getTime() - self.profilingStart)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -90,6 +98,8 @@ class RobotHAL:
         # self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
         # self.table.putNumber('hal drive volts', buf.driveVolts)
 
+        self.startProfile()
+
         driveFLPercentVoltage = self.driveMotorFL.getAppliedOutput()
         driveFLSpeedFeedback = self.driveFLEncoder.getVelocity()
         driveFLPosition = self.driveFLEncoder.getPosition()
@@ -101,11 +111,14 @@ class RobotHAL:
         self.table.putNumber("DriveMotorFL Position", driveFLPosition)
         self.table.putNumber("DriveMotorFL percent voltage", driveFLPercentVoltage)
 
+        self.endProfile("Getting motor values")
+
         # self.MotorP = self.table.getNumber("P", self.MotorP)
         # self.MotorFF = self.table.getNumber("FF", self.MotorFF)
 
         driveUniversalConfig = rev.SparkBaseConfig()
 
+        self.startProfile()
         if (
             abs(self.table.getNumber("P", self.MotorP) - self.MotorP) < 1e-6
             or abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) < 1e-6
@@ -133,12 +146,18 @@ class RobotHAL:
 
             self.table.putNumber("Config err", error.value)
 
+        self.endProfile("rev motor controller config")
+
+        self.startProfile()
+
         self.desiredSpeed = self.table.getNumber("desired speed", self.desiredSpeed)
         self.driveFLClosedLoopController.setReference(
             self.desiredSpeed,
             rev.SparkBase.ControlType.kMAXMotionVelocityControl,
             rev.ClosedLoopSlot.kSlot0,
         )
+
+        self.endProfile("Set reference")
 
         # self.table.putNumber("read p value", driveUniversalConfig.closedLoop.)
 
