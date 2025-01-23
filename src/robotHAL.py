@@ -15,8 +15,7 @@ from rev import SparkMax, SparkClosedLoopController
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-
-        self.driveVolts = 0
+        pass
 
     def resetEncoders(self) -> None:
         pass
@@ -74,6 +73,8 @@ class RobotHAL:
             rev.SparkBase.PersistMode.kNoPersistParameters,
         )
 
+        self.table.putNumber("Config err", error)
+
         self.driveFLClosedLoopController = self.driveMotorFL.getClosedLoopController()
         self.driveFLEncoder = self.driveMotorFL.getEncoder()
 
@@ -96,9 +97,6 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        # self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
-        # self.table.putNumber('hal drive volts', buf.driveVolts)
-
         self.startProfile()
 
         driveFLPercentVoltage = self.driveMotorFL.getAppliedOutput()
@@ -120,9 +118,12 @@ class RobotHAL:
         driveUniversalConfig = rev.SparkBaseConfig()
 
         self.startProfile()
+        # var1 = abs(self.table.getNumber("P", self.MotorP) - self.MotorP) < 1e-6
+        # var2 = abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) < 1e-6
+        # self.table.putNumber()
         if (
-            abs(self.table.getNumber("P", self.MotorP) - self.MotorP) < 1e-6
-            or abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) < 1e-6
+            abs(self.table.getNumber("P", self.MotorP) - self.MotorP) > 1e-6
+            or abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) > 1e-6
         ):
             self.MotorP = self.table.getNumber("P", self.MotorP)
             self.MotorFF = self.table.getNumber("FF", self.MotorFF)
@@ -162,96 +163,97 @@ class RobotHAL:
 
         # self.table.putNumber("read p value", driveUniversalConfig.closedLoop.)
 
-    class PIDs:
-        def __init__(
-            self,
-            name: str,
-            motorRefrence: SparkMax,
-            controlMode: SparkMax.ControlType,
-            config: rev.SparkBaseConfig,
-        ) -> None:
-            self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-            self.motorReference: SparkMax = motorRefrence
-            self.closedLoopController: SparkClosedLoopController = (
-                self.motorReference.getClosedLoopController()
+class PIDs:
+    def __init__(
+        self,
+        name: str,
+        motorRefrence: SparkMax,
+        controlMode: SparkMax.ControlType,
+        config: rev.SparkBaseConfig,
+    ) -> None:
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+
+        self.motorReference: SparkMax = motorRefrence
+        self.closedLoopController: SparkClosedLoopController = (
+            self.motorReference.getClosedLoopController()
+        )
+
+        self.controlMode: SparkMax.ControlType = controlMode
+        self.setpiont = 0
+
+        self.motorReference.configure(
+            config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.config = config
+
+        # self.kP = self.motorReference.configAccessor.closedLoop.getP()
+        # self.kI = self.motorReference.configAccessor.closedLoop.getI()
+        # self.kD = self.motorReference.configAccessor.closedLoop.getD()
+        # self.kFF = self.motorReference.configAccessor.closedLoop.getFF()
+
+        # self.table.putNumber(self.name + "kP", self.kP)
+        # self.table.putNumber(self.name + "kI", self.kI)
+        # self.table.putNumber(self.name + "kD", self.kD)
+        # self.table.putNumber(self.name + "kFF", self.kFF)
+
+        # the key will be used for values on the network table
+        # not that all network table values will be labeled self.name + key
+        self.configurationVars: dict = {
+            "kP": self.motorReference.configAccessor.closedLoop.getP(),
+            "kI": self.motorReference.configAccessor.closedLoop.getI(),
+            "kD": self.motorReference.configAccessor.closedLoop.getD(),
+            "kFF": self.motorReference.configAccessor.closedLoop.getFF(),
+        }
+
+        for key, value in zip(
+            self.configurationVars.keys(), self.configurationVars.values()
+        ):
+            self.table.putNumber(self.name + key, value)
+
+    def liveConfig(self) -> None:
+        tuneErr = 0.00001
+
+        reconfigureFlag = False
+
+        for key, value in zip(
+            self.configurationVars.keys(), self.configurationVars.values()
+        ):
+            if abs(value - self.table.getNumber(self.name + key, value)) > tuneErr:
+                reconfigureFlag = True
+                break
+
+        if reconfigureFlag:
+            self.config.closedLoop.pidf(
+                self.table.getNumber(self.name + "kP"),
+                self.table.getNumber(self.name + "kI"),
+                self.table.getNumber(self.name + "kD"),
+                self.table.getNumber(self.name + "kFF"),
             )
 
-            self.controlMode: SparkMax.ControlType = controlMode
-            self.setpiont = 0
+            self.motorReference.configure(self.config)
 
-            self.motorReference.configure(
-                config,
-                rev.SparkMax.ResetMode.kNoResetSafeParameters,
-                rev.SparkMax.PersistMode.kNoPersistParameters,
-            )
+        # if (
+        #     abs(self.table.getNumber(self.name + "kP") - self.kP) > tuneErr
+        #     or abs(self.table.getNumber(self.name + "kI") - self.kI) > tuneErr
+        #     or abs(self.table.getNumber(self.name + "kD") - self.kD) > tuneErr
+        #     or abs(self.table.getNumber(self.name + "kFF") - self.kFF) > tuneErr
+        # ):
+        #     self.config.closedLoop.pidf(
+        #         self.table.getNumber(self.name + "kP"),
+        #         self.table.getNumber(self.name + "kI"),
+        #         self.table.getNumber(self.name + "kD"),
+        #         self.table.getNumber(self.name + "kFF"),
+        #     )
 
-            self.config = config
+        #     self.motorReference.configure(self.config)
 
-            # self.kP = self.motorReference.configAccessor.closedLoop.getP()
-            # self.kI = self.motorReference.configAccessor.closedLoop.getI()
-            # self.kD = self.motorReference.configAccessor.closedLoop.getD()
-            # self.kFF = self.motorReference.configAccessor.closedLoop.getFF()
+    def update(self, setpoint: float) -> None:
+        self.closedLoopController.setReference(setpoint, self.controlMode)
+        self.setpiont = setpoint
 
-            # self.table.putNumber(self.name + "kP", self.kP)
-            # self.table.putNumber(self.name + "kI", self.kI)
-            # self.table.putNumber(self.name + "kD", self.kD)
-            # self.table.putNumber(self.name + "kFF", self.kFF)
-
-            # the key will be used for values on the network table
-            # not that all network table values will be labeled self.name + key
-            self.configurationVars: dict = {
-                "kP": self.motorReference.configAccessor.closedLoop.getP(),
-                "kI": self.motorReference.configAccessor.closedLoop.getI(),
-                "kD": self.motorReference.configAccessor.closedLoop.getD(),
-                "kFF": self.motorReference.configAccessor.closedLoop.getFF(),
-            }
-
-            for key, value in zip(
-                self.configurationVars.keys(), self.configurationVars.values()
-            ):
-                self.table.putNumber(self.name + key, value)
-
-        def liveConfig(self) -> None:
-            tuneErr = 0.00001
-
-            reconfigureFlag = False
-
-            for key, value in zip(
-                self.configurationVars.keys(), self.configurationVars.values()
-            ):
-                if abs(value - self.table.getNumber(self.name + key, value)) > tuneErr:
-                    reconfigureFlag = True
-                    break
-
-            if reconfigureFlag:
-                self.config.closedLoop.pidf(
-                    self.table.getNumber(self.name + "kP"),
-                    self.table.getNumber(self.name + "kI"),
-                    self.table.getNumber(self.name + "kD"),
-                    self.table.getNumber(self.name + "kFF"),
-                )
-
-                self.motorReference.configure(self.config)
-
-            # if (
-            #     abs(self.table.getNumber(self.name + "kP") - self.kP) > tuneErr
-            #     or abs(self.table.getNumber(self.name + "kI") - self.kI) > tuneErr
-            #     or abs(self.table.getNumber(self.name + "kD") - self.kD) > tuneErr
-            #     or abs(self.table.getNumber(self.name + "kFF") - self.kFF) > tuneErr
-            # ):
-            #     self.config.closedLoop.pidf(
-            #         self.table.getNumber(self.name + "kP"),
-            #         self.table.getNumber(self.name + "kI"),
-            #         self.table.getNumber(self.name + "kD"),
-            #         self.table.getNumber(self.name + "kFF"),
-            #     )
-
-            #     self.motorReference.configure(self.config)
-
-        def update(self, setpoint: float) -> None:
-            self.closedLoopController.setReference(setpoint, self.controlMode)
-            self.setpiont = setpoint
-
-        def publish(self) -> None:
-            self.table.putNumber(self.name + " setpoint", self.setpiont)
+    def publish(self) -> None:
+        self.table.putNumber(self.name + " setpoint", self.setpiont)

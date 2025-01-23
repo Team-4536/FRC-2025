@@ -44,7 +44,6 @@ class Robot(wpilib.TimedRobot):
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-        self.table.putNumber("leftJoyY", self.hal.driveVolts)
         self.hal.publish(self.table)
         self.input.update()
         self.hal.stopMotors()
@@ -54,7 +53,6 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        self.hal.driveVolts = self.driveCtrlr.getLeftY()
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
 
