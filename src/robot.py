@@ -50,12 +50,12 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
-
-        pass
+        self.testPIDSetpoint = 0
+        self.table.putNumber("Test PID setpoint", self.testPIDSetpoint)
 
     def teleopPeriodic(self) -> None:
-        # self.hal.driveVolts = 1
-        # self.hal.driveDesired = 500
+        self.hal.stopMotors()
+
         self.hardware.update(self.hal, self.time)
 
     def autonomousPeriodic(self) -> None:
