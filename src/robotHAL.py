@@ -43,17 +43,6 @@ class RobotHAL:
         self.driveMotorFLPID = revPID(self.driveMotorBL)
         self.driveMotorFLPID = revPID(self.driveMotorBL)
 
-
-
-        self.driveMotorFLClosedLoopControl = self.driveMotorFL.getClosedLoopController()
-        self.driveMotorFRClosedLoopControl = self.driveMotorFR.getClosedLoopController()
-        self.driveMotorBLClosedLoopControl = self.driveMotorFR.getClosedLoopController()
-        self.driveMotorBRClosedLoopControl = self.driveMotorFR.getClosedLoopController()
-        
-        self.driveMotorFLClosedLoopControl = self.driveMotorFL.getClosedLoopController()
-        self.driveMotorFRClosedLoopControl = self.driveMotorFR.getClosedLoopController()
-        self.driveMotorBLClosedLoopControl = self.driveMotorFR.getClosedLoopController()
-        self.driveMotorBRClosedLoopControl = self.driveMotorFR.getClosedLoopController()
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -65,6 +54,7 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
+        
 
         # self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
         # self.table.putNumber('hal drive volts', buf.driveVolts)  
