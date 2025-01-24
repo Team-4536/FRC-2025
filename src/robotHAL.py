@@ -16,12 +16,14 @@ class RobotHALBuffer:
     def __init__(self) -> None:
 
         self.driveVolts = 0
+        self.driveDesired = 0
 
     def resetEncoders(self) -> None:
         pass
 
     def stopMotors(self) -> None:
-        pass
+        self.driveVolts = 0
+        self.driveDesired = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         pass
@@ -32,15 +34,15 @@ class RobotHAL:
         self.prev = RobotHALBuffer()
 
         self.driveMotorFL = rev.SparkMax(2, rev.SparkLowLevel.MotorType.kBrushless)
-        self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
-        self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
-        self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
+        # self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
+        # self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
+        # self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         # max velocity (RPM), max acceleration (RPM / s), allowed closed loop error, minimum output velocity,
         self.desiredSpeed = 0
-        self.table.putNumber("desired speed", self.desiredSpeed)
+        self.table.putNumber("setpoint", self.desiredSpeed)
         self.MotorP = 0.00019
         self.table.putNumber("P", self.MotorP)
         self.MotorFF = 0.00002
@@ -87,9 +89,6 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        # self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
-        # self.table.putNumber('hal drive volts', buf.driveVolts)
-
         driveFLPercentVoltage = self.driveMotorFL.getAppliedOutput()
         driveFLSpeedFeedback = self.driveFLEncoder.getVelocity()
         driveFLPosition = self.driveFLEncoder.getPosition()
@@ -106,41 +105,46 @@ class RobotHAL:
 
         driveUniversalConfig = rev.SparkBaseConfig()
 
-        if (
-            abs(self.table.getNumber("P", self.MotorP) - self.MotorP) < 1e-6
-            or abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) < 1e-6
-        ):
-            self.MotorP = self.table.getNumber("P", self.MotorP)
-            self.MotorFF = self.table.getNumber("FF", self.MotorFF)
+        # if (
+        #     abs(self.table.getNumber("P", self.MotorP) - self.MotorP) < 1e-6
+        #     or abs(self.table.getNumber("FF", self.MotorFF) - self.MotorFF) < 1e-6
+        # ):
+        #     self.MotorP = self.table.getNumber("P", self.MotorP)
+        #     self.MotorFF = self.table.getNumber("FF", self.MotorFF)
 
-            driveUniversalConfig.closedLoop.pidf(
-                self.MotorP, 0, 0, self.MotorFF, rev.ClosedLoopSlot.kSlot0
-            ).setFeedbackSensor(
-                rev.ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-            ).outputRange(
-                -1.0, 1.0, rev.ClosedLoopSlot.kSlot0
-            )
+        #     driveUniversalConfig.closedLoop.pidf(
+        #         self.MotorP, 0, 0, self.MotorFF, rev.ClosedLoopSlot.kSlot0
+        #     ).setFeedbackSensor(
+        #         rev.ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
+        #     ).outputRange(
+        #         -1.0, 1.0, rev.ClosedLoopSlot.kSlot0
+        #     )
 
-            driveUniversalConfig.encoder.positionConversionFactor(
-                1
-            ).velocityConversionFactor(1)
+        #     driveUniversalConfig.encoder.positionConversionFactor(
+        #         1
+        #     ).velocityConversionFactor(1)
 
-            error = self.driveMotorFL.configure(
-                driveUniversalConfig,
-                rev.SparkBase.ResetMode.kNoResetSafeParameters,
-                rev.SparkBase.PersistMode.kNoPersistParameters,
-            )
+        #     error = self.driveMotorFL.configure(
+        #         driveUniversalConfig,
+        #         rev.SparkBase.ResetMode.kNoResetSafeParameters,
+        #         rev.SparkBase.PersistMode.kNoPersistParameters,
+        #     )
 
-            self.table.putNumber("Config err", error.value)
+        #     self.table.putNumber("Config err", error.value)
 
-        self.desiredSpeed = self.table.getNumber("desired speed", self.desiredSpeed)
+        self.desiredSpeed = self.table.getNumber("setpoint", self.desiredSpeed)
+        # self.driveFLClosedLoopController.setReference(
+        #     buf.driveDesired,
+        #     rev.SparkBase.ControlType.kMAXMotionVelocityControl,
+        #     rev.ClosedLoopSlot.kSlot0,
+        # )
         self.driveFLClosedLoopController.setReference(
             self.desiredSpeed,
             rev.SparkBase.ControlType.kMAXMotionVelocityControl,
             rev.ClosedLoopSlot.kSlot0,
         )
 
-        # self.table.putNumber("read p value", driveUniversalConfig.closedLoop.)
+        # self.driveMotorFL.setVoltage(buf.driveVolts)
 
     class PIDs:
 

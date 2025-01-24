@@ -54,8 +54,8 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        self.hal.driveVolts = self.driveCtrlr.getLeftY()
-        self.hal.stopMotors()
+        # self.hal.driveVolts = 1
+        # self.hal.driveDesired = 500
         self.hardware.update(self.hal, self.time)
 
     def autonomousPeriodic(self) -> None:
