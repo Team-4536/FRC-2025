@@ -17,6 +17,10 @@ class RobotHALBuffer:
 
         self.driveVolts = 0
         self.driveDesired = 0
+        self.driveSpeedFL = 0
+        self.driveSpeedFR = 0
+        self.driveSpeedBL = 0
+        self.driveSpeedBR = 0
 
     def resetEncoders(self) -> None:
         pass

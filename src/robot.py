@@ -14,16 +14,20 @@ from robotHAL import RobotHAL
 class RobotInputs:
     def __init__(self) -> None:
 
-        pass
+        self.driveCtrlr = wpilib.XboxController(0)
 
     def update(self) -> None:
-        pass
+        self.driveX = self.driveCtrlr.getLeftX()*0.2
+        self.driveY = self.driveCtrlr.getLeftY()*0.2
+        self.driveRotation = self.driveCtrlr.getRightX()*0.0625
 
+        self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
+      
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
 
-        self.driveCtrlr = wpilib.XboxController(0)
+        
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
