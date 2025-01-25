@@ -26,6 +26,29 @@ class RobotHALBuffer:
         self.driveBLSetpoint = 0
         self.driveBRSetpoint = 0
 
+        self.driveVolts = 0
+        self.driveDesired = 0
+
+        self.driveVelFL = 0
+        self.driveVelFR = 0
+        self.driveVelBL = 0
+        self.driveVelBR = 0
+
+        self.drivePosFL = 0
+        self.drivePosFR = 0
+        self.drivePosBL = 0
+        self.drivePosBR = 0
+
+        self.turnPosFL = 0
+        self.turnPosFR = 0
+        self.turnPosBL = 0
+        self.turnPosBR = 0
+
+        self.driveFLSetpoint = 0
+        self.driveFRSetpoint = 0
+        self.driveBLSetpoint = 0
+        self.driveBRSetpoint = 0
+
         self.turnFLSetpoint = 0
         self.turnFRSetpoint = 0
         self.turnBLSetpoint = 0

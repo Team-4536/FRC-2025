@@ -14,7 +14,6 @@ from robotHAL import RobotHAL
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
 
-        self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
@@ -43,8 +42,7 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
-        self.testPIDSetpoint = 0
-        self.table.putNumber("Test PID setpoint", self.testPIDSetpoint)
+        pass
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
