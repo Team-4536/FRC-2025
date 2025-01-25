@@ -40,15 +40,35 @@ class SwerveDrive:
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
 
-    def update(self, dt: float, hal: robotHAL.RobotHALBuffer, speed: ChassisSpeeds):
+    def update(self, dt: float, hal: robotHAL.RobotHALBuffer, speed: ChassisSpeeds, joystickY: float, joystickX: float, joystickRotation: float):
         
-        wheelPositions = 
-        self.unleashedModules = self.kinematics.toSwerveModuleStates(robot.chassisSpeeds)
-        self.swerveModule = self.kinematics.desaturateWheelSpeeds(self.unleashedModules)
+        self.driveX = joystickX*0.2
+        self.driveY = joystickY*0.2
+        self.driveRotation = joystickRotation*0.0625
 
-        for i in range(4):
-            state = self.optimizeTarget(self.swerveModule[i], wheelPositions[i].angle)
+        self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
 
+        
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        self.swerveModuleStates = self.kinematics.desaturateWheelSpeeds(self.unleashedModules)
+
+        FLModuleState = self.optimizeTarget(self.swerveModuleStates[0], Rotation2d(hal.turnPosFL))
+        hal.driveFLSetpoint = FLModuleState.speed
+        hal.turnFLSetpoint = FLModuleState.angle
+
+        FRModuleState = self.optimizeTarget(self.swerveModuleStates[1], Rotation2d(hal.turnPosFR))
+        hal.driveFRSetpoint = FRModuleState.speed
+        hal.turnFRSetpoint = FRModuleState.angle
+
+        BLModuleState = self.optimizeTarget(self.swerveModuleStates[2], Rotation2d(hal.turnPosBL))
+        hal.driveBLSetpoint = BLModuleState.speed
+        hal.turnBLSetpoint = BLModuleState.angle
+        
+        BRModuleState = self.optimizeTarget(self.swerveModuleStates[3], Rotation2d(hal.turnPosBR))
+        hal.driveBRSetpoint = BRModuleState.speed
+        hal.turnBRSetpoint = BRModuleState.angle
+
+            
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 

@@ -17,11 +17,7 @@ class RobotInputs:
         self.driveCtrlr = wpilib.XboxController(0)
 
     def update(self) -> None:
-        self.driveX = self.driveCtrlr.getLeftX()*0.2
-        self.driveY = self.driveCtrlr.getLeftY()*0.2
-        self.driveRotation = self.driveCtrlr.getRightX()*0.0625
-
-        self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
+        pass
       
 
 class Robot(wpilib.TimedRobot):

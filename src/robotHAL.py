@@ -17,10 +17,35 @@ class RobotHALBuffer:
 
         self.driveVolts = 0
         self.driveDesired = 0
-        self.driveSpeedFL = 0
-        self.driveSpeedFR = 0
-        self.driveSpeedBL = 0
-        self.driveSpeedBR = 0
+        
+        self.driveVelFL = 0
+        self.driveVelFR = 0
+        self.driveVelBL = 0
+        self.driveVelBR = 0
+
+
+        self.drivePosFL = 0
+        self.drivePosFR = 0
+        self.drivePosBL = 0
+        self.drivePosBR = 0
+
+        self.turnPosFL = 0
+        self.turnPosFR = 0
+        self.turnPosBL = 0
+        self.turnPosBR = 0
+
+        self.driveFLSetpoint = 0
+        self.driveFRSetpoint = 0
+        self.driveBLSetpoint = 0
+        self.driveBRSetpoint = 0
+
+        self.turnFLSetpoint = 0
+        self.turnFRSetpoint = 0
+        self.turnBLSetpoint = 0
+        self.turnBRSetpoint = 0
+
+        
+
 
     def resetEncoders(self) -> None:
         pass
@@ -36,6 +61,9 @@ class RobotHALBuffer:
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
+
+        self.drivePositions: list[float] = [0, 0, 0, 0]
+        self.steeringPositions: list[float] = [0, 0, 0, 0]
 
         self.driveMotorFL = rev.SparkMax(2, rev.SparkLowLevel.MotorType.kBrushless)
         # self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
@@ -104,6 +132,7 @@ class RobotHAL:
         self.table.putNumber("DriveMotorFL Position", driveFLPosition)
         self.table.putNumber("DriveMotorFL percent voltage", driveFLPercentVoltage)
 
+    
         # self.MotorP = self.table.getNumber("P", self.MotorP)
         # self.MotorFF = self.table.getNumber("FF", self.MotorFF)
 
