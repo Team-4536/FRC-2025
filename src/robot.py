@@ -41,6 +41,9 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
+        self.hal.otherSpeed = self.driveCtrlr.getBButton() * 0.1
+        self.hal.otherSpeed = self.driveCtrlr.getAButton() * 0.1
+
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
@@ -48,9 +51,7 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.hardware.update(
-            self.hal, self.time
-        )  # Keep this at the bottom of autonomousPeriodic
+        self.hardware.update(self.hal, self.time)  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
