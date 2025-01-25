@@ -21,10 +21,15 @@ from rev import (
 
 class RobotHALBuffer:
     def __init__(self) -> None:
+        self.driveFLSetpoint = 0
+        self.driveFRSetpoint = 0
+        self.driveBLSetpoint = 0
+        self.driveBRSetpoint = 0
 
-        self.driveVolts = 0
-        self.driveDesired = 0
-        self.turnDesired = 0
+        self.turnFLSetpoint = 0
+        self.turnFRSetpoint = 0
+        self.turnBLSetpoint = 0
+        self.turnBRSetpoint = 0
 
     def resetEncoders(self) -> None:
         pass
@@ -71,71 +76,44 @@ class RobotHAL:
             2000, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(4000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
 
-        self.FRDrivePID = RevPID(
-            "FR Drive",
-            self.driveMotorFR,
-            driveMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionVelocityControl,
-        )
-        self.FLDrivePID = RevPID(
-            "FL Drive",
-            self.driveMotorFL,
-            driveMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionVelocityControl,
-        )
-        self.BRDrivePID = RevPID(
-            "BR Drive",
-            self.driveMotorBR,
-            driveMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionVelocityControl,
-        )
-        self.BLDrivePID = RevPID(
-            "BL Drive",
-            self.driveMotorBL,
-            driveMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionVelocityControl,
-        )
+        turnMotorPIDConfig = SparkMaxConfig()
 
-        turnMotorConfig = SparkMaxConfig()
-
-        turnMotorConfig.closedLoop.pidf(0.3, 0.001, 0.01, 0).setFeedbackSensor(
+        turnMotorPIDConfig.closedLoop.pidf(0.3, 0.001, 0.01, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
 
-        turnMotorConfig.closedLoop.maxMotion.maxVelocity(
+        turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             10000, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(20000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
 
-        self.FLTurnPID = RevPID(
-            "FL Turn",
+        self.FLSwerveModule = SwerveModuleController(
+            "FL",
+            self.driveMotorFL,
+            driveMotorPIDConfig,
             self.turnMotorFL,
-            turnMotorConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            turnMotorPIDConfig,
         )
-        self.FRTurnPID = RevPID(
-            "FR Turn",
+        self.FRSwerveModule = SwerveModuleController(
+            "FR",
+            self.driveMotorFR,
+            driveMotorPIDConfig,
             self.turnMotorFR,
-            turnMotorConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            turnMotorPIDConfig,
         )
-        self.BLTurnPID = RevPID(
-            "BL Turn",
+        self.BLSwerveModule = SwerveModuleController(
+            "BL",
+            self.driveMotorBL,
+            driveMotorPIDConfig,
             self.turnMotorBL,
-            turnMotorConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            turnMotorPIDConfig,
         )
-        self.BRTurnPID = RevPID(
-            "BR Turn",
+        self.BRSwerveModule = SwerveModuleController(
+            "BR",
+            self.driveMotorBR,
+            driveMotorPIDConfig,
             self.turnMotorBR,
-            turnMotorConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            turnMotorPIDConfig,
         )
-
-        self.desiredDriveSpeed = 0
-        self.table.putNumber("desired Drive speed", self.desiredDriveSpeed)
-
-        self.desirePosition = 0
-        self.table.putNumber("desired Turn position", self.desiredDriveSpeed)
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -148,26 +126,41 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        self.desiredDriveSpeed = self.table.getNumber(
-            "desired Drive speed", self.desiredDriveSpeed
+        self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
+        self.FLSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
+        self.FLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
+        self.FLSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
+
+
+class SwerveModuleController:
+    def __init__(
+        self,
+        name: str,
+        driveMotor: SparkMax,
+        driveConfig: SparkMaxConfig,
+        turnMotor: SparkMax,
+        turnConfig: SparkMaxConfig,
+    ) -> None:
+        self.name = name
+        self.driveMotor = RevMotorController(
+            "Drive " + name,
+            driveMotor,
+            driveConfig,
+            SparkMax.ControlType.kMAXMotionVelocityControl,
+        )
+        self.turnMotor = RevMotorController(
+            "Turn " + name,
+            turnMotor,
+            turnConfig,
+            SparkMax.ControlType.kMAXMotionPositionControl,
         )
 
-        self.desirePosition = self.table.getNumber(
-            "desired Turn position", self.desirePosition
-        )
-
-        self.FLDrivePID.update(self.desiredDriveSpeed)
-        self.FRDrivePID.update(self.desiredDriveSpeed)
-        self.BLDrivePID.update(self.desiredDriveSpeed)
-        self.BRDrivePID.update(self.desiredDriveSpeed)
-
-        self.FLTurnPID.update(self.desirePosition)
-        self.FRTurnPID.update(self.desirePosition)
-        self.BLTurnPID.update(self.desirePosition)
-        self.BRTurnPID.update(self.desirePosition)
+    def update(self, driveSetpoint: float, turnSetpoint: float) -> None:
+        self.driveMotor.update(driveSetpoint)
+        self.turnMotor.update(turnSetpoint)
 
 
-class RevPID:
+class RevMotorController:
     def __init__(
         self,
         name: str,
