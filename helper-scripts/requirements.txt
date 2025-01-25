@@ -16,7 +16,7 @@ launch from downloads folder
 	-Install
 - Finish
 
-add folowing extensions to vscode enviroment: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance, https://marketplace.visualstudio.com/items?itemName=ms-python.python, https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+add folowing extensions to vscode enviroment: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance, https://marketplace.visualstudio.com/items?itemName=ms-python.python, https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens, https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
 
 
 
@@ -126,3 +126,7 @@ if a security page opens click more options and run anyways
     - choose download for this computer
 - Finished
     - Click Finish
+
+
+install C++ redistributable at https://aka.ms/vs/17/release/vc_redist.x64.exe
+Just simply accept license and continue with install

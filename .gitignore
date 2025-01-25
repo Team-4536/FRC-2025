@@ -21,6 +21,6 @@ ctre_sim/*.dat
 .\#*
 
 # virtualenv
-.venv/
 
 .vscode
+.venv/
