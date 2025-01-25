@@ -11,8 +11,8 @@ from timing import TimeData
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-        self.intakeSpeeds = [0, 0]
-        self.otherSpeed = 0
+        self.shooterSpeeds: list[float] = [0, 0]
+        self.otherSpeed: float = 0
 
     def resetEncoders(self) -> None:
         pass
@@ -21,14 +21,17 @@ class RobotHALBuffer:
         pass
 
     def publish(self, table: ntcore.NetworkTable) -> None:
-        pass
+        table.putNumber("shooterSpeed1", self.shooterSpeeds[0])
+        table.putNumber("shooterSpeed2", self.shooterSpeeds[1])
+
+        table.putNumber("otherSpeed", self.otherSpeed)
 
 
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
 
-        self.intakeMotors = [
+        self.shooterMotors = [
             rev.CANSparkMax(11, rev.CANSparkMax.MotorType.kBrushless),
             rev.CANSparkMax(12, rev.CANSparkMax.MotorType.kBrushless),
         ]
@@ -46,7 +49,7 @@ class RobotHAL:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
 
-        for m, s in zip(self.intakeMotors, buf.intakeSpeeds):
+        for m, s in zip(self.shooterMotors, buf.shooterSpeeds):
             m.set(s)
 
         self.otherMotor.set(buf.otherSpeed)
