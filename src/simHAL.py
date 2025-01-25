@@ -18,3 +18,4 @@ class RobotSimHAL:
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass
+
