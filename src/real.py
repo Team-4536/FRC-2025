@@ -11,11 +11,12 @@ def invLerp(a, b, pt):
 
 
 # CLEANUP: this
-# returns input angle between -180 and 180
+# returns input angle between (-pi, pi]
+# Converts any radian to a CCW Radian
 def angleWrap(a: float) -> float:
     while a > math.pi:
         a -= math.pi * 2
-    while a < -math.pi:
+    while a <= -math.pi:
         a += math.pi * 2
     return a
 

@@ -16,64 +16,79 @@ from wpimath.kinematics import (
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
+    MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
 
-    
-        
+    def __init__(self) -> None:
 
-    def __init__(
-        self, angle: Rotation2d, pose: Pose2d, wheelStates: list[SwerveModulePosition]
-    ) -> None:
-        
         oneftInMeters = 0.3048
 
         self.modulePositions: list[Translation2d] = [
             Translation2d(oneftInMeters, oneftInMeters),
             Translation2d(oneftInMeters, -oneftInMeters),
             Translation2d(-oneftInMeters, oneftInMeters),
-            Translation2d(-oneftInMeters,-oneftInMeters)]
+            Translation2d(-oneftInMeters, -oneftInMeters),
+        ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
-        
-        
-
-    
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
 
-    def update(self, dt: float, hal: robotHAL.RobotHALBuffer, speed: ChassisSpeeds, joystickY: float, joystickX: float, joystickRotation: float):
-        
-        self.driveX = joystickX*0.2
-        self.driveY = joystickY*0.2
-        self.driveRotation = joystickRotation*0.0625
+    def update(
+        self,
+        hal: robotHAL.RobotHALBuffer,
+        joystickX: float,
+        joystickY: float,
+        joystickRotation: float,
+    ):
+        if abs(joystickX) < 0.05:
+            joystickX = 0
+        if abs(joystickY) < 0.05:
+            joystickY = 0
+        if abs(joystickRotation) < 0.05:
+            joystickRotation = 0
+
+        self.driveX = joystickX * 0.2
+        self.driveY = joystickY * 0.2
+        self.driveRotation = joystickRotation * 0.2  # 0.0625
 
         self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
 
-        
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
-        self.swerveModuleStates = self.kinematics.desaturateWheelSpeeds(self.unleashedModules)
+        self.swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
+            self.unleashedModules,
+            self.MAX_METERS_PER_SEC,
+        )
 
-        FLModuleState = self.optimizeTarget(self.swerveModuleStates[0], Rotation2d(hal.turnPosFL))
+        FLModuleState = self.optimizeTarget(
+            self.swerveModuleStates[0], Rotation2d(hal.turnPosFL)
+        )
         hal.driveFLSetpoint = FLModuleState.speed
-        hal.turnFLSetpoint = FLModuleState.angle
+        hal.turnFLSetpoint = FLModuleState.angle.radians()
 
-        FRModuleState = self.optimizeTarget(self.swerveModuleStates[1], Rotation2d(hal.turnPosFR))
+        FRModuleState = self.optimizeTarget(
+            self.swerveModuleStates[1], Rotation2d(hal.turnPosFR)
+        )
         hal.driveFRSetpoint = FRModuleState.speed
-        hal.turnFRSetpoint = FRModuleState.angle
+        hal.turnFRSetpoint = FRModuleState.angle.radians()
 
-        BLModuleState = self.optimizeTarget(self.swerveModuleStates[2], Rotation2d(hal.turnPosBL))
+        BLModuleState = self.optimizeTarget(
+            self.swerveModuleStates[2], Rotation2d(hal.turnPosBL)
+        )
         hal.driveBLSetpoint = BLModuleState.speed
-        hal.turnBLSetpoint = BLModuleState.angle
-        
-        BRModuleState = self.optimizeTarget(self.swerveModuleStates[3], Rotation2d(hal.turnPosBR))
-        hal.driveBRSetpoint = BRModuleState.speed
-        hal.turnBRSetpoint = BRModuleState.angle
+        hal.turnBLSetpoint = BLModuleState.angle.radians()
 
-            
+        BRModuleState = self.optimizeTarget(
+            self.swerveModuleStates[3], Rotation2d(hal.turnPosBR)
+        )
+        hal.driveBRSetpoint = BRModuleState.speed
+        hal.turnBRSetpoint = BRModuleState.angle.radians()
+
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 
-
-    def optimizeTarget(self, target: SwerveModuleState, moduleAngle: Rotation2d) -> SwerveModuleState:
+    def optimizeTarget(
+        self, target: SwerveModuleState, moduleAngle: Rotation2d
+    ) -> SwerveModuleState:
 
         error = angleWrap(target.angle.radians() - moduleAngle.radians())
 
