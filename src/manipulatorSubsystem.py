@@ -1,7 +1,8 @@
 
 from robotHAL import RobotHALBuffer
 from ntcore import NetworkTableInstance
-
+from timing import TimeData
+import wpilib
 class manipulatorSub:
 
     IDLE = 0
@@ -15,20 +16,20 @@ class manipulatorSub:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         
 
-    def update(self, buf:RobotHALBuffer, YButton:bool, XButton:bool):
+    def update(self, buf:RobotHALBuffer, YButton:bool, backSensor:bool):
         
         if self.state == self.IDLE:
             buf.rollerVoltage = 0
-            if XButton:
+            if backSensor:
                 self.state = self.INTAKE
 
         elif self.state == self.INTAKE:
             buf.rollerVoltage = 1
 
-            if not buf.motorSensorValue and not XButton:
+            if buf.motorSensorValue and not backSensor:
                 self.state = self.IDLE
 
-            if buf.motorSensorValue:
+            if not buf.motorSensorValue:
                 self.state = self.STORED
                 
                 
@@ -37,10 +38,13 @@ class manipulatorSub:
             buf.rollerVoltage = 0
             if YButton:
                 self.state = self.SHOOT
+
+            self.startTime = wpilib.getTime()
             
         elif self.state == self.SHOOT:
-            buf.rollerVoltage = 1
-            if not buf.motorSensorValue:
+            
+            buf.rollerVoltage = 1.75
+            if wpilib.getTime() - self.startTime > 2.6:
                 self.state = self.IDLE
 
         self.table.putNumber("state", self.state) 
