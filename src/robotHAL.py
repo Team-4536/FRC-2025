@@ -43,12 +43,33 @@ class RobotHAL:
         self.driveMotorFLPID = revPID(self.driveMotorBL)
         self.driveMotorFLPID = revPID(self.driveMotorBL)
 
+        self.maxVelocity = 2000
+        self.maxAcceleration = 4000
+        self.closedLoopError = 1
+
         self.driveMotorUniversalP = 0.00019
         self.table.putNumber("DriveMotorP", self.driveMotorUniversalP)
         self.driveMotorUniversalDesiredSpeed = 0
         self.table.putNumber("DriveMotorSetPoint", self.driveMotorUniversalDesiredSpeed)
         self.driveMotorUniversalFF = 0.00002
         self.table.putNumber("driveMotorFF", self.driveMotorUniversalFF)
+
+        self.driveMotorUniversalConfig = rev.SparkBaseConfig()
+        self.driveMotorUniversalConfig.closedLoop.pidf(
+            self.driveMotorUniversalP, 0, 0, 1/473, rev.ClosedLoopSlot.kSlot0
+            ).setFeedbackSensor(
+            rev.ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
+        ).outputRange(
+            -1.0, 1.0, rev.ClosedLoopSlot.kSlot0
+        )
+        
+        self.driveMotorUniversalConfig.closedLoop.maxMotion.maxVelocity(
+            self.maxVelocity, rev.ClosedLoopSlot.kSlot0
+        ).maxAcceleration(
+            self.maxAcceleration, rev.ClosedLoopSlot.kSlot0
+        ).allowedClosedLoopError(
+            self.closedLoopError
+        )
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:

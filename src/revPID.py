@@ -22,14 +22,15 @@ class revPID:
         self.driveMotorPosition = self.driveMotor.getPosition()
         self.driveMotorVoltage = self.driveMotor.getAppliedOutput()*self.driveMotor.getBusVoltage()
 
+        
+
         self.table.putNumber("DriveMotorFL Speed", self.driveMotorSpeedFeedback)
         self.table.putNumber("DriveMotorFL Position", self.driveMotorPosition)
         self.table.putNumber("DriveMotorFL percentVoltage", self.driveMotorPercentVoltage)
         self.table.putNumber("DriveMotorFL Voltage", self.driveMotorVoltage)
 
         self.driveMotorClosedLoopControl = self.driveMotor.getClosedLoopController()
-        self.driveMotorUniversalConfig = rev.SparkBaseConfig()
-        self.driveMotorUniversalConfig.closedLoop.pidf(robotHAL.driveMotorUniversalP, 0, 0, 1/473, rev.ClosedLoopSlot.kSlot0)
+        
 
         
 
