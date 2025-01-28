@@ -53,44 +53,6 @@ class RobotHAL:
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
-
-        
-
-        # self.driveMotorFL.setVoltage(buf.driveVolts*1.6)
-        # self.table.putNumber('hal drive volts', buf.driveVolts)  
-
-        # driveMotorFREncoder = self.driveMotorFR.getEncoder()
-        # driveMotorFRPercentVoltage = self.driveMotorFR.getAppliedOutput()
-        # driveMotorFRSpeedFeedback = driveMotorFREncoder.getVelocity()
-        # driveMotorFRPosition = driveMotorFREncoder.getPosition()
-        # driveMotorFRVoltage = self.driveMotorFR.getAppliedOutput()*self.driveMotorFR.getBusVoltage()
-        # self.table.putNumber("DriveMotorFL Speed", driveMotorFRSpeedFeedback)
-        # self.table.putNumber("DriveMotorFL Position", driveMotorFRPosition)
-        # self.table.putNumber("DriveMotorFL percentVoltage", driveMotorFRPercentVoltage)
-        # self.table.putNumber("DriveMotorFL Voltage", driveMotorFRVoltage)
-
-        # driveMotorBLEncoder = self.driveMotorBL.getEncoder()
-        # driveMotorBLPercentVoltage = self.driveMotorBL.getAppliedOutput()
-        # driveMotorBLSpeedFeedback = driveMotorBLEncoder.getVelocity()
-        # driveMotorBLPosition = driveMotorBLEncoder.getPosition()
-        # driveMotorBLVoltage = self.driveMotorBL.getAppliedOutput()*self.driveMotorBL.getBusVoltage()
-        # self.table.putNumber("DriveMotorFL Speed", driveMotorBLSpeedFeedback)
-        # self.table.putNumber("DriveMotorFL Position", driveMotorBLPosition)
-        # self.table.putNumber("DriveMotorFL percentVoltage", driveMotorBLPercentVoltage)
-        # self.table.putNumber("DriveMotorFL Voltage", driveMotorBLVoltage)
-
-        # driveMotorBREncoder = self.driveMotorBR.getEncoder()
-        # driveMotorBRPercentVoltage = self.driveMotorBR.getAppliedOutput()
-        # driveMotorBRSpeedFeedback = driveMotorBREncoder.getVelocity()
-        # driveMotorBRPosition = driveMotorBREncoder.getPosition()
-        # driveMotorBRVoltage = self.driveMotorBR.getAppliedOutput()*self.driveMotorBR.getBusVoltage()
-        # self.table.putNumber("DriveMotorFL Speed", driveMotorBRSpeedFeedback)
-        # self.table.putNumber("DriveMotorFL Position", driveMotorBRPosition)
-        # self.table.putNumber("DriveMotorFL percentVoltage", driveMotorBRPercentVoltage)
-        # self.table.putNumber("DriveMotorFL Voltage", driveMotorBRVoltage)
-        
-
-        #driveMotorUniversalConfig.closedLoop.P(self.driveMotorFLP)
         
     
 
