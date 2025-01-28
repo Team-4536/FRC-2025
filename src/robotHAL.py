@@ -1,7 +1,7 @@
 import copy
 import math
 import robot
-
+import revPID
 
 import navx
 import ntcore
@@ -43,6 +43,13 @@ class RobotHAL:
         self.driveMotorFLPID = revPID(self.driveMotorBL)
         self.driveMotorFLPID = revPID(self.driveMotorBL)
 
+        self.driveMotorUniversalP = 0.00019
+        self.table.putNumber("DriveMotorP", self.driveMotorUniversalP)
+        self.driveMotorUniversalDesiredSpeed = 0
+        self.table.putNumber("DriveMotorSetPoint", self.driveMotorUniversalDesiredSpeed)
+        self.driveMotorUniversalFF = 0.00002
+        self.table.putNumber("driveMotorFF", self.driveMotorUniversalFF)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -53,66 +60,18 @@ class RobotHAL:
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         self.prev = copy.deepcopy(buf)
+
+        if (
+             abs(self.table.getNumber("DriveMotorP", self.driveMotorUniversalP) - self.driveMotorUniversalP) < 1e-6
+             or abs(self.table.getNumber("driveMotorFF", self.driveMotorUniversalFF) - self.driveMotorUniversalFF) < 1e-6
+        ):
+            self.driveMotorUniversalP = self.table.getNumber("DriveMotorP", self.driveMotorUniversalP)
+            self.driveMotorUniversalDesiredSpeed = self.table.getNumber("DriveMotor UniversalDesiredSpeed", self.driveMotorUniversalDesiredSpeed)
+            
         
     
 
-class revPID:
-    def __init__(self, driveMotorIn)->None:
 
-        self.driveMotor = driveMotorIn
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-
-        self.driveMotorUniversalP = 0
-        self.table.putNumber("DriveMotorP", self.driveMotorFLP)
-        self.driveMotorUniversalDesiredSpeed = 0
-        self.table.putNumber("DriveMotorFLDesiredSpeed", self.driveMotorUniversalDesiredSpeed)
-        
-
-        self.driveMotorEncoder = self.driveMotor.getEncoder()
-        self.driveMotorPercentVoltage = self.driveMotor.getAppliedOutput()
-        self.driveMotorSpeedFeedback = self.driveMotor.getVelocity()
-        self.driveMotorPosition = self.driveMotor.getPosition()
-        self.driveMotorVoltage = self.driveMotor.getAppliedOutput()*self.driveMotor.getBusVoltage()
-
-        self.table.putNumber("DriveMotorFL Speed", self.driveMotorSpeedFeedback)
-        self.table.putNumber("DriveMotorFL Position", self.driveMotorPosition)
-        self.table.putNumber("DriveMotorFL percentVoltage", self.driveMotorPercentVoltage)
-        self.table.putNumber("DriveMotorFL Voltage", self.driveMotorVoltage)
-
-        self.driveMotorClosedLoopControl = self.driveMotor.getClosedLoopController()
-        self.driveMotorUniversalConfig = rev.SparkBaseConfig()
-        self.driveMotorUniversalConfig.closedLoop.pidf(self.driveMotorUniversalP, 0, 0, 1/473, rev.ClosedLoopSlot.kSlot0)
-
-        
-
-    def periodic(self)->None:
-        pass
-
-    def update(self)->None:
-
-        self.driveMotorUniversalP = self.table.getNumber("DriveMotorP", self.driveMotorUniversalP)
-        self.driveMotorUniversalDesiredSpeed = self.table.getNumber("DriveMotor UniversalDesiredSpeed", self.driveMotorUniversalDesiredSpeed)
-        
-        self.driveMotor.configure(
-            self.driveMotorUniversalConfig, 
-            rev.SparkBase.ResetMode.kNoResetSafeParameters, 
-            rev.SparkBase.PersistMode.kNoPersistParameters)
-        
-        
-        self.driveMotorClosedLoopControl.setReference(self.desiredSpeed, rev.SparkBase.ControlType.kVelocity)
-       
-        self.table.putNumber("desiredSpeedConfirm", self.desiredSpeed)
-
-        self.driveMotorEncoder = self.driveMotor.getEncoder()
-        self.driveMotorPercentVoltage = self.driveMotor.getAppliedOutput()
-        self.driveMotorSpeedFeedback = self.driveMotor.getVelocity()
-        self.driveMotorPosition = self.driveMotor.getPosition()
-        self.driveMotorVoltage = self.driveMotor.getAppliedOutput()*self.driveMotor.getBusVoltage()
-
-        self.table.putNumber("DriveMotorFL Speed", self.driveMotorSpeedFeedback)
-        self.table.putNumber("DriveMotorFL Position", self.driveMotorPosition)
-        self.table.putNumber("DriveMotorFL percentVoltage", self.driveMotorPercentVoltage)
-        self.table.putNumber("DriveMotorFL Voltage", self.driveMotorVoltage)
             
         
 
