@@ -51,7 +51,7 @@ class RobotHALBuffer:
         table.putNumber("Turn Pos BR", self.turnPosBR)
 
 
-debugMode = False
+debugMode = True
 
 
 class RobotHAL:
@@ -112,13 +112,15 @@ class RobotHAL:
 
         turnMotorPIDConfig = SparkMaxConfig()
         turnMotorPIDConfig.smartCurrentLimit(40)
-        turnMotorPIDConfig.closedLoop.pidf(0.3, 0.001, 0.01, 0).setFeedbackSensor(
+        turnMotorPIDConfig.closedLoop.pidf(0.15, 0.001, 0.01, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
         turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            10000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(20000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
+            5000, rev.ClosedLoopSlot.kSlot0
+        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
+        # turnMotorPIDConfig.inverted(True)
 
+        # FL 135
         self.FLSwerveModule = SwerveModuleController(
             "FL",
             self.driveMotorFL,
@@ -126,6 +128,7 @@ class RobotHAL:
             self.turnMotorFL,
             turnMotorPIDConfig,
         )
+        # FR 45
         self.FRSwerveModule = SwerveModuleController(
             "FR",
             self.driveMotorFR,
@@ -133,6 +136,7 @@ class RobotHAL:
             self.turnMotorFR,
             turnMotorPIDConfig,
         )
+        # BL -45
         self.BLSwerveModule = SwerveModuleController(
             "BL",
             self.driveMotorBL,
@@ -140,6 +144,7 @@ class RobotHAL:
             self.turnMotorBL,
             turnMotorPIDConfig,
         )
+        # BR -135
         self.BRSwerveModule = SwerveModuleController(
             "BR",
             self.driveMotorBR,
@@ -147,6 +152,11 @@ class RobotHAL:
             self.turnMotorBR,
             turnMotorPIDConfig,
         )
+
+        self.table.putNumber("BL Turn Offset", 0)
+        self.table.putNumber("BR Turn Offset", 0)
+        self.table.putNumber("FL Turn Offset", 0)
+        self.table.putNumber("FR Turn Offset", 0)
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -167,15 +177,28 @@ class RobotHAL:
         buf.turnPosBL = angleWrap(self.turnMotorBLEncoder.getPosition() * 2 * math.pi)
         buf.turnPosBR = angleWrap(self.turnMotorBREncoder.getPosition() * 2 * math.pi)
 
-        self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
-        self.FRSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
-        self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
-        self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
+        self.FLSwerveModule.update(
+            buf.driveFLSetpoint,
+            buf.turnFLSetpoint + self.table.getNumber("FL Turn Offset", 0),
+        )
+        self.FRSwerveModule.update(
+            buf.driveFRSetpoint,
+            buf.turnFRSetpoint + self.table.getNumber("FR Turn Offset", 0),
+        )
+        self.BLSwerveModule.update(
+            buf.driveBLSetpoint,
+            buf.turnBLSetpoint + self.table.getNumber("BL Turn Offset", 0),
+        )
+        self.BRSwerveModule.update(
+            buf.driveBRSetpoint,
+            buf.turnBRSetpoint + self.table.getNumber("BR Turn Offset", 0),
+        )
 
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters
-    GEARING = 6.12
+    DRIVE_GEARING = 6.12
+    TURN_GEARING = 21.4
 
     def __init__(
         self,
@@ -205,10 +228,10 @@ class SwerveModuleController:
         self.table.putNumber(self.name + " Turn Setpoint (rads)", turnSetpoint)
         # converts to rotations
         self.driveMotor.update(
-            driveSetpoint * self.GEARING * 60 / (2 * math.pi * self.WHEEL_RADIUS)
+            driveSetpoint * self.DRIVE_GEARING * 60 / (2 * math.pi * self.WHEEL_RADIUS)
         )
         # converts to Rotations
-        self.turnMotor.update(turnSetpoint * self.GEARING / (2 * math.pi))
+        self.turnMotor.update(-turnSetpoint * self.TURN_GEARING / (2 * math.pi))
 
 
 class RevMotorController:
@@ -229,18 +252,18 @@ class RevMotorController:
         self.controlType: SparkMax.ControlType = controlType
         self.setpoint = 0
 
+        self.motor.configure(
+            self.config,
+            SparkMax.ResetMode.kResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
+
         self.PIDValues = {
             "kP": self.motor.configAccessor.closedLoop.getP(),
             "kI": self.motor.configAccessor.closedLoop.getI(),
             "kD": self.motor.configAccessor.closedLoop.getD(),
             "kFF": self.motor.configAccessor.closedLoop.getFF(),
         }
-
-        self.motor.configure(
-            self.config,
-            SparkMax.ResetMode.kResetSafeParameters,
-            SparkMax.PersistMode.kNoPersistParameters,
-        )
 
         for key, value in zip(self.PIDValues.keys(), self.PIDValues.values()):
             self.table.putNumber(name + key, value)
@@ -284,9 +307,9 @@ class RevMotorController:
         measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
         self.table.putNumber(self.name + " Voltage", measuredVoltage)
         self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
-        self.table.putNumber(self.name + " DriveMotorFL Position", measuredPosition)
+        self.table.putNumber(self.name + " Drive Position", measuredPosition)
         self.table.putNumber(
-            self.name + " DriveMotorFL percent voltage", measuredPercentVoltage
+            self.name + " Drive percent voltage", measuredPercentVoltage
         )
         self.setpoint = setpoint
         self.table.putNumber(self.name + " setpoint", self.setpoint)

@@ -19,7 +19,7 @@ class SwerveDrive:
     MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
 
     def __init__(self) -> None:
-
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
 
         self.modulePositions: list[Translation2d] = [
@@ -29,6 +29,10 @@ class SwerveDrive:
             Translation2d(-oneftInMeters, -oneftInMeters),
         ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+
+        self.table.putNumber("SD Joystick X offset", 0)
+        self.table.putNumber("SD Joystick Y offset", 0)
+        self.table.putNumber("SD Joystick Omega offset", 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
@@ -40,6 +44,10 @@ class SwerveDrive:
         joystickY: float,
         joystickRotation: float,
     ):
+        self.table.putNumber("mech Ctrl X", joystickX)
+        self.table.putNumber("mech Ctrl Y", joystickY)
+        self.table.putNumber("mech Ctrl Rotation", joystickRotation)
+
         if abs(joystickX) < 0.05:
             joystickX = 0
         if abs(joystickY) < 0.05:
@@ -47,11 +55,21 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 0.2
-        self.driveY = joystickY * 0.2
-        self.driveRotation = joystickRotation * 0.2  # 0.0625
+        self.driveX = joystickX * 1.0 + self.table.getNumber(
+            "SD Joystick X offset", 0
+        )  # * 0.2
+        self.driveY = joystickY * 1.0 + self.table.getNumber(
+            "SD Joystick Y offset", 0
+        )  # * 0.2
+        self.driveRotation = joystickRotation * 0.2 + self.table.getNumber(
+            "SD Joystick Omega offset", 0
+        )  # 0.0625
 
         self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
+
+        self.table.putNumber("ChassisSpeeds vx", self.chassisSpeeds.vx)
+        self.table.putNumber("ChassisSpeeds vy", self.chassisSpeeds.vy)
+        self.table.putNumber("ChassisSpeeds omega", self.chassisSpeeds.omega)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         self.swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
@@ -59,11 +77,18 @@ class SwerveDrive:
             self.MAX_METERS_PER_SEC,
         )
 
+        self.table.putNumber(
+            "Original Turn Setpoint", self.swerveModuleStates[0].angle.radians()
+        )
+
         FLModuleState = self.optimizeTarget(
             self.swerveModuleStates[0], Rotation2d(hal.turnPosFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
+        self.table.putNumber(
+            "SD Turn Setpoint After Opimize", FLModuleState.angle.radians()
+        )
 
         FRModuleState = self.optimizeTarget(
             self.swerveModuleStates[1], Rotation2d(hal.turnPosFR)
@@ -86,22 +111,27 @@ class SwerveDrive:
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 
+    # def optimizeTarget(
+    #     self, target: SwerveModuleState, moduleAngle: Rotation2d
+    # ) -> SwerveModuleState:
+
+    #     error = angleWrap(target.angle.radians() - moduleAngle.radians())
+
+    #     outputSpeed = target.speed
+    #     outputAngle = target.angle.radians()
+
+    #     # optimize
+    #     if abs(error) > math.pi / 2:
+    #         outputAngle = outputAngle + math.pi
+    #         outputSpeed = -outputSpeed
+
+    #     # return
+    #     outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
+    #     output = SwerveModuleState(outputSpeed, outputAngleRot2d)
+
+    #     return output
+
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
     ) -> SwerveModuleState:
-
-        error = angleWrap(target.angle.radians() - moduleAngle.radians())
-
-        outputSpeed = target.speed
-        outputAngle = target.angle.radians()
-
-        # optimize
-        if abs(error) > math.pi / 2:
-            outputAngle = outputAngle + math.pi
-            outputSpeed = -outputSpeed
-
-        # return
-        outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
-        output = SwerveModuleState(outputSpeed, outputAngleRot2d)
-
-        return output
+        return target

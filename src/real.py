@@ -16,7 +16,7 @@ def invLerp(a, b, pt):
 def angleWrap(a: float) -> float:
     while a > math.pi:
         a -= math.pi * 2
-    while a <= -math.pi:
+    while a < -math.pi:
         a += math.pi * 2
     return a
 
