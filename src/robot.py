@@ -28,7 +28,7 @@ class Robot(wpilib.TimedRobot):
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
-        self.photonCamera = photonVision("Camera1")
+        self.photonCamera = photonVision("Camera1", 0, 0, 0, 0)
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -37,7 +37,7 @@ class Robot(wpilib.TimedRobot):
 
         self.hal.stopMotors()
         self.photonCamera.update()
-        #self.photonCamera.odometryUpdate()
+        self.photonCamera.odometryUpdate()
 
     def teleopInit(self) -> None:
         pass
