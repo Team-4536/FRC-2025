@@ -62,7 +62,7 @@ class RobotHAL:
         ).outputRange(
             -1.0, 1.0, rev.ClosedLoopSlot.kSlot0
         )
-        
+
         self.driveMotorUniversalConfig.closedLoop.maxMotion.maxVelocity(
             self.maxVelocity, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(
