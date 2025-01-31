@@ -7,6 +7,7 @@ from photonlibpy.photonPoseEstimator import PhotonPoseEstimator, PoseStrategy
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from ntcore import NetworkTableInstance
 import wpimath.geometry
+import numpy
 
 photonTable = NetworkTableInstance.getDefault()
 
@@ -59,6 +60,31 @@ aprilTagY = [
     186.83,
     158.50,
     130.17,
+]
+aprilTagDegrees = [
+    -180,
+    126,
+    234,
+    270,
+    0,
+    0,
+    300,
+    0,
+    60,
+    120,
+    180,
+    240,
+    54,
+    306,
+    180,
+    180,
+    90,
+    240,
+    180,
+    120,
+    60,
+    0,
+    300,
 ]
 
 
@@ -124,6 +150,10 @@ class photonVision:
             self.pX = self.transform3d.Y()
             self.pY = self.transform3d.X()
             # self.photonOdometry =
+            self.a = self.transform3d.rotation()
+            self.angle = self.a.Z()
+            self.angle = self.angle *(180/numpy.pi)
+            print("angleee", self.angle)
         else:
             self.ambiguity = 1
             self.pitch = 0
@@ -135,10 +165,11 @@ class photonVision:
             self.fiducialId = 0
             self.pX = False
             self.pY = False
-        # self.photonTable.putNumber("Pitch", self.pitch)
-        # self.photonTable.putNumber("Yaw", self.yaw)
-        # self.photonTable.putNumber("Area", self.area)
-        # self.photonTable.putNumber("Skew", self.skew)
+        #     self.photonTable.putNumber("Pitch", self.pitch)
+        #     self.photonTable.putNumber("Yaw", self.yaw)
+        # # self.photonTable.putNumber("Area", self.area)
+            self.photonTable.putNumber("angle", self.angle)
+            
 
         #self.photonTable.putNumber("Ambiguity", self.ambiguity)
         # self.photonTable.putNumber("FiducialId", self.fiducialId)
