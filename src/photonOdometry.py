@@ -120,13 +120,15 @@ class photonVision:
         self.pH = 0
         self.camX = 0
         self.camY = 0
-        self.angle = camPitch
+        self.camAngle = camPitch
         self.crX = intCamX
         self.crY = intCamY
-        self.camAngle = False
+        self.angle = False
+        self.ca = False
         self.photonTable = NetworkTableInstance.getDefault().getTable("photon")
-        self.rX = 0
-        self.rY = 0
+        self.robotX = 0
+        self.robotY = 0
+        self.robotAngle = False
 
     def update(self):
 
@@ -139,11 +141,11 @@ class photonVision:
             self.fiducialId = self.target[0].getFiducialId()
             # print("this is an idididiidididiididid: ", self.fiducialId)
 
-            self.pitch = self.target[0].getPitch()
-            self.yaw = self.target[0].getYaw()
-            self.area = self.target[0].getArea()
-            self.skew = self.target[0].getSkew()
-            self.pose = self.target[0].getBestCameraToTarget()
+            # self.pitch = self.target[0].getPitch()
+            # self.yaw = self.target[0].getYaw()
+            #self.area = self.target[0].getArea()
+            #self.skew = self.target[0].getSkew()
+            #self.pose = self.target[0].getBestCameraToTarget()
             # self.corners = self.target.getDetectedCorners()
             self.ambiguity = self.target[0].getPoseAmbiguity()
             self.transform3d = self.target[0].getBestCameraToTarget()
@@ -165,15 +167,7 @@ class photonVision:
             self.fiducialId = 0
             self.pX = False
             self.pY = False
-        #     self.photonTable.putNumber("Pitch", self.pitch)
-        #     self.photonTable.putNumber("Yaw", self.yaw)
-        # # self.photonTable.putNumber("Area", self.area)
-            self.photonTable.putNumber("angle", self.angle)
-            
-
-        #self.photonTable.putNumber("Ambiguity", self.ambiguity)
-        # self.photonTable.putNumber("FiducialId", self.fiducialId)
-        # self.photonTable.putBoolean("Has Targets", self.hasTargets)
+   
 
     def odometryUpdate(self):
 
@@ -181,17 +175,24 @@ class photonVision:
 
             self.camX = ((aprilTagX[self.fiducialId])/39.37) + self.pX
             self.camY = ((aprilTagY[self.fiducialId])/39.37) - self.pY
+            self.ca = aprilTagDegrees[self.fiducialId] + (self.angle - 180)
+            self.ca = self.ca - 180
+            if self.ca < -360:
+                self.ca + 720
+            if self.ca < 0:
+                self.ca + 360
             self.photonTable.putNumber("x", self.camX)
             self.photonTable.putNumber("y", self.camY)
             self.photonTable.putNumber("Ambiguity", self.ambiguity)
             print("x = ", self.camX)
             print("y = ", self.camY)
-            # print("pX = ", self.pX)
-            # print("pY = ", self.pY)
+            print("angle", self.ca)
+           
             print("est X =", self.camEstPose.estimatedPose.X)
-            print("est Y =", self.camEstPose.estimatedPose.Y)
-            self.rX = self.camX - self.crX
-            self.rY = self.camY - self.crY
+            
+            self.robotX = self.camX - self.crX
+            self.robotY = self.camY - self.crY
+            self.robotAngle = self.ca + self.camAngle
 
 
             
