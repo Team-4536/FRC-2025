@@ -72,38 +72,36 @@ class SwerveDrive:
         self.table.putNumber("ChassisSpeeds omega", self.chassisSpeeds.omega)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
-        self.swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
+        swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
             self.unleashedModules,
             self.MAX_METERS_PER_SEC,
         )
 
         self.table.putNumber(
-            "Original Turn Setpoint", self.swerveModuleStates[0].angle.radians()
+            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
         FLModuleState = self.optimizeTarget(
-            self.swerveModuleStates[0], Rotation2d(hal.turnPosFL)
+            swerveModuleStates[0], Rotation2d(hal.turnPosFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
-        self.table.putNumber(
-            "SD Turn Setpoint After Opimize", FLModuleState.angle.radians()
-        )
+        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
-            self.swerveModuleStates[1], Rotation2d(hal.turnPosFR)
+            swerveModuleStates[1], Rotation2d(hal.turnPosFR)
         )
         hal.driveFRSetpoint = FRModuleState.speed
         hal.turnFRSetpoint = FRModuleState.angle.radians()
 
         BLModuleState = self.optimizeTarget(
-            self.swerveModuleStates[2], Rotation2d(hal.turnPosBL)
+            swerveModuleStates[2], Rotation2d(hal.turnPosBL)
         )
         hal.driveBLSetpoint = BLModuleState.speed
         hal.turnBLSetpoint = BLModuleState.angle.radians()
 
         BRModuleState = self.optimizeTarget(
-            self.swerveModuleStates[3], Rotation2d(hal.turnPosBR)
+            swerveModuleStates[3], Rotation2d(hal.turnPosBR)
         )
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
@@ -111,27 +109,27 @@ class SwerveDrive:
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 
-    # def optimizeTarget(
-    #     self, target: SwerveModuleState, moduleAngle: Rotation2d
-    # ) -> SwerveModuleState:
-
-    #     error = angleWrap(target.angle.radians() - moduleAngle.radians())
-
-    #     outputSpeed = target.speed
-    #     outputAngle = target.angle.radians()
-
-    #     # optimize
-    #     if abs(error) > math.pi / 2:
-    #         outputAngle = outputAngle + math.pi
-    #         outputSpeed = -outputSpeed
-
-    #     # return
-    #     outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
-    #     output = SwerveModuleState(outputSpeed, outputAngleRot2d)
-
-    #     return output
-
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
     ) -> SwerveModuleState:
-        return target
+
+        error = angleWrap(target.angle.radians() - moduleAngle.radians())
+
+        outputSpeed = target.speed
+        outputAngle = target.angle.radians()
+
+        # optimize
+        if abs(error) > math.pi / 2:
+            outputAngle = outputAngle + math.pi
+            outputSpeed = -outputSpeed
+
+        # return
+        outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
+        output = SwerveModuleState(outputSpeed, outputAngleRot2d)
+
+        return output
+
+    # def optimizeTarget(
+    #     self, target: SwerveModuleState, moduleAngle: Rotation2d
+    # ) -> SwerveModuleState:
+    #     return target

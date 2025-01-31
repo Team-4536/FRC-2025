@@ -112,13 +112,15 @@ class RobotHAL:
 
         turnMotorPIDConfig = SparkMaxConfig()
         turnMotorPIDConfig.smartCurrentLimit(40)
-        turnMotorPIDConfig.closedLoop.pidf(0.15, 0.001, 0.01, 0).setFeedbackSensor(
+        turnMotorPIDConfig.closedLoop.pidf(0.25, 0, 0.01, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
         turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             5000, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
-        # turnMotorPIDConfig.inverted(True)
+        turnMotorPIDConfig.closedLoop.positionWrappingEnabled(
+            True
+        ).positionWrappingInputRange(-math.pi, math.pi)
 
         # FL 135
         self.FLSwerveModule = SwerveModuleController(
@@ -172,10 +174,19 @@ class RobotHAL:
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
 
-        buf.turnPosFL = angleWrap(self.turnMotorFLEncoder.getPosition() * 2 * math.pi)
-        buf.turnPosFR = angleWrap(self.turnMotorFREncoder.getPosition() * 2 * math.pi)
-        buf.turnPosBL = angleWrap(self.turnMotorBLEncoder.getPosition() * 2 * math.pi)
-        buf.turnPosBR = angleWrap(self.turnMotorBREncoder.getPosition() * 2 * math.pi)
+        TURN_GEARING = 21.4
+        buf.turnPosFL = angleWrap(
+            self.turnMotorFLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
+        )
+        buf.turnPosFR = angleWrap(
+            self.turnMotorFREncoder.getPosition() * 2 * math.pi / TURN_GEARING
+        )
+        buf.turnPosBL = angleWrap(
+            self.turnMotorBLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
+        )
+        buf.turnPosBR = angleWrap(
+            self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
+        )
 
         self.FLSwerveModule.update(
             buf.driveFLSetpoint,
