@@ -109,27 +109,27 @@ class SwerveDrive:
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 
-    def optimizeTarget(
-        self, target: SwerveModuleState, moduleAngle: Rotation2d
-    ) -> SwerveModuleState:
-
-        error = angleWrap(target.angle.radians() - moduleAngle.radians())
-
-        outputSpeed = target.speed
-        outputAngle = target.angle.radians()
-
-        # optimize
-        if abs(error) > math.pi / 2:
-            outputAngle = outputAngle + math.pi
-            outputSpeed = -outputSpeed
-
-        # return
-        outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
-        output = SwerveModuleState(outputSpeed, outputAngleRot2d)
-
-        return output
-
     # def optimizeTarget(
     #     self, target: SwerveModuleState, moduleAngle: Rotation2d
     # ) -> SwerveModuleState:
-    #     return target
+
+    #     error = angleWrap(target.angle.radians() - moduleAngle.radians())
+
+    #     outputSpeed = target.speed
+    #     outputAngle = target.angle.radians()
+
+    #     # optimize
+    #     if abs(error) > math.pi / 2:
+    #         outputAngle = outputAngle + math.pi
+    #         outputSpeed = -outputSpeed
+
+    #     # return
+    #     outputAngleRot2d = Rotation2d(angleWrap(outputAngle))
+    #     output = SwerveModuleState(outputSpeed, outputAngleRot2d)
+
+    #     return output
+
+    def optimizeTarget(
+        self, target: SwerveModuleState, moduleAngle: Rotation2d
+    ) -> SwerveModuleState:
+        return target
