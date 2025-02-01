@@ -8,7 +8,7 @@ from simHAL import RobotSimHAL
 from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
-
+from elevatorSubsystem import ElevatorSubsystem
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -21,6 +21,8 @@ class Robot(wpilib.TimedRobot):
             self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
+
+        self.elevatorSub: ElevatorSubsystem = ElevatorSubsystem()
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
@@ -40,6 +42,8 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+
+        self.elevatorSub.update(self.mechCtrlr.getPOV(), self.hal)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
