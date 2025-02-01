@@ -37,7 +37,7 @@ class Robot(wpilib.TimedRobot):
 
         self.hal.stopMotors()
         self.photonCamera.update()
-        self.photonCamera.odometryUpdate()
+        #self.photonCamera.odometryUpdate()
 
     def teleopInit(self) -> None:
         pass
