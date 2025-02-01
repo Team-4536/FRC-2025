@@ -47,7 +47,7 @@ class RobotHAL:
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
         elevatorMotorPIDConfig = SparkMaxConfig()
         elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
-        elevatorMotorPIDConfig.closedLoop.pidf(0, 0, 0, 0).setFeedbackSensor(
+        elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1, 1)
         elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(

@@ -46,7 +46,9 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
         self.elevatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getBButton()
+            self.hal,
+            self.mechCtrlr.getRightTriggerAxis(),
+            self.mechCtrlr.getLeftTriggerAxis(),
         )
 
         # Keep the lines below at the bottom of teleopPeriodic
