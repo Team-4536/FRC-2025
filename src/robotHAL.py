@@ -51,7 +51,7 @@ class RobotHALBuffer:
         table.putNumber("Turn Pos BR", self.turnPosBR)
 
 
-debugMode = True
+debugMode = False
 
 
 class RobotHAL:
@@ -105,6 +105,8 @@ class RobotHAL:
         driveMotorPIDConfig.closedLoop.pidf(0.00019, 0, 0, 0.00002).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
+
+        driveMotorPIDConfig.disableFollowerMode()
 
         driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             2000, rev.ClosedLoopSlot.kSlot0
