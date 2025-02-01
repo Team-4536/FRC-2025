@@ -15,6 +15,7 @@ from rev import (
     ClosedLoopSlot,
     SparkClosedLoopController,
     ClosedLoopConfig,
+    LimitSwitchConfig,
 )
 from ntcore import NetworkTableInstance
 
@@ -45,13 +46,22 @@ class RobotHAL:
 
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
         elevatorMotorPIDConfig = SparkMaxConfig()
-        elevatorMotorPIDConfig.smartCurrentLimit(20)
+        elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1, 1)
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(100).maxAcceleration(
-            200
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
+            10000
         ).allowedClosedLoopError(1)
+
+        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
+            LimitSwitchConfig.Type.kNormallyOpen
+        )
+        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
+            LimitSwitchConfig.Type.kNormallyClosed
+        )
         self.elevatorController = RevMotorController(
             "Elevator",
             self.elevatorMotor,
@@ -144,10 +154,12 @@ class RevMotorController:
         measuredSpeed = self.encoder.getVelocity()
         measuredPosition = self.encoder.getPosition()
         measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
+        measuredAmps = self.motor.getOutputCurrent()
         self.table.putNumber(self.name + " Voltage", measuredVoltage)
         self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
         self.table.putNumber(self.name + " Position (rot)", measuredPosition)
         self.table.putNumber(self.name + " percent voltage", measuredPercentVoltage)
+        self.table.putNumber(self.name + " current", measuredAmps)
         self.setpoint = setpoint
         self.table.putNumber(self.name + " setpoint", self.setpoint)
 
