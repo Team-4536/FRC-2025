@@ -18,8 +18,8 @@ class ElevatorSubsystem:
             down = 0
 
         self.setpoint += 0.5 * up + (-0.5 * down)
-        if self.setpoint < 1:
-            self.setpoint = 1
+        if self.setpoint < 0:
+            self.setpoint = 0
         if self.setpoint > 50:
             self.setpoint = 50
         hal.elevatorSetpoint = self.setpoint + self.table.getNumber(

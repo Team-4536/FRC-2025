@@ -41,6 +41,8 @@ class RobotHALBuffer:
         self.turnBLSetpoint: radians = 0
         self.turnBRSetpoint: radians = 0
 
+        self.manipulatorVolts = 0
+
     def resetEncoders(self) -> None:
         pass
 
@@ -48,6 +50,7 @@ class RobotHALBuffer:
         self.driveVolts = 0
         self.driveDesired = 0
         self.turnDesired = 0
+        self.manipulatorVolts = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putNumber("Elevator Rotations", self.elevatorPos)
@@ -74,7 +77,7 @@ class RobotHAL:
         ).outputRange(-1, 1)
         elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
             10000
-        ).allowedClosedLoopError(1)
+        ).allowedClosedLoopError(0.05)
 
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
@@ -194,6 +197,8 @@ class RobotHAL:
         self.table.putNumber("FL Turn Offset", 0)
         self.table.putNumber("FR Turn Offset", 0)
 
+        self.manipulatorMotor = SparkMax(9, SparkMax.MotorType.kBrushless)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -241,6 +246,8 @@ class RobotHAL:
             buf.turnBRSetpoint + self.table.getNumber("BR Turn Offset", 0),
         )
 
+        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters
@@ -275,10 +282,8 @@ class SwerveModuleController:
         self.table.putNumber(self.name + " Turn Setpoint (rads)", turnSetpoint)
         # converts to rotations
         self.driveMotor.update(
-            driveSetpoint
-            * self.DRIVE_GEARING
-            * 60
-            / (2 * math.pi * self.WHEEL_RADIUS, 0)
+            driveSetpoint * self.DRIVE_GEARING * 60 / (2 * math.pi * self.WHEEL_RADIUS),
+            0,
         )
         # converts to Rotations
         self.turnMotor.update(-turnSetpoint * self.TURN_GEARING / (2 * math.pi), 0)
@@ -347,7 +352,7 @@ class RevMotorController:
 
                 self.motor.configure(
                     self.config,
-                    SparkMax.ResetMode.kNoResetSafeParameters,
+                    SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kNoPersistParameters,
                 )
 

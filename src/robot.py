@@ -62,6 +62,13 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getRightX(),
         )
 
+        if self.mechCtrlr.getAButton():
+            self.hal.manipulatorVolts = 4
+        elif self.mechCtrlr.getBButton():
+            self.hal.manipulatorVolts = -4
+        else:
+            self.hal.manipulatorVolts = 0
+
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
