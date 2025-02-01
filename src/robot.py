@@ -1,5 +1,5 @@
 import math
-
+import rev
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -9,10 +9,16 @@ from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 from elevator import ElevatorSubsystem
+from robotHAL import RobotHAL
+from swerveDrive import SwerveDrive
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
+
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
+
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
@@ -20,7 +26,6 @@ class Robot(wpilib.TimedRobot):
             self.hardware = RobotSimHAL()
         else:
             self.hardware = robotHAL.RobotHAL()
-        # self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -31,12 +36,12 @@ class Robot(wpilib.TimedRobot):
         self.buttonPanel = wpilib.Joystick(4)
 
         self.elevatorSubsystem = ElevatorSubsystem()
+        self.swerveDrive: SwerveDrive = SwerveDrive()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-
+        self.table.putNumber("leftJoyY", self.hal.driveVolts)
         self.hal.publish(self.table)
-
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
@@ -49,6 +54,12 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
+        )
+        self.swerveDrive.update(
+            self.hal,
+            self.driveCtrlr.getLeftX(),
+            self.driveCtrlr.getLeftY(),
+            self.driveCtrlr.getRightX(),
         )
 
         # Keep the lines below at the bottom of teleopPeriodic
