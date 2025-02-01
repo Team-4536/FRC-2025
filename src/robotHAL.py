@@ -36,6 +36,8 @@ class RobotHALBuffer:
         self.turnBLSetpoint: radians = 0
         self.turnBRSetpoint: radians = 0
 
+        self.unboundAngle = 0
+
     def resetEncoders(self) -> None:
         pass
 
@@ -315,3 +317,5 @@ class RevMotorController:
         self.table.putNumber(self.name + " setpoint", self.setpoint)
 
         self.controller.setReference(setpoint, self.controlType, ClosedLoopSlot.kSlot0)
+
+ 

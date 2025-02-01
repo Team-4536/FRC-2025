@@ -2,6 +2,9 @@ import math
 import robotHAL
 import robot
 
+
+import numpy as np
+import matplotlib.pyplot as plt
 from ntcore import NetworkTableInstance
 from real import angleWrap
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
@@ -131,7 +134,4 @@ class SwerveDrive:
 
     #     return output
 
-    def optimizeTarget(
-        self, target: SwerveModuleState, moduleAngle: Rotation2d
-    ) -> SwerveModuleState:
-        return target
+    
