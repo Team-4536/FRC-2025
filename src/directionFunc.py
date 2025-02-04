@@ -21,7 +21,7 @@ def func(motorPos, targetPos):
     
     print("motor pos unwrapped: " + str(unWrappedPos))
     
-    distance = targetPos-unWrappedPos
+    distance = targetPos-unWrappedPos/gearRatio
     
     print("distance between motor pos and target pos: " + str(distance))
     
@@ -42,7 +42,7 @@ def func(motorPos, targetPos):
 #For testing:
 
 #Test variables
-# listB = [99.25*pi, -99.25*pi, 0.25*pi, -0.25*pi, 0.75*pi, -0.75*25]
+# listB = [99.25*pi, -99.25*pi, 0.25*pi, -0.25*pi, 0.75*pi, -0.75*pi]
 # listA = [-0.5*pi, 0.5*pi, -0.75*pi, 0.75*pi]
 
 # for i in range(len(listB)*len(listA)):
