@@ -16,8 +16,6 @@ def func(motorPos, targetPos):
     
     if unWrappedPos> pi:
         unWrappedPos -= 2*pi
-    elif unWrappedPos<-pi:
-        unWrappedPos += 2*pi
     
     print("motor pos unwrapped: " + str(unWrappedPos))
     
