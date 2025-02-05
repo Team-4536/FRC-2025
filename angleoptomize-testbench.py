@@ -3,45 +3,45 @@ import numpy as np
 
 def arcsinList(desY, unboundrotations)->list:
         
-        unboundAngle = (unboundrotations * (2*math.pi))/25
+        unboundAngle = (unboundrotations )/25
 
-        referenceValue = math.asin(desY)
+        referenceValue = math.asin((desY))/25
         wrongList: list[float] = [referenceValue]
 
         if referenceValue > 0:
             
-            referenceValue2 = ((((math.pi)/25)/2)+(((math.pi/25)/2) - referenceValue))
+            referenceValue2 = ((0.5) - referenceValue)
             wrongList.append(referenceValue2)
-            wrongList.append((referenceValue+((2*math.pi)/25)))
-            wrongList.append((referenceValue2+((2*math.pi)/25)))
+            wrongList.append((referenceValue+((1)/25)))
+            wrongList.append((referenceValue2+((1)/25)))
 
-            wrongList.append((referenceValue - ((2*math.pi)/25)))
-            wrongList.append((referenceValue2 - ((2*math.pi)/25)))
-            wrongList.append((referenceValue - ((4*math.pi)/25)))
-            wrongList.append((referenceValue2 - ((4*math.pi)/25)))
+            wrongList.append((referenceValue - ((1)/25)))
+            wrongList.append((referenceValue2 - ((1)/25)))
+            wrongList.append(referenceValue - (2/25))
+            wrongList.append((referenceValue2 - ((2)/25)))
 
         elif referenceValue < 0:
 
             referenceValue2 = (-((math.pi/25)/2)-(((math.pi/25)/2) - referenceValue))
             wrongList.append(referenceValue2)
-            wrongList.append((referenceValue-((2*math.pi)/25)))
-            wrongList.append((referenceValue2-((2*math.pi)/25)))
+            wrongList.append((referenceValue-((1)/25)))
+            wrongList.append((referenceValue2-((1)/25)))
 
-            wrongList.append((referenceValue + ((2*math.pi)/25)))
-            wrongList.append((referenceValue2 + ((2*math.pi)/25)))
-            wrongList.append((referenceValue + ((4*math.pi)/25)))
-            wrongList.append((referenceValue2 + ((4*math.pi)/25)))
+            wrongList.append((referenceValue + ((1)/25)))
+            wrongList.append((referenceValue2 + ((1)/25)))
+            wrongList.append((referenceValue + ((2)/25)))
+            wrongList.append((referenceValue2 + ((2)/25)))
         else:
 
-            wrongList.append(((2*math.pi)/25))
-            wrongList.append(((-(2*math.pi))/25))
-            wrongList.append(((4*math.pi)/25))
-            wrongList.append(((-(4*math.pi))/25))
+            wrongList.append(((1)/25))
+            wrongList.append(((-(1))/25))
+            wrongList.append(((2)/25))
+            wrongList.append(((-(2))/25))
 
         print(wrongList)
 
-        subtraction = unboundAngle % ((2*math.pi)/25)
-        period = (unboundAngle - subtraction)/((2*math.pi)/25)
+        subtraction = unboundAngle % (1/25)
+        period = (unboundAngle - subtraction)/(1/25)
 
         #wrongList[i]  + (period*((2*math.pi)/25)) for i in wrongList
         goalList: list[float] = []
@@ -49,13 +49,13 @@ def arcsinList(desY, unboundrotations)->list:
 
         for i in wrongList:
 
-            goalList.append((i) + (period*((2*math.pi)/25)))
+            goalList.append((i) + (period*((1)/25)))
         
         print(goalList)
         x = 0
         for i in goalList:
             
-            if not (unboundAngle - (math.pi/25)) < (i) < (unboundAngle + (math.pi/25)):
+            if not (unboundAngle - (0.5/25)) < (i) < (unboundAngle + (0.5/25)):
                 del goalList[x]
             x += 1
 
@@ -67,9 +67,9 @@ def optimizeTarget(
     desiredRelativeRotations, unboundRotations
 ):
     # -> SwerveModuleState
-    unboundAngle = unboundRotations*(2*math.pi)
+    unboundAngle = unboundRotations
     
-    desiredRelativeRadians = desiredRelativeRotations*((2*math.pi))
+    desiredRelativeRadians = desiredRelativeRotations
     desY = math.sin(25*(desiredRelativeRadians))
     goal: list[float] = arcsinList(desY, unboundAngle)
 
@@ -79,7 +79,7 @@ def optimizeTarget(
         print(i)   
 
         if i > 2*math.pi:
-            remainderRadians = i % ((2*math.pi)/25)
+            remainderRadians = i % ((1)/25)
             if (desiredRelativeRadians - 0.01) < remainderRadians < (desiredRelativeRadians + 0.01):
                 target = (str(i/(2*math.pi))+'Hu')
 
@@ -106,5 +106,5 @@ def optimizeTarget(
 
 
 
-print(optimizeTarget(0.3, -10))
+print(optimizeTarget(0.3, 100))
 
