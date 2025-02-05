@@ -22,11 +22,17 @@ class SwerveDrive:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
 
+        # self.modulePositions: list[Translation2d] = [
+        #     Translation2d(oneftInMeters, oneftInMeters),
+        #     Translation2d(oneftInMeters, -oneftInMeters),
+        #     Translation2d(-oneftInMeters, oneftInMeters),
+        #     Translation2d(-oneftInMeters, -oneftInMeters),
+        # ]
         self.modulePositions: list[Translation2d] = [
-            Translation2d(oneftInMeters, oneftInMeters),
-            Translation2d(oneftInMeters, -oneftInMeters),
             Translation2d(-oneftInMeters, oneftInMeters),
+            Translation2d(oneftInMeters, oneftInMeters),
             Translation2d(-oneftInMeters, -oneftInMeters),
+            Translation2d(oneftInMeters, -oneftInMeters),
         ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
 
@@ -55,13 +61,13 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 1.5 + self.table.getNumber(
+        self.driveX = joystickX * 0.5 + self.table.getNumber(
             "SD Joystick X offset", 0
         )  # * 0.2
-        self.driveY = joystickY * 1.5 + self.table.getNumber(
+        self.driveY = joystickY * 0.5 + self.table.getNumber(
             "SD Joystick Y offset", 0
         )  # * 0.2
-        self.driveRotation = joystickRotation * 2.5 + self.table.getNumber(
+        self.driveRotation = joystickRotation * -2.5 + self.table.getNumber(
             "SD Joystick Omega offset", 0
         )  # 0.0625
 
