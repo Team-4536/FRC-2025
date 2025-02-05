@@ -87,12 +87,12 @@ class RobotHAL:
         elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
             LimitSwitchConfig.Type.kNormallyClosed
         )
-        self.elevatorController = RevMotorController(
-            "Elevator",
-            self.elevatorMotor,
-            elevatorMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
-        )
+        # self.elevatorController = RevMotorController(
+        #     "Elevator",
+        #     self.elevatorMotor,
+        #     elevatorMotorPIDConfig,
+        #     SparkMax.ControlType.kMAXMotionPositionControl,
+        # )
 
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
@@ -112,6 +112,31 @@ class RobotHAL:
         self.driveMotorBLEncoder = self.driveMotorBL.getEncoder()
         self.driveMotorBREncoder = self.driveMotorBR.getEncoder()
 
+        # turnMotorConfig = SparkMaxConfig()
+        # # turnMotorConfig.encoder.inverted(True)
+        # turnMotorConfig.inverted(True)
+
+        # self.turnMotorBL.configure(
+        #     turnMotorConfig,
+        #     SparkMax.ResetMode.kResetSafeParameters,
+        #     SparkMax.PersistMode.kNoPersistParameters,
+        # )
+        # self.turnMotorBR.configure(
+        #     turnMotorConfig,
+        #     SparkMax.ResetMode.kResetSafeParameters,
+        #     SparkMax.PersistMode.kNoPersistParameters,
+        # )
+        # self.turnMotorFL.configure(
+        #     turnMotorConfig,
+        #     SparkMax.ResetMode.kResetSafeParameters,
+        #     SparkMax.PersistMode.kNoPersistParameters,
+        # )
+        # self.turnMotorFR.configure(
+        #     turnMotorConfig,
+        #     SparkMax.ResetMode.kResetSafeParameters,
+        #     SparkMax.PersistMode.kNoPersistParameters,
+        # )
+
         self.turnMotorFLEncoder = self.turnMotorFL.getEncoder()
         self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
         self.turnMotorBLEncoder = self.turnMotorBL.getEncoder()
@@ -121,19 +146,6 @@ class RobotHAL:
         self.turnMotorFRCANcoder = CANcoder(22)
         self.turnMotorBLCANcoder = CANcoder(23)
         self.turnMotorBRCANcoder = CANcoder(24)
-
-        self.turnMotorFLEncoder.setPosition(
-            self.turnMotorFLCANcoder.get_absolute_position().value_as_double
-        )
-        self.turnMotorFREncoder.setPosition(
-            self.turnMotorFRCANcoder.get_absolute_position().value_as_double
-        )
-        self.turnMotorBLEncoder.setPosition(
-            self.turnMotorBLCANcoder.get_absolute_position().value_as_double
-        )
-        self.turnMotorBREncoder.setPosition(
-            self.turnMotorBRCANcoder.get_absolute_position().value_as_double
-        )
 
         driveMotorPIDConfig = SparkMaxConfig()
         driveMotorPIDConfig.smartCurrentLimit(40)
@@ -156,10 +168,10 @@ class RobotHAL:
             5000, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
         turnMotorPIDConfig.closedLoop.positionWrappingEnabled(
-            True
+            False
         ).positionWrappingInputRange(-math.pi, math.pi)
+        turnMotorPIDConfig.inverted(True)
 
-        # FL 135
         self.FLSwerveModule = SwerveModuleController(
             "FL",
             self.driveMotorFL,
@@ -167,7 +179,6 @@ class RobotHAL:
             self.turnMotorFL,
             turnMotorPIDConfig,
         )
-        # FR 45
         self.FRSwerveModule = SwerveModuleController(
             "FR",
             self.driveMotorFR,
@@ -175,7 +186,6 @@ class RobotHAL:
             self.turnMotorFR,
             turnMotorPIDConfig,
         )
-        # BL -45
         self.BLSwerveModule = SwerveModuleController(
             "BL",
             self.driveMotorBL,
@@ -183,7 +193,6 @@ class RobotHAL:
             self.turnMotorBL,
             turnMotorPIDConfig,
         )
-        # BR -135
         self.BRSwerveModule = SwerveModuleController(
             "BR",
             self.driveMotorBR,
@@ -199,6 +208,19 @@ class RobotHAL:
 
         self.manipulatorMotor = SparkMax(9, SparkMax.MotorType.kBrushless)
 
+        self.turnMotorFLEncoder.setPosition(
+            (self.turnMotorFLCANcoder.get_absolute_position().value_as_double) * 21.4
+        )
+        self.turnMotorFREncoder.setPosition(
+            (self.turnMotorFRCANcoder.get_absolute_position().value_as_double) * 21.4
+        )
+        self.turnMotorBLEncoder.setPosition(
+            (self.turnMotorBLCANcoder.get_absolute_position().value_as_double) * 21.4
+        )
+        self.turnMotorBREncoder.setPosition(
+            (self.turnMotorBRCANcoder.get_absolute_position().value_as_double) * 21.4
+        )
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -213,19 +235,19 @@ class RobotHAL:
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
 
-        self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
+        # self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
 
         TURN_GEARING = 21.4
-        buf.turnPosFL = angleWrap(
+        buf.turnPosFL = -angleWrap(
             self.turnMotorFLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosFR = angleWrap(
+        buf.turnPosFR = -angleWrap(
             self.turnMotorFREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosBL = angleWrap(
+        buf.turnPosBL = -angleWrap(
             self.turnMotorBLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosBR = angleWrap(
+        buf.turnPosBR = -angleWrap(
             self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
 
@@ -246,7 +268,63 @@ class RobotHAL:
             buf.turnBRSetpoint + self.table.getNumber("BR Turn Offset", 0),
         )
 
-        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+        # self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
+        self.table.putNumber(
+            "BL Turning Pos Can",
+            self.turnMotorBLCANcoder.get_absolute_position().value_as_double,
+        )
+        self.table.putNumber(
+            "BR Turning Pos Can",
+            self.turnMotorBRCANcoder.get_absolute_position().value_as_double,
+        )
+        self.table.putNumber(
+            "FL Turning Pos Can",
+            self.turnMotorFLCANcoder.get_absolute_position().value_as_double,
+        )
+        self.table.putNumber(
+            "FR Turning Pos Can",
+            self.turnMotorFRCANcoder.get_absolute_position().value_as_double,
+        )
+
+        self.table.putNumber(
+            "FL Turn Encoder Raw", self.turnMotorFLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "FR Turn Encoder Raw", self.turnMotorFREncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BL Turn Encoder Raw", self.turnMotorBLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BR Turn Encoder Raw", self.turnMotorBREncoder.getPosition()
+        )
+
+        self.table.putNumber(
+            "FL Drive Encoder Raw", self.driveMotorFLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "FR Drive Encoder Raw", self.driveMotorFREncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BL Drive Encoder Raw", self.driveMotorBLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BR Drive Encoder Raw", self.driveMotorBREncoder.getPosition()
+        )
+
+        self.table.putNumber(
+            "FR Drive Vel(RPM)", self.driveMotorFREncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "FL Drive Vel(RPM)", self.driveMotorFLEncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "BR Drive Vel(RPM)", self.driveMotorBREncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
+        )
 
 
 class SwerveModuleController:
@@ -286,7 +364,7 @@ class SwerveModuleController:
             0,
         )
         # converts to Rotations
-        self.turnMotor.update(-turnSetpoint * self.TURN_GEARING / (2 * math.pi), 0)
+        self.turnMotor.update(turnSetpoint * self.TURN_GEARING / (2 * math.pi), 0)
 
 
 class RevMotorController:
@@ -358,7 +436,7 @@ class RevMotorController:
 
         measuredPercentVoltage = self.motor.getAppliedOutput()
         measuredSpeed = self.encoder.getVelocity()
-        measuredPosition = self.encoder.getPosition()
+        measuredPosition = -self.encoder.getPosition()
         measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
         measuredAmps = self.motor.getOutputCurrent()
         self.table.putNumber(self.name + " Voltage", measuredVoltage)

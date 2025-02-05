@@ -55,13 +55,13 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 1.0 + self.table.getNumber(
+        self.driveX = joystickX * 1.5 + self.table.getNumber(
             "SD Joystick X offset", 0
         )  # * 0.2
-        self.driveY = joystickY * 1.0 + self.table.getNumber(
+        self.driveY = joystickY * 1.5 + self.table.getNumber(
             "SD Joystick Y offset", 0
         )  # * 0.2
-        self.driveRotation = joystickRotation * 0.2 + self.table.getNumber(
+        self.driveRotation = joystickRotation * 2.5 + self.table.getNumber(
             "SD Joystick Omega offset", 0
         )  # 0.0625
 
@@ -80,6 +80,8 @@ class SwerveDrive:
         self.table.putNumber(
             "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
+
+        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
 
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnPosFL)

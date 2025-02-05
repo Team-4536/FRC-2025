@@ -35,8 +35,17 @@ class Robot(wpilib.TimedRobot):
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
-        self.elevatorSubsystem = ElevatorSubsystem()
+        # self.elevatorSubsystem = ElevatorSubsystem()
         self.swerveDrive: SwerveDrive = SwerveDrive()
+        self.table.putNumber("FR Turn Setpoint", 0)
+        self.table.putNumber("FL Turn Setpoint", 0)
+        self.table.putNumber("BR Turn Setpoint", 0)
+        self.table.putNumber("BL Turn Setpoint", 0)
+
+        self.table.putNumber("FR Drive Setpoint", 0)
+        self.table.putNumber("FL Drive Setpoint", 0)
+        self.table.putNumber("BR Drive Setpoint", 0)
+        self.table.putNumber("BL Drive Setpoint", 0)
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -50,17 +59,27 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
-        self.elevatorSubsystem.update(
-            self.hal,
-            self.mechCtrlr.getRightTriggerAxis(),
-            self.mechCtrlr.getLeftTriggerAxis(),
-        )
+        # selfelevatorSubsystem.update(
+        #     self.hal,
+        #     self.mechCtrlr.getRightTriggerAxis(),
+        #     self.mechCtrlr.getLeftTriggerAxis(),
+        # )
         self.swerveDrive.update(
             self.hal,
             self.driveCtrlr.getLeftX(),
-            self.driveCtrlr.getLeftY(),
+            -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
+
+        # self.hal.turnFRSetpoint = self.table.getNumber("FR Turn Setpoint", 0)
+        # self.hal.turnFLSetpoint = self.table.getNumber("FL Turn Setpoint", 0)
+        # self.hal.turnBRSetpoint = self.table.getNumber("BR Turn Setpoint", 0)
+        # self.hal.turnBLSetpoint = self.table.getNumber("BL Turn Setpoint", 0)
+
+        # self.hal.driveFRSetpoint = self.table.getNumber("FR Drive Setpoint", 0)
+        # self.hal.driveFLSetpoint = self.table.getNumber("FL Drive Setpoint", 0)
+        # self.hal.driveBRSetpoint = self.table.getNumber("BR Drive Setpoint", 0)
+        # self.hal.driveBLSetpoint = self.table.getNumber("BL Drive Setpoint", 0)
 
         if self.mechCtrlr.getAButton():
             self.hal.manipulatorVolts = 4
@@ -72,6 +91,12 @@ class Robot(wpilib.TimedRobot):
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
+
+    -0.298
+
+    -5.798
+
+    -0.284
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
