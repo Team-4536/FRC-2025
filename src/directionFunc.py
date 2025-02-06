@@ -9,8 +9,10 @@ def func(motorPos, targetPos):
     print("current motor pos: " +str(motorPos))
     print("current wheel pos: " + str(motorPos/gearRatio))
     print("wheel target pos on joystick: " + str(targetPos))
-
-    unWrappedPos = motorPos%(2*pi)
+    if motorPos < 0:
+        unWrappedPos = -(motorPos%(2*pi))
+    else:
+        unWrappedPos = motorPos%(2*pi)
     
     print("motor pos after mod 2pi: " + str(unWrappedPos))
     
