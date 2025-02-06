@@ -36,6 +36,7 @@ class Robot(wpilib.TimedRobot):
         self.buttonPanel = wpilib.Joystick(4)
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
+        self.elevatorSubsystem = ElevatorSubsystem()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -54,6 +55,19 @@ class Robot(wpilib.TimedRobot):
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
+
+        self.elevatorSubsystem.update(
+            self.hal,
+            self.mechCtrlr.getRightTriggerAxis(),
+            self.mechCtrlr.getLeftTriggerAxis(),
+        )
+
+        if self.mechCtrlr.getBButton():
+            self.hal.manipulatorVolts = 5
+        elif self.mechCtrlr.getAButton():
+            self.hal.manipulatorVolts = -5
+        else:
+            self.hal.manipulatorVolts = 0
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)

@@ -21,6 +21,10 @@ from wpimath.units import meters_per_second, radians
 
 class RobotHALBuffer:
     def __init__(self) -> None:
+        self.elevatorArbFF: float = 0
+        self.elevatorSetpoint: float = 0
+        # Rotations
+        self.elevatorPos: float = 0
         # These Values are in CCW Radians, (-pi, pi]
         self.turnCCWFL: radians = 0
         self.turnCCWFR: radians = 0
@@ -39,14 +43,16 @@ class RobotHALBuffer:
 
         self.manipulatorSensorForward: bool = False
         self.manipulatorSensorReverse: bool = False
+        self.manipulatorVolts: float = 0
 
     def resetEncoders(self) -> None:
         pass
 
     def stopMotors(self) -> None:
-        pass
+        self.manipulatorVolts = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
+        table.putNumber("Elevator Pos(rot)", self.elevatorPos)
         table.putNumber("Turn CCW FL", self.turnCCWFL)
         table.putNumber("Turn CCW FR", self.turnCCWFR)
         table.putNumber("Turn CCW BL", self.turnCCWBL)
@@ -67,7 +73,15 @@ class RobotHAL:
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
 
-        self.manipulatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
+        manipulatorConfig = SparkMaxConfig()
+        manipulatorConfig.limitSwitch.forwardLimitSwitchEnabled(False)
+        manipulatorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+        self.manipulatorMotor = SparkMax(9, SparkMax.MotorType.kBrushless)
+        self.manipulatorMotor.configure(
+            manipulatorConfig,
+            SparkMax.ResetMode.kResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
         self.manipulatorSensorForward = self.manipulatorMotor.getForwardLimitSwitch()
         self.manipulatorSensorReverse = self.manipulatorMotor.getReverseLimitSwitch()
 
@@ -165,6 +179,31 @@ class RobotHAL:
             (self.turnMotorBRCANcoder.get_absolute_position().value_as_double) * 21.4
         )
 
+        self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
+        elevatorMotorPIDConfig = SparkMaxConfig()
+        elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
+        elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
+            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
+        ).outputRange(-1, 1)
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
+            10000
+        ).allowedClosedLoopError(0.05)
+
+        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
+            LimitSwitchConfig.Type.kNormallyOpen
+        )
+        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
+            LimitSwitchConfig.Type.kNormallyClosed
+        )
+        self.elevatorController = RevMotorController(
+            "Elevator",
+            self.elevatorMotor,
+            elevatorMotorPIDConfig,
+            SparkMax.ControlType.kMAXMotionPositionControl,
+        )
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -256,6 +295,9 @@ class RobotHAL:
 
         buf.manipulatorSensorReverse = self.manipulatorSensorReverse.get()
         buf.manipulatorSensorForward = self.manipulatorSensorForward.get()
+
+        self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
+        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
 
 class SwerveModuleController:
