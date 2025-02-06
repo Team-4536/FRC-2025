@@ -1,5 +1,5 @@
 import math
-
+import rev
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -8,10 +8,17 @@ from simHAL import RobotSimHAL
 from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+from elevator import ElevatorSubsystem
+from robotHAL import RobotHAL
+from swerveDrive import SwerveDrive
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
+
+        self.mechCtrlr = wpilib.XboxController(1)
+        self.buttonPanel = wpilib.Joystick(4)
+
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
@@ -28,11 +35,12 @@ class Robot(wpilib.TimedRobot):
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
+        self.swerveDrive: SwerveDrive = SwerveDrive()
+        self.elevatorSubsystem = ElevatorSubsystem()
+
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-
         self.hal.publish(self.table)
-
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
@@ -40,6 +48,26 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+
+        self.swerveDrive.update(
+            self.hal,
+            self.driveCtrlr.getLeftX(),
+            -self.driveCtrlr.getLeftY(),
+            self.driveCtrlr.getRightX(),
+        )
+
+        self.elevatorSubsystem.update(
+            self.hal,
+            self.mechCtrlr.getRightTriggerAxis(),
+            self.mechCtrlr.getLeftTriggerAxis(),
+        )
+
+        if self.mechCtrlr.getBButton():
+            self.hal.manipulatorVolts = 5
+        elif self.mechCtrlr.getAButton():
+            self.hal.manipulatorVolts = -5
+        else:
+            self.hal.manipulatorVolts = 0
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
