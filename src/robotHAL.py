@@ -14,6 +14,7 @@ class RobotHALBuffer:
     def __init__(self) -> None:
         self.rollerVoltage = 0
         self.motorSensorValue = False
+        self.intakeSensorValue = False
 
     def resetEncoders(self) -> None:
         pass
@@ -28,9 +29,10 @@ class RobotHALBuffer:
 class RobotHAL:
     def __init__(self) -> None:
         self.prev = RobotHALBuffer()
-        self.rollerMotor = rev.SparkMax(2,rev.SparkLowLevel.MotorType.kBrushless)
+        self.rollerMotor = rev.SparkMax(9,rev.SparkLowLevel.MotorType.kBrushless)
         self.motor1 = rev.SparkMax(1, rev.SparkLowLevel.MotorType.kBrushless)
         self.motorSensor = wpilib.DigitalInput(0)
+        self.intakeSensor = wpilib.DigitalInput(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
     # angle expected in CCW rads
@@ -46,6 +48,7 @@ class RobotHAL:
         bob = self.motor1.getReverseLimitSwitch()
         self.rollerMotor.setVoltage(buf.rollerVoltage)
         buf.motorSensorValue = self.motorSensor.get()
+        buf.intakeSensorValue = self.intakeSensor.get()
         self.table.putNumber("voltage", buf.rollerVoltage)
         self.table.putBoolean("reverselimitswitch", bob.get())
         #self.table.putBoolean("forwardlimitswitch", self.motor1.getForwardLimitSwitch())
