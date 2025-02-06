@@ -10,7 +10,7 @@ def func(motorPos, targetPos):
     print("current wheel pos: " + str(motorPos/gearRatio))
     print("wheel target pos on joystick: " + str(targetPos))
     if motorPos < 0:
-        unWrappedPos = -(motorPos%(2*pi))
+        unWrappedPos = -(motorPos%(2*pi)) # % operator will always return a positive
     else:
         unWrappedPos = motorPos%(2*pi)
     
