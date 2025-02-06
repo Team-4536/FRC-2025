@@ -21,15 +21,11 @@ from wpimath.units import meters_per_second, radians
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-        self.elevatorArbFF: float = 0
-        self.elevatorSetpoint: float = 0
-        # Rotations
-        self.elevatorPos: float = 0
         # These Values are in CCW Radians, (-pi, pi]
-        self.turnPosFL: radians = 0
-        self.turnPosFR: radians = 0
-        self.turnPosBL: radians = 0
-        self.turnPosBR: radians = 0
+        self.turnCCWFL: radians = 0
+        self.turnCCWFR: radians = 0
+        self.turnCCWBL: radians = 0
+        self.turnCCWBR: radians = 0
 
         self.driveFLSetpoint: meters_per_second = 0
         self.driveFRSetpoint: meters_per_second = 0
@@ -41,24 +37,23 @@ class RobotHALBuffer:
         self.turnBLSetpoint: radians = 0
         self.turnBRSetpoint: radians = 0
 
-        self.manipulatorVolts = 0
+        self.manipulatorSensorForward: bool = False
+        self.manipulatorSensorReverse: bool = False
 
     def resetEncoders(self) -> None:
         pass
 
     def stopMotors(self) -> None:
-        self.driveVolts = 0
-        self.driveDesired = 0
-        self.turnDesired = 0
-        self.manipulatorVolts = 0
+        pass
 
     def publish(self, table: ntcore.NetworkTable) -> None:
-        table.putNumber("Elevator Rotations", self.elevatorPos)
+        table.putNumber("Turn CCW FL", self.turnCCWFL)
+        table.putNumber("Turn CCW FR", self.turnCCWFR)
+        table.putNumber("Turn CCW BL", self.turnCCWBL)
+        table.putNumber("Turn CCW BR", self.turnCCWBR)
 
-        table.putNumber("Turn Pos FL", self.turnPosFL)
-        table.putNumber("Turn Pos FR", self.turnPosFR)
-        table.putNumber("Turn Pos BL", self.turnPosBL)
-        table.putNumber("Turn Pos BR", self.turnPosBR)
+        table.putBoolean("Manipulator sensor Forward", self.manipulatorSensorForward)
+        table.putBoolean("Manipulator sensor Reverse", self.manipulatorSensorReverse)
 
 
 debugMode = True
@@ -69,33 +64,12 @@ class RobotHAL:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.prev = RobotHALBuffer()
 
-        self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
-        elevatorMotorPIDConfig = SparkMaxConfig()
-        elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
-        elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
-            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-1, 1)
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
-            10000
-        ).allowedClosedLoopError(0.05)
-
-        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
-        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
-            LimitSwitchConfig.Type.kNormallyOpen
-        )
-        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchEnabled(True)
-        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
-            LimitSwitchConfig.Type.kNormallyClosed
-        )
-        # self.elevatorController = RevMotorController(
-        #     "Elevator",
-        #     self.elevatorMotor,
-        #     elevatorMotorPIDConfig,
-        #     SparkMax.ControlType.kMAXMotionPositionControl,
-        # )
-
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
+
+        self.manipulatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
+        self.manipulatorSensorForward = self.manipulatorMotor.getForwardLimitSwitch()
+        self.manipulatorSensorReverse = self.manipulatorMotor.getReverseLimitSwitch()
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -111,31 +85,6 @@ class RobotHAL:
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
         self.driveMotorBLEncoder = self.driveMotorBL.getEncoder()
         self.driveMotorBREncoder = self.driveMotorBR.getEncoder()
-
-        # turnMotorConfig = SparkMaxConfig()
-        # # turnMotorConfig.encoder.inverted(True)
-        # turnMotorConfig.inverted(True)
-
-        # self.turnMotorBL.configure(
-        #     turnMotorConfig,
-        #     SparkMax.ResetMode.kResetSafeParameters,
-        #     SparkMax.PersistMode.kNoPersistParameters,
-        # )
-        # self.turnMotorBR.configure(
-        #     turnMotorConfig,
-        #     SparkMax.ResetMode.kResetSafeParameters,
-        #     SparkMax.PersistMode.kNoPersistParameters,
-        # )
-        # self.turnMotorFL.configure(
-        #     turnMotorConfig,
-        #     SparkMax.ResetMode.kResetSafeParameters,
-        #     SparkMax.PersistMode.kNoPersistParameters,
-        # )
-        # self.turnMotorFR.configure(
-        #     turnMotorConfig,
-        #     SparkMax.ResetMode.kResetSafeParameters,
-        #     SparkMax.PersistMode.kNoPersistParameters,
-        # )
 
         self.turnMotorFLEncoder = self.turnMotorFL.getEncoder()
         self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
@@ -158,19 +107,21 @@ class RobotHAL:
         driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             2000, rev.ClosedLoopSlot.kSlot0
         ).maxAcceleration(4000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
+        driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
         turnMotorPIDConfig = SparkMaxConfig()
         turnMotorPIDConfig.smartCurrentLimit(40)
-        turnMotorPIDConfig.closedLoop.pidf(0.25, 0, 0.01, 0).setFeedbackSensor(
+        turnMotorPIDConfig.closedLoop.pidf(0.15, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
         ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
         turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             5000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.1)
+        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(0.2)
         turnMotorPIDConfig.closedLoop.positionWrappingEnabled(
             False
         ).positionWrappingInputRange(-math.pi, math.pi)
         turnMotorPIDConfig.inverted(True)
+        turnMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
         self.FLSwerveModule = SwerveModuleController(
             "FL",
@@ -201,13 +152,6 @@ class RobotHAL:
             turnMotorPIDConfig,
         )
 
-        self.table.putNumber("BL Turn Offset", 0)
-        self.table.putNumber("BR Turn Offset", 0)
-        self.table.putNumber("FL Turn Offset", 0)
-        self.table.putNumber("FR Turn Offset", 0)
-
-        self.manipulatorMotor = SparkMax(9, SparkMax.MotorType.kBrushless)
-
         self.turnMotorFLEncoder.setPosition(
             (self.turnMotorFLCANcoder.get_absolute_position().value_as_double) * 21.4
         )
@@ -235,40 +179,24 @@ class RobotHAL:
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
 
-        # self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
-
         TURN_GEARING = 21.4
-        buf.turnPosFL = -angleWrap(
+        buf.turnCCWFL = angleWrap(
             self.turnMotorFLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosFR = -angleWrap(
+        buf.turnCCWFR = angleWrap(
             self.turnMotorFREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosBL = -angleWrap(
+        buf.turnCCWBL = angleWrap(
             self.turnMotorBLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-        buf.turnPosBR = -angleWrap(
+        buf.turnCCWBR = angleWrap(
             self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
 
-        self.FLSwerveModule.update(
-            buf.driveFLSetpoint,
-            buf.turnFLSetpoint + self.table.getNumber("FL Turn Offset", 0),
-        )
-        self.FRSwerveModule.update(
-            buf.driveFRSetpoint,
-            buf.turnFRSetpoint + self.table.getNumber("FR Turn Offset", 0),
-        )
-        self.BLSwerveModule.update(
-            buf.driveBLSetpoint,
-            buf.turnBLSetpoint + self.table.getNumber("BL Turn Offset", 0),
-        )
-        self.BRSwerveModule.update(
-            buf.driveBRSetpoint,
-            buf.turnBRSetpoint + self.table.getNumber("BR Turn Offset", 0),
-        )
-
-        # self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+        self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
+        self.FRSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
+        self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
+        self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
 
         self.table.putNumber(
             "BL Turning Pos Can",
@@ -326,6 +254,9 @@ class RobotHAL:
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
 
+        buf.manipulatorSensorReverse = self.manipulatorSensorReverse.get()
+        buf.manipulatorSensorForward = self.manipulatorSensorForward.get()
+
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters
@@ -364,7 +295,20 @@ class SwerveModuleController:
             0,
         )
         # converts to Rotations
-        self.turnMotor.update(turnSetpoint * self.TURN_GEARING / (2 * math.pi), 0)
+        self.table.putNumber(self.name + "Before unwrap", turnSetpoint)
+        newTurnSetpoint = self.unwrap(
+            self.turnMotor.encoder.getPosition(), turnSetpoint
+        )
+        self.table.putNumber(self.name + "After unwrap", newTurnSetpoint)
+        self.turnMotor.update(newTurnSetpoint, 0)
+
+    def unwrap(self, motorPos: float, targetPos: radians) -> radians:
+        motorPosRads = (motorPos / self.TURN_GEARING) * 2 * math.pi
+        unwrappedPos = angleWrap(motorPosRads % (2 * math.pi))
+
+        distance: radians = angleWrap(targetPos - unwrappedPos)
+
+        return (motorPosRads + distance) * self.TURN_GEARING / (2 * math.pi)
 
 
 class RevMotorController:
