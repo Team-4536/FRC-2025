@@ -133,7 +133,6 @@ class photonVision:
 
     def update(self):
 
-        self.camEstPose = self.camPoseEst.update()
         # self.photonTable.putNumber("estPose", camEstPose.estimatedPose.x)
         self.result = self.camera.getLatestResult()
         self.hasTargets = self.result.hasTargets()
@@ -156,7 +155,7 @@ class photonVision:
             # self.photonOdometry =
             self.a = self.transform3d.rotation()
             self.angle = self.a.Z()
-            self.angle = self.angle *(180/numpy.pi)
+            #self.angle = self.angle *(180/numpy.pi)
             #print("angleee", self.angle)
         else:
             self.ambiguity = 1
@@ -169,24 +168,35 @@ class photonVision:
             self.fiducialId = 0
             self.pX = False
             self.pY = False
+        if self.ambiguity < 0.16:
+            self.camEstPose = self.camPoseEst.update()
+            #print("est pose", self.camEstPose.estimatedPose.X)
+            self.robotX = self.camEstPose.estimatedPose.x
+            self.robotY = self.camEstPose.estimatedPose.y
+            self.robotAngle = self.camEstPose.estimatedPose.rotation
+            #self.robotAngle = self.robotAngle.
+            #print("robotX", self.robotX)
    
 
     def odometryUpdate(self):
 
         if not (self.ambiguity > 0.15 and self.fiducialId < 1):
-            if self.angle < 0:
-                self.pAngle = self.angle + 180
-                self.pX = self.cHyp * numpy.sin(self.pAngle)
-                self.pY = numpy.sqrt((self.cHyp * self.cHyp) - (self.pX * self.pX))
-                self.camX = ((aprilTagX[self.fiducialId])/39.37) - self.pX
-                self.camY = ((aprilTagY[self.fiducialId])/39.37) - self.pY
-            elif self.angle > -1:
-                self.pAngle = 180 - self.angle
-                self.pX = self.cHyp * numpy.sin(self.pAngle)
-                self.pY = numpy.sqrt((self.cHyp * self.cHyp) - (self.pX * self.pX))
-                self.camX = ((aprilTagX[self.fiducialId])/39.37) - self.pX
-                self.camY = ((aprilTagY[self.fiducialId])/39.37) - self.pY
-            
+           # self.lsa = 
+            self.pAngle = self.angle + numpy.pi
+            self.pX = self.cHyp * numpy.sin(self.pAngle)
+            if self.pX < 0:
+                self.pX * -1
+            self.pY = numpy.sqrt((self.cHyp * self.cHyp) - (self.pX * self.pX))
+            self.camX = ((aprilTagX[self.fiducialId])/39.37) - self.pX
+            self.camY = ((aprilTagY[self.fiducialId])/39.37) - self.pY
+            # elif self.angle > -1:
+            #     self.pAngle = 180 - self.angle
+            #     self.pX = self.cHyp * numpy.sin(self.pAngle)
+            #     self.pY = numpy.sqrt((self.cHyp * self.cHyp) - (self.pX * self.pX))
+            #     self.camX = ((aprilTagX[self.fiducialId])/39.37) - self.pX
+            #     self.camY = ((aprilTagY[self.fiducialId])/39.37) - self.pY
+            print("cx", self.pX)
+            print("cy", self.pY)
             self.ca = aprilTagDegrees[self.fiducialId] + (self.angle + 180)
             self.ca = self.ca - 180
             if self.ca < -360:
