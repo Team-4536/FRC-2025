@@ -24,7 +24,7 @@ class ManipulatorSubsystem:
                 self.state = self.INTAKE
 
         elif self.state == self.INTAKE:
-            buf.manipulatorVolts = 1
+            buf.manipulatorVolts = -1
 
             if buf.manipulatorSensorForward and not buf.manipulatorSensorReverse:
                 self.state = self.IDLE
@@ -43,7 +43,7 @@ class ManipulatorSubsystem:
             
         elif self.state == self.SHOOT:
             
-            buf.manipulatorVolts = 1.75
+            buf.manipulatorVolts = -1.75
             if wpilib.getTime() - self.startTime > 2.6:
                 self.state = self.IDLE
 
