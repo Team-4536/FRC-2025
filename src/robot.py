@@ -63,7 +63,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
         )
 
-        self.manipulatorSubsystem.update(self.hal, self.mechCtrlr.getYButton)
+        self.manipulatorSubsystem.update(self.hal, self.mechCtrlr.getYButton())
         # if self.mechCtrlr.getBButton():
         #     self.hal.manipulatorVolts = 5
         # elif self.mechCtrlr.getAButton():

@@ -20,13 +20,13 @@ class ManipulatorSubsystem:
         
         if self.state == self.IDLE:
             buf.manipulatorVolts = 0
-            if buf.manipulatorSensorReverse:
+            if not buf.manipulatorSensorReverse:
                 self.state = self.INTAKE
 
         elif self.state == self.INTAKE:
             buf.manipulatorVolts = -1
 
-            if buf.manipulatorSensorForward and not buf.manipulatorSensorReverse:
+            if buf.manipulatorSensorForward and buf.manipulatorSensorReverse:
                 self.state = self.IDLE
 
             if not buf.manipulatorSensorForward:
