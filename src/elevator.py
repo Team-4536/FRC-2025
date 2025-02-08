@@ -63,7 +63,7 @@ class ElevatorSubsystem:
                 hal.elevatorSlot = ClosedLoopSlot.kSlot2
             elif hal.elevatorPos > 35 and self.velSetpoint > 0:
                 hal.elevatorSlot = ClosedLoopSlot.kSlot2
-            self.velSetpoint = up + (-1 * down)  # moves the elevator
+            self.velSetpoint = 50 * up + (-50 * down)  # moves the elevator
             self.posSetpoint = 0
 
         # # prohibit setpoint locations
