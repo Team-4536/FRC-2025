@@ -9,7 +9,7 @@ class ManipulatorSubsystem:
     INTAKE = 1
     STORED = 2
     SHOOT = 3
-    MANUAL = 4
+    MANUAL = 999
 
     def __init__(self):
         
