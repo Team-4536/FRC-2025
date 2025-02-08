@@ -9,7 +9,7 @@ class ManipulatorSubsystem:
     INTAKE = 1
     STORED = 2
     SHOOT = 3
-    MANUAL = 999
+    MANUAL = -1
 
     def __init__(self):
         
@@ -17,51 +17,54 @@ class ManipulatorSubsystem:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         
 
-    def update(self, buf:RobotHALBuffer, YButton:bool, pov:float):
+    def update(self, buf:RobotHALBuffer, AButton:bool, BButton:bool, LBumper:bool):
         
         if self.state == self.IDLE:
             buf.manipulatorVolts = 0
-            if buf.manipulatorSensorReverse:
+            if not buf.manipulatorSensorReverse:
                 self.state = self.INTAKE
-            if pov == 180:
+            if LBumper:
                 self.state = self.MANUAL
 
         elif self.state == self.INTAKE:
             buf.manipulatorVolts = 1
 
-            if not buf.manipulatorSensorForward and not buf.manipulatorSensorReverse:
-                self.state = self.IDLE
-
-            if buf.manipulatorSensorForward and not buf.manipulatorSensorReverse:
+            if buf.manipulatorSensorReverse:
                 self.state = self.STORED
-            if pov == 180:
+            if LBumper:
                 self.state = self.MANUAL
-                
                 
         elif self.state == self.STORED:
             buf.manipulatorVolts = 0
-            if YButton:
+            if AButton:
                 self.state = self.SHOOT
 
             self.startTime = wpilib.getTime()
-            if pov == 180:
+            if LBumper:
                 self.state = self.MANUAL
             
         elif self.state == self.SHOOT:
             
             buf.manipulatorVolts = 5
-            if wpilib.getTime() - self.startTime > 1.5:
+            if wpilib.getTime() - self.startTime > 1.5: #<this number is shooting duration in sec
                 self.state = self.IDLE
-            if pov == 180:
+            if LBumper:
                 self.state = self.MANUAL
 
         elif self.state == self.MANUAL:
-            if YButton:
+            if AButton:
                 buf.manipulatorVolts = 5
+            elif BButton:
+                buf.manipulatorVolts = -5
             else:
                 buf.manipulatorVolts = 0
-            if pov == 0:
+
+            if LBumper:
                 self.state = self.IDLE
+
             
 
         self.table.putNumber("state", self.state) 
+
+        #child
+        #octonauts=boctonauts
