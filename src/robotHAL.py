@@ -31,6 +31,11 @@ class RobotHALBuffer:
         self.turnCCWBL: radians = 0
         self.turnCCWBR: radians = 0
 
+        self.elevatorSlot: ClosedLoopSlot = ClosedLoopSlot.kSlot0
+        self.elevatorControl: SparkMax.ControlType = (
+            SparkMax.ControlType.kMAXMotionPositionControl
+        )
+
         self.driveFLSetpoint: meters_per_second = 0
         self.driveFRSetpoint: meters_per_second = 0
         self.driveBLSetpoint: meters_per_second = 0
@@ -197,6 +202,24 @@ class RobotHAL:
         elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
             LimitSwitchConfig.Type.kNormallyClosed
         )
+        elevatorMotorPIDConfig.closedLoop.pidf(
+            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot1
+        )
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
+            5000, ClosedLoopSlot.kSlot1
+        ).maxAcceleration(10000, ClosedLoopSlot.kSlot1).allowedClosedLoopError(
+            0.05, ClosedLoopSlot.kSlot1
+        )
+
+        elevatorMotorPIDConfig.closedLoop.pidf(
+            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot2
+        )
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
+            2500, ClosedLoopSlot.kSlot2
+        ).maxAcceleration(5000, ClosedLoopSlot.kSlot2).allowedClosedLoopError(
+            0.05, ClosedLoopSlot.kSlot2
+        )
+
         self.elevatorController = RevMotorController(
             "Elevator",
             self.elevatorMotor,
@@ -296,7 +319,12 @@ class RobotHAL:
         buf.manipulatorSensorReverse = self.manipulatorSensorReverse.get()
         buf.manipulatorSensorForward = self.manipulatorSensorForward.get()
 
-        self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
+        self.elevatorController.update(
+            buf.elevatorSetpoint,
+            buf.elevatorArbFF,
+            buf.elevatorSlot,
+            buf.elevatorControl,
+        )
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
 
@@ -387,7 +415,13 @@ class RevMotorController:
         for key, value in zip(self.PIDValues.keys(), self.PIDValues.values()):
             self.table.putNumber(name + key, value)
 
-    def update(self, setpoint: float, arbFF: float) -> None:
+    def update(
+        self,
+        setpoint: float,
+        arbFF: float,
+        slot: ClosedLoopSlot = ClosedLoopSlot.kSlot0,
+        controlType: SparkMax.ControlType | None = None,
+    ) -> None:
 
         changeError = 1e-6
         reconfigureFlag = False
@@ -433,10 +467,13 @@ class RevMotorController:
         self.setpoint = setpoint
         self.table.putNumber(self.name + " setpoint", self.setpoint)
 
+        if controlType == None:
+            controlType = self.controlType
+
         self.controller.setReference(
             setpoint,
-            self.controlType,
-            ClosedLoopSlot.kSlot0,
+            controlType,
+            slot,
             arbFF,
             SparkClosedLoopController.ArbFFUnits.kVoltage,
         )

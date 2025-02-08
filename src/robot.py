@@ -60,6 +60,8 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getYButton(),
         )
 
         if self.mechCtrlr.getBButton():
