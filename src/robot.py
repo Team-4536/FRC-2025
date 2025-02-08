@@ -8,6 +8,7 @@ from simHAL import RobotSimHAL
 from timing import TimeData
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+from intakesubsystem import intakeSubsystem
 
 
 class Robot(wpilib.TimedRobot):
@@ -21,7 +22,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
-
+        self.intakeSubsystem = intakeSubsystem()
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         self.driveCtrlr = wpilib.XboxController(0)
@@ -43,6 +44,14 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()
 
+        if self.mechCtrlr.getBButton():
+            self.hal.blueWheelVoltage = 1
+        else:
+            self.hal.blueWheelVoltage = 0
+        # if the sensor is on send voltage
+        self.intakeSubsystem.update(
+            self.hal, self.mechCtrlr.getXButton(), self.mechCtrlr.getYButton()
+        )
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
 
