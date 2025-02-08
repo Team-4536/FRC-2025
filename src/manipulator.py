@@ -38,7 +38,6 @@ class ManipulatorSubsystem:
                 self.state = self.MANUAL
                 
                 
-
         elif self.state == self.STORED:
             buf.manipulatorVolts = 0
             if YButton:
