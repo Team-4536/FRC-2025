@@ -28,19 +28,22 @@ class SwerveDrive:
         #     Translation2d(-oneftInMeters, oneftInMeters),
         #     Translation2d(-oneftInMeters, -oneftInMeters),
         # ]
-        self.modulePositions: list[Translation2d] = [
+        self.modulePositionsOnRobot: list[Translation2d] = [
             Translation2d(-oneftInMeters, oneftInMeters), #FL
             Translation2d(oneftInMeters, oneftInMeters), #FR
             Translation2d(-oneftInMeters, -oneftInMeters), #BL
             Translation2d(oneftInMeters, -oneftInMeters), # BR
         ]
 
-        self.moduleState = SwerveModuleState(0, Rotation2d(0))
-        self.modulePosition = SwerveModulePosition(self.moduleState, self.moduleState, self.moduleState, self.moduleState)
+        #self.moduleState = SwerveModuleState(0, Rotation2d(0))
+
+        self.modulePosition = SwerveModulePosition(0, Rotation2d(0))
+        self.modulePositions = [self.modulePosition, self.modulePosition, self.modulePosition, self.modulePosition] # sctual wheel pos based on rotation
         
-        self.gyro = Rotation2d()
-        self.kinematics = SwerveDrive4Kinematics(self.modulePositions)
-        self.odometry = SwerveDrive4Odometry(self.kinematics, Rotation2d(0), self.modulePositions, Pose2d(0, 0))
+        
+        self.pose = Pose2d(0, 0, 0)
+        self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+        self.odometry = SwerveDrive4Odometry(self.kinematics, self.gyro, self.modulePositions, self.pose)
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
@@ -48,8 +51,10 @@ class SwerveDrive:
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         
-        #self.odometry.resetPosition(, hal.driveMotorPositions, pose)
-        pass
+        self.modulePositions = [SwerveModulePosition(hal.driveMotorPositions[i], Rotation2d(hal.turnMotorPositions[i])) for i in range(4)]
+        self.gyro = Rotation2d(hal.yaw)
+        self.odometry.resetPosition(self.gyro, self.modulePositions, pose)
+        
 
     def update(
         self,
@@ -119,7 +124,10 @@ class SwerveDrive:
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
-        pass
+        self.modulePositions = [SwerveModulePosition(hal.driveMotorPositions[i], Rotation2d(hal.turnMotorPositions[i])) for i in range(4)]
+        self.gyro = Rotation2d(hal.yaw)
+        self.odometry.update(self.gyro, self.modulePositions)
+
 
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d

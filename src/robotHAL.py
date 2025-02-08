@@ -16,7 +16,7 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
-from wpimath.units import meters_per_second, radians
+from wpimath.units import meters_per_second, radians, rotationsToRadians
 
 
 class RobotHALBuffer:
@@ -46,6 +46,9 @@ class RobotHALBuffer:
         self.manipulatorVolts: float = 0
 
         self.driveMotorPositions = [0, 0, 0, 0]
+        self.turnMotorPositions = [0, 0, 0, 0]
+        self.yaw = 0
+
 
         
 
@@ -208,6 +211,10 @@ class RobotHAL:
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
 
+        self.gyro = navx.AHRS(wpilib.SerialPort.Port.kUSB1)
+
+        
+
         
 
     # angle expected in CCW rads
@@ -225,6 +232,7 @@ class RobotHAL:
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
 
         TURN_GEARING = 21.4
+
         buf.turnCCWFL = angleWrap(
             self.turnMotorFLEncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
@@ -306,11 +314,12 @@ class RobotHAL:
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
         self.wheelRadius = .05 # in meters
-
-        self.drivePosFL = (self.driveMotorFLEncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
-        self.drivePosFR = (self.driveMotorFREncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
-        self.drivePosBL = (self.driveMotorBLEncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
-        self.drivePosBR = (self.driveMotorBREncoder.getPosition() / TURN_GEARING) * self.wheelRadius
+        
+        DRIVE_GEARING = SwerveModuleController.DRIVE_GEARING
+        self.drivePosFL = (rotationsToRadians(self.driveMotorFLEncoder.getPosition()) / DRIVE_GEARING) * self.wheelRadius,
+        self.drivePosFR = (rotationsToRadians(self.driveMotorFREncoder.getPosition()) / DRIVE_GEARING) * self.wheelRadius
+        self.drivePosBL = (rotationsToRadians(self.driveMotorBLEncoder.getPosition()) / DRIVE_GEARING) * self.wheelRadius
+        self.drivePosBR = (rotationsToRadians(self.driveMotorBREncoder.getPosition()) / DRIVE_GEARING) * self.wheelRadius
         
         buf.driveMotorPositions = [
             self.drivePosFL,
@@ -318,6 +327,22 @@ class RobotHAL:
             self.drivePosBL,
             self.drivePosBR
         ]
+
+        self.turnPosFR = rotationsToRadians(self.turnMotorFRCANcoder.get_position()) * self.wheelRadius
+        self.turnPosBL = rotationsToRadians(self.turnMotorBLCANcoder.get_position()) * self.wheelRadius
+        self.turnPosBR = rotationsToRadians(self.turnMotorBRCANcoder.get_position()) * self.wheelRadius
+        self.turnPosFL = rotationsToRadians(self.turnMotorFLCANcoder.get_position()) * self.wheelRadius
+        #make a boolean that tests if CANcoder == Encoder / TURN_GEARING
+
+        buf.turnMotorPositions = [
+            self.turnPosFL,
+            self.turnPosFR,
+            self.turnPosBL,
+            self.turnPosBR
+
+        ]
+
+        buf.yaw = self.gyro.getAngle()
 
         
 
