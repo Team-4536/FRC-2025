@@ -45,6 +45,10 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
+        self.driveMotorPositions = [0, 0, 0, 0]
+
+        
+
     def resetEncoders(self) -> None:
         pass
 
@@ -204,6 +208,8 @@ class RobotHAL:
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
 
+        
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         pass
@@ -299,6 +305,21 @@ class RobotHAL:
         self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
+        self.wheelRadius = .05 # in meters
+
+        self.drivePosFL = (self.driveMotorFLEncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
+        self.drivePosFR = (self.driveMotorFREncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
+        self.drivePosBL = (self.driveMotorBLEncoder.getPosition() / TURN_GEARING) * self.wheelRadius,
+        self.drivePosBR = (self.driveMotorBREncoder.getPosition() / TURN_GEARING) * self.wheelRadius
+        
+        buf.driveMotorPositions = [
+            self.drivePosFL,
+            self.drivePosFR,
+            self.drivePosBL,
+            self.drivePosBR
+        ]
+
+        
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters

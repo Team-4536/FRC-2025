@@ -29,18 +29,26 @@ class SwerveDrive:
         #     Translation2d(-oneftInMeters, -oneftInMeters),
         # ]
         self.modulePositions: list[Translation2d] = [
-            Translation2d(-oneftInMeters, oneftInMeters),
-            Translation2d(oneftInMeters, oneftInMeters),
-            Translation2d(-oneftInMeters, -oneftInMeters),
-            Translation2d(oneftInMeters, -oneftInMeters),
+            Translation2d(-oneftInMeters, oneftInMeters), #FL
+            Translation2d(oneftInMeters, oneftInMeters), #FR
+            Translation2d(-oneftInMeters, -oneftInMeters), #BL
+            Translation2d(oneftInMeters, -oneftInMeters), # BR
         ]
-        self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+
+        self.moduleState = SwerveModuleState(0, Rotation2d(0))
+        self.modulePosition = SwerveModulePosition(self.moduleState, self.moduleState, self.moduleState, self.moduleState)
+        
+        self.gyro = Rotation2d()
+        self.kinematics = SwerveDrive4Kinematics(self.modulePositions)
+        self.odometry = SwerveDrive4Odometry(self.kinematics, Rotation2d(0), self.modulePositions, Pose2d(0, 0))
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
+        
+        #self.odometry.resetPosition(, hal.driveMotorPositions, pose)
         pass
 
     def update(
