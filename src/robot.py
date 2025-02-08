@@ -62,6 +62,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getXButton(),
             self.mechCtrlr.getYButton(),
+            self.mechCtrlr.getPOV(),
         )
 
         if self.mechCtrlr.getBButton():
