@@ -1,10 +1,13 @@
 import copy
 import math
+from wpimath import units
 from real import angleWrap
 import navx
+from navx import AHRS
 import ntcore
 import rev
 import wpilib
+from wpilib import SerialPort
 from phoenix6.hardware import CANcoder
 from timing import TimeData
 from ntcore import NetworkTableInstance
@@ -16,7 +19,7 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
-from wpimath.units import meters_per_second, radians
+from wpimath.units import meters_per_second, radians, rotationsToRadians, degreesToRadians
 
 
 class RobotHALBuffer:
@@ -45,6 +48,11 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
+        self.drivePositionsList = [0, 0, 0, 0]
+        self.steerPositionList = [0, 0, 0, 0]
+
+        self.yaw = 0
+
     def resetEncoders(self) -> None:
         pass
 
@@ -72,6 +80,8 @@ class RobotHAL:
 
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
+
+        self.wheelRadius = 0.05 #meters
 
         manipulatorConfig = SparkMaxConfig()
         manipulatorConfig.limitSwitch.forwardLimitSwitchEnabled(False)
@@ -204,9 +214,12 @@ class RobotHAL:
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
 
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
-        pass
+        self.gyro.reset()
+        self.gyro.setAngleAdjustment(-math.degrees(ang))
 
     def resetCamEncoderPos(self, nPos: float) -> None:
         pass
@@ -295,6 +308,24 @@ class RobotHAL:
 
         buf.manipulatorSensorReverse = self.manipulatorSensorReverse.get()
         buf.manipulatorSensorForward = self.manipulatorSensorForward.get()
+
+        
+        
+        buf.yaw = degreesToRadians(-self.gyro.getAngle())
+
+        drivePosFL = rotationsToRadians(self.driveMotorFLEncoder.getPosition() / SwerveModuleController.DRIVE_GEARING) * self.wheelRadius
+        drivePosFR = rotationsToRadians(self.driveMotorFREncoder.getPosition() / SwerveModuleController.DRIVE_GEARING) * self.wheelRadius
+        drivePosBL = rotationsToRadians(self.driveMotorBLEncoder.getPosition() / SwerveModuleController.DRIVE_GEARING) * self.wheelRadius
+        drivePosBR = rotationsToRadians(self.driveMotorBREncoder.getPosition() / SwerveModuleController.DRIVE_GEARING) * self.wheelRadius
+
+        buf.drivePositionsList = [drivePosFL, drivePosFR, drivePosBL, drivePosBR]
+
+        steerPosFL = rotationsToRadians(self.turnMotorFLEncoder.getPosition() / SwerveModuleController.TURN_GEARING)
+        steerPosFR = rotationsToRadians(self.turnMotorFREncoder.getPosition() / SwerveModuleController.TURN_GEARING)
+        steerposBL = rotationsToRadians(self.turnMotorBLEncoder.getPosition() / SwerveModuleController.TURN_GEARING)
+        steerPosBR = rotationsToRadians(self.turnMotorBREncoder.getPosition() / SwerveModuleController.TURN_GEARING)
+
+        buf.steerPositionList = [steerPosFL, steerPosFR, steerposBL, steerPosBR]
 
         self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)

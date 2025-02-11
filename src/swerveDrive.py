@@ -4,6 +4,7 @@ import robot
 
 from ntcore import NetworkTableInstance
 from real import angleWrap
+import wpimath.units
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
     ChassisSpeeds,
@@ -34,19 +35,30 @@ class SwerveDrive:
             Translation2d(-oneftInMeters, -oneftInMeters),
             Translation2d(oneftInMeters, -oneftInMeters),
         ]
+        #ModuleState = SwerveModuleState(wpimath.units.meters(0), Rotation2d(0))
+        ModulePos = SwerveModulePosition(0, Rotation2d(0))
+        modulePosList = [ModulePos, ModulePos, ModulePos, ModulePos]
+
+        self.angle = Rotation2d(0)
+        self.pose = Pose2d(wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0))
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+        self.odometry = SwerveDrive4Odometry(self.kinematics, self.angle, modulePosList, self.pose)
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
-        pass
+        
+        modulePosList = [SwerveModulePosition(hal.drivePositionsList[i], Rotation2d(hal.steerPositionList)) for i in hal.drivePositionsList]
+
+        self.odometry.resetPosition(modulePosList, Rotation2d(hal.yaw), pose)
+        
 
     def update(
         self,
         hal: robotHAL.RobotHALBuffer,
-        joystickX: float,
+        joystickX: float, 
         joystickY: float,
         joystickRotation: float,
     ):
@@ -111,7 +123,10 @@ class SwerveDrive:
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
-        pass
+
+        modulePosList = [SwerveModulePosition(hal.drivePositionsList[i], Rotation2d(hal.steerPositionList)) for i in hal.drivePositionsList]
+
+        self.odometry.update(hal.yaw, modulePosList)
 
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
