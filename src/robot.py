@@ -60,17 +60,20 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
-            self.mechCtrlr.getXButton(),
-            self.mechCtrlr.getYButton(),
+            self.mechCtrlr.getXButtonPressed(),
+            self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
         )
 
         if self.mechCtrlr.getBButton():
-            self.hal.manipulatorVolts = 5
+            self.hal.manipulatorVolts = 8
         elif self.mechCtrlr.getAButton():
-            self.hal.manipulatorVolts = -5
+            self.hal.manipulatorVolts = -8
         else:
             self.hal.manipulatorVolts = 0
+
+        if self.driveCtrlr.getAButton():
+            self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)

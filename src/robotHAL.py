@@ -50,6 +50,8 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
+        self.yaw: float = 0
+
     def resetEncoders(self) -> None:
         pass
 
@@ -65,6 +67,8 @@ class RobotHALBuffer:
 
         table.putBoolean("Manipulator sensor Forward", self.manipulatorSensorForward)
         table.putBoolean("Manipulator sensor Reverse", self.manipulatorSensorReverse)
+
+        table.putNumber("yaw", self.yaw)
 
 
 debugMode = True
@@ -125,7 +129,7 @@ class RobotHAL:
 
         driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             2000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(4000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
+        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
         driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
         turnMotorPIDConfig = SparkMaxConfig()
@@ -185,6 +189,7 @@ class RobotHAL:
         )
 
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
+        self.elevatorMotorEncoder = self.elevatorMotor.getEncoder()
         elevatorMotorPIDConfig = SparkMaxConfig()
         elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
@@ -227,9 +232,12 @@ class RobotHAL:
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
 
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
-        pass
+        self.gyro.reset()
+        self.gyro.setAngleAdjustment(-math.degrees(ang))
 
     def resetCamEncoderPos(self, nPos: float) -> None:
         pass
@@ -326,6 +334,10 @@ class RobotHAL:
             buf.elevatorControl,
         )
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
+        buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
+
+        buf.yaw = math.radians(-self.gyro.getAngle())
 
 
 class SwerveModuleController:
