@@ -15,7 +15,8 @@ class ElevatorSubsystem:
         self.velSetpoint = 0
         self.posSetpoint = 0
         # mode 0 is position control, 1 is velocity
-        self.mode = 0
+
+        self.setPointmode = True
 
     def update(
         self,
@@ -43,10 +44,20 @@ class ElevatorSubsystem:
         if down < 0.1:
             down = 0
 
-        if self.mode == 0:
+        if self.setPointmode:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionPositionControl
-            hal.elevatorSlot = ClosedLoopSlot.kSlot0
-
+            if (
+                hal.elevatorPos > self.posSetpoint - 10
+                and hal.elevatorPos < self.posSetpoint
+            ):
+                hal.elevatorSlot = ClosedLoopSlot.kSlot3
+            elif (
+                hal.elevatorPos < self.posSetpoint + 10
+                and hal.elevatorPos > self.posSetpoint
+            ):
+                hal.elevatorSlot = ClosedLoopSlot.kSlot3
+            else:
+                hal.elevatorSlot = ClosedLoopSlot.kSlot0
             if POVSetpoint == 0:
                 self.posSetpoint = 0
             elif POVSetpoint == 90:
@@ -54,10 +65,10 @@ class ElevatorSubsystem:
             elif POVSetpoint == 180:
                 self.posSetpoint = 30
             self.velSetpoint = 0
-
-        elif self.mode == 1:
+        elif not self.setPointmode:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
+
             # velocity logic on bottom and top
             if hal.elevatorPos < 10 and self.velSetpoint < 0:
                 hal.elevatorSlot = ClosedLoopSlot.kSlot2
