@@ -33,6 +33,7 @@ class Robot(wpilib.TimedRobot):
 
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
+        self.senseCtrlr = wpilib.XboxController(3)
         self.buttonPanel = wpilib.Joystick(4)
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
@@ -63,13 +64,17 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
         )
 
-        self.manipulatorSubsystem.update(self.hal, self.mechCtrlr.getYButton(), self.mechCtrlr.getPOV())
-        # if self.mechCtrlr.getBButton():
-        #     self.hal.manipulatorVolts = 5
-        # elif self.mechCtrlr.getAButton():
-        #     self.hal.manipulatorVolts = -5
-        # else:
-        #     self.hal.manipulatorVolts = 0
+        self.manipulatorSubsystem.update(self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed())
+
+        if self.senseCtrlr.getAButton():
+            self.hal.simForwardSensorValue = True
+        if self.senseCtrlr.getBButton():
+            self.hal.simForwardSensorValue = False
+
+        if self.senseCtrlr.getYButton():
+            self.hal.simReverseSensorValue = True
+        if self.senseCtrlr.getXButton():
+            self.hal.simReverseSensorValue = False
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)

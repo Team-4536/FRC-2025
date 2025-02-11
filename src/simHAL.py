@@ -14,7 +14,9 @@ class RobotSimHAL:
         self.prev = RobotHALBuffer()
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
-        pass
+        buf.manipulatorSensorForward = buf.simForwardSensorValue
+        buf.manipulatorSensorReverse = buf.simReverseSensorValue
+
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass

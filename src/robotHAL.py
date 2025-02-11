@@ -43,6 +43,8 @@ class RobotHALBuffer:
 
         self.manipulatorSensorForward: bool = False
         self.manipulatorSensorReverse: bool = False
+        self.simForwardSensorValue: bool = False
+        self.simReverseSensorValue: bool = False
         self.manipulatorVolts: float = 0
 
     def resetEncoders(self) -> None:
