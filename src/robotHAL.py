@@ -19,6 +19,8 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
+from wpimath.kinematics import SwerveModulePosition
+from wpimath.geometry import Rotation2d
 from wpimath.units import meters_per_second, radians, rotationsToRadians, degreesToRadians
 
 
@@ -52,6 +54,11 @@ class RobotHALBuffer:
         self.steerPositionList = [0, 0, 0, 0]
 
         self.yaw = 0
+
+        self.moduleFL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleFR = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBR = SwerveModulePosition(0, Rotation2d(radians(0)))
 
     def resetEncoders(self) -> None:
         pass
@@ -322,10 +329,15 @@ class RobotHAL:
 
         steerPosFL = rotationsToRadians(self.turnMotorFLEncoder.getPosition() / SwerveModuleController.TURN_GEARING)
         steerPosFR = rotationsToRadians(self.turnMotorFREncoder.getPosition() / SwerveModuleController.TURN_GEARING)
-        steerposBL = rotationsToRadians(self.turnMotorBLEncoder.getPosition() / SwerveModuleController.TURN_GEARING)
+        steerPosBL = rotationsToRadians(self.turnMotorBLEncoder.getPosition() / SwerveModuleController.TURN_GEARING)
         steerPosBR = rotationsToRadians(self.turnMotorBREncoder.getPosition() / SwerveModuleController.TURN_GEARING)
 
-        buf.steerPositionList = [steerPosFL, steerPosFR, steerposBL, steerPosBR]
+        buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
+
+        buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))
+        buf.moduleFR = SwerveModulePosition(drivePosFR, Rotation2d(radians(steerPosFR)))
+        buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
+        buf.moduleBR = SwerveModulePosition(drivePosBR, Rotation2d(radians(steerPosBR)))
 
         self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)

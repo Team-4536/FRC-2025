@@ -13,6 +13,7 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
+from wpimath.units import radians
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -50,9 +51,16 @@ class SwerveDrive:
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         
-        modulePosList = [SwerveModulePosition(hal.drivePositionsList[i], Rotation2d(hal.steerPositionList)) for i in hal.drivePositionsList]
+        modulePosList = (SwerveModulePosition(hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))),
+                         SwerveModulePosition(hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))),
+                         SwerveModulePosition(hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))),
+                         SwerveModulePosition(hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))))
+        #modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
+        self.odometry.resetPosition( Rotation2d(hal.yaw), modulePosList, pose)
+        
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-        self.odometry.resetPosition(modulePosList, Rotation2d(hal.yaw), pose)
+        
         
 
     def update(
@@ -125,8 +133,11 @@ class SwerveDrive:
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
 
         modulePosList = [SwerveModulePosition(hal.drivePositionsList[i], Rotation2d(hal.steerPositionList)) for i in hal.drivePositionsList]
-
         self.odometry.update(hal.yaw, modulePosList)
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+
+        self.table.putNumber('odom', self.odometry)
+
 
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
