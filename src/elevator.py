@@ -5,13 +5,16 @@ from rev import (
     SparkMax,
     ClosedLoopSlot,
 )
-import enum
+from enum import Enum
+
+
+class ElevatorMode(Enum):
+    MANUAL_MODE = 0
+    POSITION_MODE = 1
 
 
 class ElevatorSubsystem:
-    class Mode(enum):
-        MANUAL_MODE = 0
-        POSITION_MODE = 1
+
     INTAKE_POS = 0
     L2_POS = 15
     L3_POS = 30
@@ -24,7 +27,7 @@ class ElevatorSubsystem:
         self.velSetpoint = 0
         self.posSetpoint = 0
         # mode 0 is position control, 1 is velocity
-        self.mode = self.Mode.MANUAL_MODE
+        self.mode = ElevatorMode.MANUAL_MODE
 
     def update(
         self,
@@ -34,7 +37,7 @@ class ElevatorSubsystem:
         toggleMode: bool,
         POVSetpoint: float,
     ):
-          # Dead-Zone
+        # Dead-Zone
         if up < 0.1:
             up = 0
         if down < 0.1:
@@ -42,20 +45,18 @@ class ElevatorSubsystem:
         self.table.putNumber("Elevator up", up)
         self.table.putNumber("Elevator down", down)
         if toggleMode:
-            if self.mode == self.Mode.MANUAL_MODE:
-                self.mode = self.Mode.POSITION_MODE
+            if self.mode == ElevatorMode.MANUAL_MODE:
+                self.mode = ElevatorMode.POSITION_MODE
                 self.posSetpoint = hal.elevatorPos
                 self.velSetpoint = 0
-            elif self.Mode == self.Mode.POSITION_MODE:
-                self.mode = self.Mode.MANUAL_MODE
+            elif self.mode == ElevatorMode.POSITION_MODE:
+                self.mode = ElevatorMode.MANUAL_MODE
                 self.velSetpoint = 0
                 self.posSetpoint = 0
 
-        self.table.putNumber("Elevator State", self.mode)
+        self.table.putNumber("Elevator State", self.mode.value)
 
-      
-
-        if self.mode == self.Mode.POSITION_MODE:
+        if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
@@ -68,17 +69,17 @@ class ElevatorSubsystem:
             elif POVSetpoint == 270:
                 self.posSetpoint = self.L4_POS
 
-        elif self.mode == self.Mode.MANUAL_MODE:
+        elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 75 * up + (-75 * down)  # moves the elevator
 
-        if self.mode == self.Mode.POSITION_MODE:
+        if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
             )
-        if self.mode == self.Mode.MANUAL_MODE:
+        if self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
             )
