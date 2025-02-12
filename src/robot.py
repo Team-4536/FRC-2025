@@ -31,6 +31,10 @@ class Robot(wpilib.TimedRobot):
         self.photonCamera1 = photonVision("Camera1", 0, 0, 0, 0)
         self.photonCamera2 = photonVision("Camera2", 0, 0, 0, 0)
         self.fileTest = open("pyTest.txt", "w")
+        self.photonCamera1.photonTable.putBoolean("a button",False)
+        self.a = True
+        
+        
        
 
     def robotPeriodic(self) -> None:
@@ -47,13 +51,23 @@ class Robot(wpilib.TimedRobot):
         self.PC2Y = self.photonCamera2.robotY
         self.PC1Angle = self.photonCamera1.robotAngle
         self.PC2Angle = self.photonCamera2.robotAngle
-        if self.driveCtrlr.getLeftBumperPressed:
+        
+       
+        if self.driveCtrlr.getAButton() and self.a == True:
+            
             self.fileTest.write("Camera1 X = " + f"{self.PC1X}""\n")
             self.fileTest.write("Camera1 Y = " + f"{self.PC1Y}""\n")
             self.fileTest.write("Camera1 Angle = " + f"{self.PC1Angle}""\n")
             self.fileTest.write("Camera2 X = " + f"{self.PC2X}""\n")
             self.fileTest.write("Camera2 Y = " + f"{self.PC2Y}""\n")
             self.fileTest.write("Camera2 Angle = " + f"{self.PC2Angle}""\n")
+            self.a = False
+            
+        
+        if self.driveCtrlr.getLeftBumperButtonReleased():
+            self.a = True
+       
+            
 
 
     def teleopInit(self) -> None:
