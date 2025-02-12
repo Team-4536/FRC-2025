@@ -27,8 +27,11 @@ class Robot(wpilib.TimedRobot):
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
-
-        self.photonCamera = photonVision("Camera1", 0, 0, 0, 0)
+        #self.driveCtrlr.getLeftBumperButtonPressed()
+        self.photonCamera1 = photonVision("Camera1", 0, 0, 0, 0)
+        self.photonCamera2 = photonVision("Camera2", 0, 0, 0, 0)
+        self.fileTest = open("pyTest.txt", "w")
+       
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -36,8 +39,22 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
 
         self.hal.stopMotors()
-        self.photonCamera.update()
-       # self.photonCamera.odometryUpdate()
+        self.photonCamera1.update()
+        self.photonCamera2.update()
+        self.PC1X = self.photonCamera1.robotX
+        self.PC2X = self.photonCamera2.robotX
+        self.PC1Y = self.photonCamera1.robotY
+        self.PC2Y = self.photonCamera2.robotY
+        self.PC1Angle = self.photonCamera1.robotAngle
+        self.PC2Angle = self.photonCamera2.robotAngle
+        if self.driveCtrlr.getLeftBumperPressed:
+            self.fileTest.write("Camera1 X = " + f"{self.PC1X}""\n")
+            self.fileTest.write("Camera1 Y = " + f"{self.PC1Y}""\n")
+            self.fileTest.write("Camera1 Angle = " + f"{self.PC1Angle}""\n")
+            self.fileTest.write("Camera2 X = " + f"{self.PC2X}""\n")
+            self.fileTest.write("Camera2 Y = " + f"{self.PC2Y}""\n")
+            self.fileTest.write("Camera2 Angle = " + f"{self.PC2Angle}""\n")
+
 
     def teleopInit(self) -> None:
         pass
