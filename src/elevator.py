@@ -48,7 +48,7 @@ class ElevatorSubsystem:
             down = 0
 
         if self.mode == 0:
-            hal.elevatorControl = SparkMax.ControlType.kMAXMotionPositionControl
+            hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
             if POVSetpoint == 0:

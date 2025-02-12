@@ -32,9 +32,7 @@ class RobotHALBuffer:
         self.turnCCWBR: radians = 0
 
         self.elevatorSlot: ClosedLoopSlot = ClosedLoopSlot.kSlot0
-        self.elevatorControl: SparkMax.ControlType = (
-            SparkMax.ControlType.kMAXMotionPositionControl
-        )
+        self.elevatorControl: SparkMax.ControlType = SparkMax.ControlType.kPosition
 
         self.driveFLSetpoint: meters_per_second = 0
         self.driveFRSetpoint: meters_per_second = 0
@@ -194,10 +192,7 @@ class RobotHAL:
         elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-1, 1)
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
-            10000
-        ).allowedClosedLoopError(0.05)
+        ).outputRange(-0.5, 0.5)
 
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
@@ -229,7 +224,7 @@ class RobotHAL:
             "Elevator",
             self.elevatorMotor,
             elevatorMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            SparkMax.ControlType.kPosition,
         )
 
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
