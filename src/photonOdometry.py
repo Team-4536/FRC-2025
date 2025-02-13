@@ -5,6 +5,7 @@ from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from ntcore import NetworkTableInstance
 import wpimath.geometry
 import numpy
+import robotpy
 
 photonTable = NetworkTableInstance.getDefault()
 aprilTagX = [
@@ -86,7 +87,7 @@ class photonVision:
     photonTable = NetworkTableInstance.getDefault()
 
     def __init__(self, cameraName, camPitch, intCamX, intCamY, intCamZ):
-        self.cameraa = cameraName
+        self.cameraNameReal = cameraName
         self.camera = PhotonCamera(cameraName)
         kRobotToCam = wpimath.geometry.Transform3d(
     wpimath.geometry.Translation3d(intCamX, intCamY, intCamZ),
@@ -119,7 +120,14 @@ class photonVision:
                 self.robotX = self.camEstPose.estimatedPose.x
                 self.robotY = self.camEstPose.estimatedPose.y
                 self.robotAngle = self.camEstPose.estimatedPose.rotation().z
-                self.photonTable.putNumber(self.cameraa + "x", self.robotX)
+                self.photonTable.putNumber(self.cameraNameReal + "x", self.robotX)
         else:
             self.ambiguity = 1
             self.fiducialId = 0
+
+    def savePos(self):
+        with open("pyTest.txt", "a") as f:
+            f.write(self.cameraNameReal + " X = " + f"{self.robotX}""\n")
+            f.write(self.cameraNameReal + " Y = " + f"{self.robotY}""\n")
+            f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}""\n")
+        #Test.close()
