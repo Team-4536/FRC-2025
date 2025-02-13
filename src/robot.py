@@ -52,11 +52,14 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
+        
+
         self.swerveDrive.update(
             self.hal,
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis()
         )
 
         self.elevatorSubsystem.update(
