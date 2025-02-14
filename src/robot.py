@@ -23,11 +23,10 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
-        # if self.isSimulation():
-        #     self.hardware = RobotSimHAL()
-        # else:
-        #     self.hardware = robotHAL.RobotHAL()
-        self.hardware = robotHAL.RobotHAL()
+        if self.isSimulation():
+            self.hardware = RobotSimHAL()
+        else:
+            self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
