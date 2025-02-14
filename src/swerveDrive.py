@@ -68,13 +68,13 @@ class SwerveDrive:
         self.offsetY = (0.05*np.sign(joystickY))
         self.offsetR = (0.05*np.sign(joystickRotation))
 
-        self.proxyDeadZoneX = (joystickX - self.offsetX) * 2.5
-        self.proxyDeadZoneY = (joystickY - self.offsetY) * 2.5
-        self.proxyDeadZoneR = (joystickY - self.offsetR) * 2.5
+        self.proxyDeadZoneX = (joystickX - self.offsetX) * 3.5
+        self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
+        self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
-        self.driveX = self.proxyDeadZoneX*((LBumperSpeedToggle/2)+1)#self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = self.proxyDeadZoneY*((LBumperSpeedToggle/2)+1)#self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = self.proxyDeadZoneR*((LBumperSpeedToggle/2)+1)#self.table.getNumber(
+        self.driveX = self.proxyDeadZoneX*((LBumperSpeedToggle)+1)#self.table.getNumber("SD Joystick X offset", 0)
+        self.driveY = self.proxyDeadZoneY*((LBumperSpeedToggle)+1)#self.table.getNumber("SD Joystick Y offset", 0)
+        self.driveRotation = self.proxyDeadZoneR*((LBumperSpeedToggle)+1)#self.table.getNumber(
             #"SD Joystick Omega offset", 0
         #)
 
