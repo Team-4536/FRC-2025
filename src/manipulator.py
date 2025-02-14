@@ -31,7 +31,7 @@ class ManipulatorSubsystem:
                 self.state = self.ManipulatorState.INTAKE
 
         elif self.state == self.ManipulatorState.INTAKE:
-            buf.manipulatorVolts = 8
+            buf.manipulatorVolts = 4
 
             if not buf.secondManipulatorSensor and not buf.firstManipulatorSensor:
                 self.state = self.ManipulatorState.IDLE
