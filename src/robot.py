@@ -34,7 +34,6 @@ class Robot(wpilib.TimedRobot):
 
         self.driveCtrlr = wpilib.XboxController(0)
         self.mechCtrlr = wpilib.XboxController(1)
-        self.senseCtrlr = wpilib.XboxController(3)
         self.buttonPanel = wpilib.Joystick(4)
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
