@@ -44,8 +44,8 @@ class RobotHALBuffer:
         self.turnBLSetpoint: radians = 0
         self.turnBRSetpoint: radians = 0
 
-        self.manipulatorSensorForward: bool = False
-        self.manipulatorSensorReverse: bool = False
+        self.secondManipulatorSensor: bool = False
+        self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
         self.yaw: float = 0
@@ -63,8 +63,8 @@ class RobotHALBuffer:
         table.putNumber("Turn CCW BL", self.turnCCWBL)
         table.putNumber("Turn CCW BR", self.turnCCWBR)
 
-        table.putBoolean("Manipulator sensor Forward", self.manipulatorSensorForward)
-        table.putBoolean("Manipulator sensor Reverse", self.manipulatorSensorReverse)
+        table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
+        table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
 
         table.putNumber("yaw", self.yaw)
 
@@ -89,8 +89,8 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        self.manipulatorSensorForward = self.manipulatorMotor.getForwardLimitSwitch()
-        self.manipulatorSensorReverse = self.manipulatorMotor.getReverseLimitSwitch()
+        self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
+        self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -319,8 +319,8 @@ class RobotHAL:
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
 
-        buf.manipulatorSensorReverse = self.manipulatorSensorReverse.get()
-        buf.manipulatorSensorForward = self.manipulatorSensorForward.get()
+        buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
+        buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
         self.elevatorController.update(
             buf.elevatorSetpoint,
