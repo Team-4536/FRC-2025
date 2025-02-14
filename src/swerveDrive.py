@@ -1,7 +1,7 @@
 import math
 import robotHAL
 import robot
-
+import numpy as np
 from ntcore import NetworkTableInstance
 from real import angleWrap
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
@@ -49,6 +49,7 @@ class SwerveDrive:
         joystickX: float,
         joystickY: float,
         joystickRotation: float,
+        LBumperSpeedToggle: float
     ):
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)
@@ -61,11 +62,21 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 2.5 + self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = joystickY * 2.5 + self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = joystickRotation * -2.5 + self.table.getNumber(
-            "SD Joystick Omega offset", 0
-        )
+        self.number = 1
+        
+        self.offsetX = (0.05*np.sign(joystickX))
+        self.offsetY = (0.05*np.sign(joystickY))
+        self.offsetR = (0.05*np.sign(joystickRotation))
+
+        self.proxyDeadZoneX = (joystickX - self.offsetX) * 2.5
+        self.proxyDeadZoneY = (joystickY - self.offsetY) * 2.5
+        self.proxyDeadZoneR = (joystickY - self.offsetR) * 2.5
+
+        self.driveX = self.proxyDeadZoneX*((LBumperSpeedToggle/2)+1)#self.table.getNumber("SD Joystick X offset", 0)
+        self.driveY = self.proxyDeadZoneY*((LBumperSpeedToggle/2)+1)#self.table.getNumber("SD Joystick Y offset", 0)
+        self.driveRotation = self.proxyDeadZoneR*((LBumperSpeedToggle/2)+1)#self.table.getNumber(
+            #"SD Joystick Omega offset", 0
+        #)
 
         self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
 
