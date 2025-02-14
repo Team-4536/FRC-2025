@@ -16,8 +16,8 @@ class ElevatorMode(Enum):
 class ElevatorSubsystem:
 
     INTAKE_POS = 0
-    L2_POS = 15
-    L3_POS = 30
+    L2_POS = 11.71
+    L3_POS = 24.59
     L4_POS = 45
 
     def __init__(self):
