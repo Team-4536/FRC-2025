@@ -45,6 +45,8 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
+        
+
     def resetEncoders(self) -> None:
         pass
 
@@ -94,6 +96,8 @@ class RobotHAL:
         self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
+
+        self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
 
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
@@ -298,6 +302,11 @@ class RobotHAL:
 
         self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
+        self.chuteMotorVoltage = self.chuteMotor.getAppliedOutput()* self.chuteMotor.getBusVoltage()
+        self.table.putNumber("Intake Chute Voltage", self.chuteMotorVoltage)
+        self.chuteMotor.setVoltage(self.table.getNumber("Intake Chute Voltage", self.chuteMotorVoltage))
+        
 
 
 class SwerveModuleController:
