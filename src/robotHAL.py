@@ -36,6 +36,9 @@ class RobotHALBuffer:
         self.turnCCWBL: radians = 0
         self.turnCCWBR: radians = 0
 
+        self.elevatorSlot: ClosedLoopSlot = ClosedLoopSlot.kSlot0
+        self.elevatorControl: SparkMax.ControlType = SparkMax.ControlType.kPosition
+
         self.driveFLSetpoint: meters_per_second = 0
         self.driveFRSetpoint: meters_per_second = 0
         self.driveBLSetpoint: meters_per_second = 0
@@ -49,16 +52,6 @@ class RobotHALBuffer:
         self.manipulatorSensorForward: bool = False
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
-
-        self.drivePositionsList = [0, 0, 0, 0]
-        self.steerPositionList = [0, 0, 0, 0]
-
-        self.yaw = 0
-
-        self.moduleFL = SwerveModulePosition(0, Rotation2d(radians(0)))
-        self.moduleFR = SwerveModulePosition(0, Rotation2d(radians(0)))
-        self.moduleBL = SwerveModulePosition(0, Rotation2d(radians(0)))
-        self.moduleBR = SwerveModulePosition(0, Rotation2d(radians(0)))
 
     def resetEncoders(self) -> None:
         pass
@@ -75,6 +68,8 @@ class RobotHALBuffer:
 
         table.putBoolean("Manipulator sensor Forward", self.manipulatorSensorForward)
         table.putBoolean("Manipulator sensor Reverse", self.manipulatorSensorReverse)
+
+        table.putNumber("yaw", self.yaw)
 
 
 debugMode = True
@@ -137,7 +132,7 @@ class RobotHAL:
 
         driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             2000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(4000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
+        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
         driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
         turnMotorPIDConfig = SparkMaxConfig()
@@ -197,14 +192,12 @@ class RobotHAL:
         )
 
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
+        self.elevatorMotorEncoder = self.elevatorMotor.getEncoder()
         elevatorMotorPIDConfig = SparkMaxConfig()
         elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-1, 1)
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000).maxAcceleration(
-            10000
-        ).allowedClosedLoopError(0.05)
+        ).outputRange(-0.5, 0.5)
 
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
@@ -214,11 +207,29 @@ class RobotHAL:
         elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
             LimitSwitchConfig.Type.kNormallyClosed
         )
+        elevatorMotorPIDConfig.closedLoop.pidf(
+            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot1
+        )
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
+            5000, ClosedLoopSlot.kSlot1
+        ).maxAcceleration(10000, ClosedLoopSlot.kSlot1).allowedClosedLoopError(
+            0.05, ClosedLoopSlot.kSlot1
+        )
+
+        elevatorMotorPIDConfig.closedLoop.pidf(
+            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot2
+        )
+        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
+            2500, ClosedLoopSlot.kSlot2
+        ).maxAcceleration(5000, ClosedLoopSlot.kSlot2).allowedClosedLoopError(
+            0.05, ClosedLoopSlot.kSlot2
+        )
+
         self.elevatorController = RevMotorController(
             "Elevator",
             self.elevatorMotor,
             elevatorMotorPIDConfig,
-            SparkMax.ControlType.kMAXMotionPositionControl,
+            SparkMax.ControlType.kPosition,
         )
 
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
@@ -339,8 +350,17 @@ class RobotHAL:
         buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
         buf.moduleBR = SwerveModulePosition(drivePosBR, Rotation2d(radians(steerPosBR)))
 
-        self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
+        self.elevatorController.update(
+            buf.elevatorSetpoint,
+            buf.elevatorArbFF,
+            buf.elevatorSlot,
+            buf.elevatorControl,
+        )
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
+        buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
+
+        buf.yaw = math.radians(-self.gyro.getAngle())
 
 
 class SwerveModuleController:
@@ -430,7 +450,13 @@ class RevMotorController:
         for key, value in zip(self.PIDValues.keys(), self.PIDValues.values()):
             self.table.putNumber(name + key, value)
 
-    def update(self, setpoint: float, arbFF: float) -> None:
+    def update(
+        self,
+        setpoint: float,
+        arbFF: float,
+        slot: ClosedLoopSlot = ClosedLoopSlot.kSlot0,
+        controlType: SparkMax.ControlType | None = None,
+    ) -> None:
 
         changeError = 1e-6
         reconfigureFlag = False
@@ -476,10 +502,13 @@ class RevMotorController:
         self.setpoint = setpoint
         self.table.putNumber(self.name + " setpoint", self.setpoint)
 
+        if controlType == None:
+            controlType = self.controlType
+
         self.controller.setReference(
             setpoint,
-            self.controlType,
-            ClosedLoopSlot.kSlot0,
+            controlType,
+            slot,
             arbFF,
             SparkClosedLoopController.ArbFFUnits.kVoltage,
         )
