@@ -19,7 +19,12 @@ class SwerveDrive:
     MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
 
     def __init__(self) -> None:
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Swerve Drive Subsystem")
+        )
+        self.debugMode = False
         oneftInMeters = 0.3048
 
         # self.modulePositions: list[Translation2d] = [
@@ -39,6 +44,7 @@ class SwerveDrive:
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
+        self.table.putBoolean("Swerve Drive Debug Mode", False)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
@@ -50,9 +56,11 @@ class SwerveDrive:
         joystickY: float,
         joystickRotation: float,
     ):
-        self.table.putNumber("Drive Ctrl X", joystickX)
-        self.table.putNumber("Drive Ctrl Y", joystickY)
-        self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
+        self.debugMode = self.table.getBoolean("Swerve Drive Debug Mode", False)
+        if self.debugMode:
+            self.table.putNumber("Drive Ctrl X", joystickX)
+            self.table.putNumber("Drive Ctrl Y", joystickY)
+            self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
         if abs(joystickX) < 0.05:
             joystickX = 0
@@ -61,23 +69,26 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 5 + self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = joystickY * 5 + self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = joystickRotation * -6.5 + self.table.getNumber(
-            "SD Joystick Omega offset", 0
-        )
+        self.driveX = joystickX * 5
+        self.driveY = joystickY * 5
+        self.driveRotation = joystickRotation * -6.5
+
+        if self.debugMode:
+            self.driveX += self.table.getNumber("SD Joystick X offset", 0)
+            self.driveY += self.table.getNumber("SD Joystick Y offset", 0)
+            self.driveRotation += self.table.getNumber("SD Joystick Omega offset", 0)
 
         driveVector = Translation2d(joystickX, joystickY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
-        # self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 5, driveVector.Y() * 5, self.driveRotation
         )
 
-        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+        if self.debugMode:
+            self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+            self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+            self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
@@ -85,18 +96,11 @@ class SwerveDrive:
             self.MAX_METERS_PER_SEC,
         )
 
-        self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
-        )
-
-        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
-
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
-        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
             swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
