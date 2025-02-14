@@ -63,11 +63,16 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
+            self.mechCtrlr.getYButtonPressed(),
+            self.mechCtrlr.getPOV(),
         )
 
         self.manipulatorSubsystem.update(
             self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
         )
+
+        if self.driveCtrlr.getAButton():
+            self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
