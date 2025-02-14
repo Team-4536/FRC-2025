@@ -13,6 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 
+
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
 
@@ -64,17 +65,9 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
         )
 
-        self.manipulatorSubsystem.update(self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed())
-
-        if self.senseCtrlr.getAButton():
-            self.hal.simForwardSensorValue = True
-        if self.senseCtrlr.getBButton():
-            self.hal.simForwardSensorValue = False
-
-        if self.senseCtrlr.getYButton():
-            self.hal.simReverseSensorValue = True
-        if self.senseCtrlr.getXButton():
-            self.hal.simReverseSensorValue = False
+        self.manipulatorSubsystem.update(
+            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+        )
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
