@@ -84,13 +84,19 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 2.5 + self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = joystickY * 2.5 + self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = joystickRotation * -2.5 + self.table.getNumber(
+        self.driveX = joystickX * 5 + self.table.getNumber("SD Joystick X offset", 0)
+        self.driveY = joystickY * 5 + self.table.getNumber("SD Joystick Y offset", 0)
+        self.driveRotation = joystickRotation * -6.5 + self.table.getNumber(
             "SD Joystick Omega offset", 0
         )
 
-        self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
+        driveVector = Translation2d(joystickX, joystickY)
+        driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
+
+        # self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
+        self.chassisSpeeds = ChassisSpeeds(
+            driveVector.X() * 5, driveVector.Y() * 5, self.driveRotation
+        )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)

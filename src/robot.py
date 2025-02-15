@@ -13,6 +13,7 @@ from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL, RobotHALBuffer
 from swerveDrive import SwerveDrive
 from wpimath.units import radians
+from manipulator import ManipulatorSubsystem
 
 
 class Robot(wpilib.TimedRobot):
@@ -40,6 +41,7 @@ class Robot(wpilib.TimedRobot):
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.elevatorSubsystem = ElevatorSubsystem()
+        self.manipulatorSubsystem = ManipulatorSubsystem()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -63,14 +65,16 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
+            self.mechCtrlr.getYButtonPressed(),
+            self.mechCtrlr.getPOV(),
         )
 
-        if self.mechCtrlr.getBButton():
-            self.hal.manipulatorVolts = 5
-        elif self.mechCtrlr.getAButton():
-            self.hal.manipulatorVolts = -5
-        else:
-            self.hal.manipulatorVolts = 0
+        self.manipulatorSubsystem.update(
+            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+        )
+
+        if self.driveCtrlr.getAButton():
+            self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
         # Keep the lines below at the bottom of teleopPeriodic
