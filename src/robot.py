@@ -68,7 +68,11 @@ class Robot(wpilib.TimedRobot):
         )
 
         self.manipulatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+            self.hal, 
+            self.mechCtrlr.getAButton(), 
+            self.mechCtrlr.getLeftBumperPressed(), 
+            self.mechCtrlr.getBButton(), 
+            self.mechCtrlr.getRightBumper()
         )
 
         if self.driveCtrlr.getAButton():

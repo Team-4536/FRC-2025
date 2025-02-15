@@ -48,6 +48,10 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
+        self.frontArmLimitSwitch: bool = False
+        self.backArmLimitSwitch: bool = False
+        self.armVolts: float = 0
+
         self.yaw: float = 0
 
     def resetEncoders(self) -> None:
@@ -55,6 +59,7 @@ class RobotHALBuffer:
 
     def stopMotors(self) -> None:
         self.manipulatorVolts = 0
+        self.armVolts = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putNumber("Elevator Pos(rot)", self.elevatorPos)
@@ -92,6 +97,19 @@ class RobotHAL:
         self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
 
+       
+        self.ArmMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
+        self.frontArmLimitSwitch = self.ArmMotor
+        self.backArmLimitSwitch = self.ArmMotor
+        ArmConfig = SparkMaxConfig()
+        #ArmConfig.limitSwitch.frontArmLimitSwitch(True)
+        #ArmConfig.limitSwitch.backLimitSwitchEnabled(True)
+        
+
+        self.frontArmLimitSwitch = self.ArmMotor.getForwardLimitSwitch()
+        self.backArmLimitSwitch = self.ArmMotor.getReverseLimitSwitch()
+
+
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorBL = rev.SparkMax(5, rev.SparkMax.MotorType.kBrushless)
@@ -116,6 +134,13 @@ class RobotHAL:
         self.turnMotorFRCANcoder = CANcoder(22)
         self.turnMotorBLCANcoder = CANcoder(23)
         self.turnMotorBRCANcoder = CANcoder(24)
+
+        self.ArmMotorEncoder = self.ArmMotor.getEncoder()
+        self.frontArmLimitSwitch = False
+        self.backArmLimitSwitch = False
+
+
+        
 
         driveMotorPIDConfig = SparkMaxConfig()
         driveMotorPIDConfig.smartCurrentLimit(40)
@@ -333,6 +358,8 @@ class RobotHAL:
         buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
 
         buf.yaw = math.radians(-self.gyro.getAngle())
+
+        self.ArmMotor.setVoltage(buf.armVolts)
 
 
 class SwerveModuleController:
