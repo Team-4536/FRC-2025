@@ -56,6 +56,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis()
         )
 
         self.elevatorSubsystem.update(
