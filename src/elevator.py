@@ -66,13 +66,13 @@ class ElevatorSubsystem:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
-            if POVSetpoint == 0:
+            if POVSetpoint == 180:
                 self.posSetpoint = self.INTAKE_POS
             elif POVSetpoint == 90:
                 self.posSetpoint = self.L2_POS
-            elif POVSetpoint == 180:
-                self.posSetpoint = self.L3_POS
             elif POVSetpoint == 270:
+                self.posSetpoint = self.L3_POS
+            elif POVSetpoint == 0:
                 self.posSetpoint = self.L4_POS
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
@@ -82,7 +82,7 @@ class ElevatorSubsystem:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
-            self.velSetpoint = 75 * up + (-75 * down)  # moves the elevator
+            self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
 
         # if self.mode == ElevatorMode.POSITION_MODE:
         #    hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
@@ -97,4 +97,4 @@ class ElevatorSubsystem:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-        hal.elevatorArbFF = 0.3 + self.table.getNumber("Elevator arbFF offset", 0)
+        hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)

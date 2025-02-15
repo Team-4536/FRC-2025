@@ -94,21 +94,20 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-        self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
+        # self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
+        # self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
+        self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
+        self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
-       
         self.ArmMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.frontArmLimitSwitch = self.ArmMotor
         self.backArmLimitSwitch = self.ArmMotor
         ArmConfig = SparkMaxConfig()
-        #ArmConfig.limitSwitch.frontArmLimitSwitch(True)
-        #ArmConfig.limitSwitch.backLimitSwitchEnabled(True)
-        
+        # ArmConfig.limitSwitch.frontArmLimitSwitch(True)
+        # ArmConfig.limitSwitch.backLimitSwitchEnabled(True)
 
         self.frontArmLimitSwitch = self.ArmMotor.getForwardLimitSwitch()
         self.backArmLimitSwitch = self.ArmMotor.getReverseLimitSwitch()
-
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -138,9 +137,6 @@ class RobotHAL:
         self.ArmMotorEncoder = self.ArmMotor.getEncoder()
         self.frontArmLimitSwitch = False
         self.backArmLimitSwitch = False
-
-
-        
 
         driveMotorPIDConfig = SparkMaxConfig()
         driveMotorPIDConfig.smartCurrentLimit(40)
@@ -214,10 +210,10 @@ class RobotHAL:
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
         self.elevatorMotorEncoder = self.elevatorMotor.getEncoder()
         elevatorMotorPIDConfig = SparkMaxConfig()
-        elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
+        elevatorMotorPIDConfig.smartCurrentLimit(35)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-0.5, 0.5)
+        ).outputRange(-0.7, 0.7)
 
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(

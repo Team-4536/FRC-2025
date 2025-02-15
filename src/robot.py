@@ -56,7 +56,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
-            self.driveCtrlr.getRightTriggerAxis()
+            self.driveCtrlr.getRightTriggerAxis(),
         )
 
         self.elevatorSubsystem.update(
@@ -68,14 +68,14 @@ class Robot(wpilib.TimedRobot):
         )
 
         self.manipulatorSubsystem.update(
-            self.hal, 
-            self.mechCtrlr.getAButton(), 
-            self.mechCtrlr.getLeftBumperPressed(), 
-            self.mechCtrlr.getBButton(), 
-            self.mechCtrlr.getRightBumper()
+            self.hal,
+            self.mechCtrlr.getAButton(),
+            self.mechCtrlr.getLeftBumperPressed(),
+            self.mechCtrlr.getBButton(),
+            self.mechCtrlr.getRightBumper(),
         )
 
-        if self.driveCtrlr.getAButton():
+        if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic

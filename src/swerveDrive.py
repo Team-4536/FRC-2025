@@ -16,7 +16,7 @@ from wpimath.kinematics import (
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
-    MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
+    MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
@@ -49,7 +49,7 @@ class SwerveDrive:
         joystickX: float,
         joystickY: float,
         joystickRotation: float,
-        LBumperSpeedToggle: float
+        RTriggerScalar: float,
     ):
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)
@@ -63,27 +63,39 @@ class SwerveDrive:
             joystickRotation = 0
 
         self.number = 1
-        
-        self.offsetX = (0.05*np.sign(joystickX))
-        self.offsetY = (0.05*np.sign(joystickY))
-        self.offsetR = (0.05*np.sign(joystickRotation))
+
+        self.offsetX = 0.05 * np.sign(joystickX)
+        self.offsetY = 0.05 * np.sign(joystickY)
+        self.offsetR = 0.05 * np.sign(joystickRotation)
 
         self.proxyDeadZoneX = (joystickX - self.offsetX) * 3.5
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
-        self.driveX = self.proxyDeadZoneX*((LBumperSpeedToggle)+1)#self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = self.proxyDeadZoneY*((LBumperSpeedToggle)+1)#self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = self.proxyDeadZoneR*((LBumperSpeedToggle)+1)#self.table.getNumber(
-            #"SD Joystick Omega offset", 0
-        #)
+        # self.driveX = self.proxyDeadZoneX * (
+        #     (LBumperSpeedToggle) + 1
+        # )  # self.table.getNumber("SD Joystick X offset", 0)
+        # self.driveY = self.proxyDeadZoneY * (
+        #     (LBumperSpeedToggle) + 1
+        # )  # self.table.getNumber("SD Joystick Y offset", 0)
+        # self.driveRotation = self.proxyDeadZoneR * (
+        #     (LBumperSpeedToggle) + 1
+        # )  # self.table.getNumber(
+        # # "SD Joystick Omega offset", 0
+        # # )
 
-        driveVector = Translation2d(joystickX, joystickY)
+        self.driveX = self.proxyDeadZoneX  # * 4**RTriggerScalar
+        self.driveY = self.proxyDeadZoneY  # * 4**RTriggerScalar
+        self.driveRotation = self.proxyDeadZoneR  # * 4**RTriggerScalar
+
+        driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
         # self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
         self.chassisSpeeds = ChassisSpeeds(
-            driveVector.X() * 5, driveVector.Y() * 5, self.driveRotation
+            driveVector.X() * 0.5 * 4**RTriggerScalar,
+            driveVector.Y() * 0.5 * 4**RTriggerScalar,
+            -self.driveRotation * 3,
         )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
