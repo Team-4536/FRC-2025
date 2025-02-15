@@ -20,12 +20,15 @@ class ElevatorSubsystem:
     L3_POS = 24.59
     L4_POS = 45
 
-    def __init__(self):
+    def __init__(self, hal: RobotHALBuffer):
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
         self.velSetpoint = 0
         self.posSetpoint = 0
+
+        self.elevatorSafe = True  # This variable currently doesnt work, delete this comment once it works
+
         # mode 0 is position control, 1 is velocity
         self.mode = ElevatorMode.MANUAL_MODE
         self.debugMode = False
@@ -59,6 +62,10 @@ class ElevatorSubsystem:
             "Elevator setpoint offset", 0
         )
 
+        while not self.elevatorSafe:
+            hal.elevatorSlot = ClosedLoopSlot.kSlot2
+            self.posSetpoint = hal.elevatorPos
+
         if self.debugMode:
             self.table.putNumber("Elevator State", self.mode.value)
 
@@ -77,6 +84,18 @@ class ElevatorSubsystem:
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
             )
+
+            if (
+                hal.elevatorPos > 10
+                and hal.elevatorPos < 35
+                or self.posSetpoint > hal.elevatorPos
+                and self.posSetpoint < 35
+                or self.posSetpoint < hal.elevatorPos
+                and self.posSetpoint > 10
+            ):
+                hal.elevatorSlot = ClosedLoopSlot.kSlot2
+            else:
+                hal.elevatorSlot = ClosedLoopSlot.kSlot1
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl

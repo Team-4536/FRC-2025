@@ -50,6 +50,8 @@ class RobotHALBuffer:
 
         self.yaw: float = 0
 
+        self.elevatorSafe = True
+
     def resetEncoders(self) -> None:
         pass
 
@@ -212,13 +214,8 @@ class RobotHAL:
         )
 
         elevatorMotorPIDConfig.closedLoop.pidf(
-            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot2
-        )
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            2500, ClosedLoopSlot.kSlot2
-        ).maxAcceleration(5000, ClosedLoopSlot.kSlot2).allowedClosedLoopError(
-            0.05, ClosedLoopSlot.kSlot2
-        )
+            0.0001, 0.0, 0.0, 0.0, ClosedLoopSlot.kSlot2
+        ).outputRange(-0.7, 0.7, ClosedLoopSlot.kSlot2)
 
         self.elevatorController = RevMotorController(
             "Elevator",
