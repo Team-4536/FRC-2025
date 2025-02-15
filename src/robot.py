@@ -47,7 +47,7 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
-        pass
+        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -72,6 +72,7 @@ class Robot(wpilib.TimedRobot):
         else:
             self.hal.manipulatorVolts = 0
 
+        self.swerveDrive.updateOdometry(self.hal)
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)

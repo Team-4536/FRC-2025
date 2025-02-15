@@ -2,6 +2,8 @@ import math
 import robotHAL
 import robot
 
+import wpilib
+from wpilib import SmartDashboard, Field2d
 from ntcore import NetworkTableInstance
 from real import angleWrap
 import wpimath.units
@@ -23,6 +25,7 @@ class SwerveDrive:
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
+        self.OdomField = Field2d()
 
         # self.modulePositions: list[Translation2d] = [
         #     Translation2d(oneftInMeters, oneftInMeters),
@@ -132,11 +135,22 @@ class SwerveDrive:
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
 
-        modulePosList = [SwerveModulePosition(hal.drivePositionsList[i], Rotation2d(hal.steerPositionList)) for i in hal.drivePositionsList]
-        self.odometry.update(hal.yaw, modulePosList)
+        
+
+        modulePosList = (SwerveModulePosition(hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))),
+                         SwerveModulePosition(hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))),
+                         SwerveModulePosition(hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))),
+                         SwerveModulePosition(hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))))
+        self.odometry.update(Rotation2d(hal.yaw), modulePosList)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
-        self.table.putNumber('odom', self.odometry)
+        self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
+        self.OdomField.setRobotPose(self.odometry.getPose())
+
+        self.table.putNumber('odomX', self.odomPos[0])
+        self.table.putNumber('odomy', self.odomPos[1])
+        wpilib.SmartDashboard.putData('Odom', self.OdomField)
+        
 
 
     def optimizeTarget(
