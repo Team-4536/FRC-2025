@@ -73,6 +73,12 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
 
+        if self.mechCtrlr.getRightTriggerAxis():
+            self.hal.controllerTrigger = -1
+        elif self.mechCtrlr.getRightBumperPressed():
+            self.hal.controllerTrigger = 1
+
+
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
@@ -86,6 +92,8 @@ class Robot(wpilib.TimedRobot):
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
+
+    
 
 
 if __name__ == "__main__":

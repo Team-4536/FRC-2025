@@ -45,6 +45,8 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
+        self.controllerTrigger = 0
+
         
 
     def resetEncoders(self) -> None:
@@ -98,6 +100,14 @@ class RobotHAL:
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
         self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
+
+        chuteMotorConfig = SparkMaxConfig()
+        
+        self.chuteMotor.configure(
+            chuteMotorConfig,
+            SparkMax.ResetMode.kResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters
+        )
 
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
@@ -207,6 +217,15 @@ class RobotHAL:
             elevatorMotorPIDConfig,
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
+        self.setChuteVoltage = 0
+        self.table.putNumber("Set Chute Voltage", self.setChuteVoltage)
+        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
+        self.setChuteControlMode = 3
+        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
+
+        self.startTime = wpilib.getTime()
+        self.currentTime = wpilib.getTime()
+
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
@@ -305,7 +324,40 @@ class RobotHAL:
 
         self.chuteMotorVoltage = self.chuteMotor.getAppliedOutput()* self.chuteMotor.getBusVoltage()
         self.table.putNumber("Intake Chute Voltage", self.chuteMotorVoltage)
-        self.chuteMotor.setVoltage(self.table.getNumber("Intake Chute Voltage", self.chuteMotorVoltage))
+        self.setChuteControlMode = self.table.getNumber("Chute Control Mode", self.setChuteControlMode)
+        self.currentTime = wpilib.getTime()
+
+        mode = self.setChuteControlMode
+
+        chuteSpeed = 5
+
+        if mode == 1:
+            
+            #self.setChuteVoltage = self.table.getNumber("Set Chute Voltage", self.setChuteVoltage)
+            self.chuteMotor.setVoltage(buf.controllerTrigger*self.setChuteVoltage) # POSITIVE Pulls down Negative lets up
+
+        elif mode == 2:
+            
+            if self.chuteMotorLimitswitch.get() == False: #returns false if the limitSwitch is pressed
+                
+                self.chuteMotor.setVoltage(chuteSpeed)
+
+            else:
+                
+                self.chuteMotor.setVoltage(0)
+        
+        elif mode == 3:
+
+            if self.currentTime - self.startTime < 2:
+
+                self.chuteMotor.setVoltage(-chuteSpeed)
+            
+            else:
+                
+                self.chuteMotor.setVoltage(0)
+
+        
+        
         
 
 
