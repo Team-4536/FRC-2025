@@ -19,10 +19,10 @@ from manipulator import ManipulatorSubsystem
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
 
-        
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
 
+        
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
@@ -40,12 +40,15 @@ class Robot(wpilib.TimedRobot):
         self.buttonPanel = wpilib.Joystick(4)
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
+        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
+        self.swerveDrive.updateOdometry(self.hal)
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
@@ -93,7 +96,6 @@ class Robot(wpilib.TimedRobot):
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
-    
 
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
