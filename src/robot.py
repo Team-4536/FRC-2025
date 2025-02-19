@@ -59,15 +59,11 @@ class Robot(wpilib.TimedRobot):
         self.PC2Y = self.photonCamera2.robotY
         self.PC1Angle = self.photonCamera1.robotAngle
         self.PC2Angle = self.photonCamera2.robotAngle
+        self.photonCamera1.photonTable.putNumber("cam 1 x", self.PC1X)
 
-        if self.driveCtrlr.getAButtonPressed():  # and self.a == True:
+        if self.driveCtrlr.getAButtonPressed():
             self.photonCamera1.savePos()
             self.photonCamera2.savePos()
-
-            # self.a = False
-
-        # if self.driveCtrlr.getAButtonReleased():
-        #     self.a = True
 
     def teleopInit(self) -> None:
         pass
