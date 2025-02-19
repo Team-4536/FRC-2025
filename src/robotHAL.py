@@ -256,7 +256,7 @@ class RobotHAL:
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
-        self.prev = copy.deepcopy(buf)
+        self.prev = copy.copy(buf)
 
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
