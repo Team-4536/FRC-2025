@@ -52,6 +52,8 @@ class SwerveDrive:
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
 
+        self.DJOtest = 0
+
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         
         modulePosList = (SwerveModulePosition(hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))),
@@ -147,7 +149,9 @@ class SwerveDrive:
                          SwerveModulePosition(hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))),
                          SwerveModulePosition(hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))),
                          SwerveModulePosition(hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))))
-        self.odometry.update(Rotation2d(hal.yaw), modulePosList)
+        self.DJOtest = self.DJOtest + 0.01
+        self.table.putNumber("DJOtest",self.DJOtest % 10)
+        self.odometry.update(Rotation2d(self.DJOtest), modulePosList)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
