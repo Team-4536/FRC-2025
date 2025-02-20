@@ -20,14 +20,12 @@ class ElevatorSubsystem:
     L3_POS = 24.59
     L4_POS = 45
 
-    def __init__(self, hal: RobotHALBuffer):
+    def __init__(self):
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
         self.velSetpoint = 0
         self.posSetpoint = 0
-
-        self.elevatorSafe = True  # This variable currently doesnt work, delete this comment once it works
 
         # mode 0 is position control, 1 is velocity
         self.mode = ElevatorMode.MANUAL_MODE
@@ -62,14 +60,14 @@ class ElevatorSubsystem:
             "Elevator setpoint offset", 0
         )
 
-        while not self.elevatorSafe:
-            hal.elevatorSlot = ClosedLoopSlot.kSlot2
-            self.posSetpoint = hal.elevatorPos
-
         if self.debugMode:
             self.table.putNumber("Elevator State", self.mode.value)
 
-        if self.mode == ElevatorMode.POSITION_MODE:
+        if hal.firstManipulatorSensor:
+            hal.elevatorSlot = ClosedLoopSlot.kSlot2
+            self.posSetpoint = hal.elevatorPos
+
+        elif self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
@@ -102,15 +100,6 @@ class ElevatorSubsystem:
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 75 * up + (-75 * down)  # moves the elevator
-
-        # if self.mode == ElevatorMode.POSITION_MODE:
-        #    hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
-        # if self.mode == ElevatorMode.MANUAL_MODE:
-        #    hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)

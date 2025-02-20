@@ -48,9 +48,14 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
-        self.yaw: float = 0
+        self.totalspeed = sum(
+            self.driveFLSetpoint,
+            self.driveFRSetpoint,
+            self.driveBLSetpoint,
+            self.driveBRSetpoint,
+        )
 
-        self.elevatorSafe = True
+        self.yaw: float = 0
 
     def resetEncoders(self) -> None:
         pass
@@ -330,6 +335,13 @@ class RobotHAL:
         buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
 
         buf.yaw = math.radians(-self.gyro.getAngle())
+
+        buf.totalspeed = sum(
+            self.BLSwerveModule.driveMotor.encoder.getVelocity(),
+            self.BRSwerveModule.driveMotor.encoder.getVelocity(),
+            self.FLSwerveModule.driveMotor.encoder.getVelocity(),
+            self.FRSwerveModule.driveMotor.encoder.getVelocity(),
+        )
 
 
 class SwerveModuleController:
