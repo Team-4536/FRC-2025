@@ -37,6 +37,8 @@ class ElevatorSubsystem:
         down: float,
         toggleMode: bool,
         POVSetpoint: float,
+        armUp: bool,
+        armDown: bool,
     ):
         # Dead-Zone
         if up < 0.1:
@@ -59,9 +61,6 @@ class ElevatorSubsystem:
             "Elevator setpoint offset", 0
         )
 
-        if self.debugMode:
-            self.table.putNumber("Elevator State", self.mode.value)
-
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
@@ -78,23 +77,26 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
+            if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
+                hal.elevatorSetpoint = hal.elevatorPos
+                hal.armVolts = -1
+            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
+                hal.armVolts = 1
+
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
 
-        # if self.mode == ElevatorMode.POSITION_MODE:
-        #    hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
-        # if self.mode == ElevatorMode.MANUAL_MODE:
-        #    hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
+            if armUp:
+                hal.armVolts = 1
+            elif armDown:
+                hal.armVolts = -1
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
+            self.table.putNumber("Elevator State", self.mode.value)
         hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)

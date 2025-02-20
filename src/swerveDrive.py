@@ -22,12 +22,6 @@ class SwerveDrive:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
 
-        # self.modulePositions: list[Translation2d] = [
-        #     Translation2d(oneftInMeters, oneftInMeters),
-        #     Translation2d(oneftInMeters, -oneftInMeters),
-        #     Translation2d(-oneftInMeters, oneftInMeters),
-        #     Translation2d(-oneftInMeters, -oneftInMeters),
-        # ]
         self.modulePositions: list[Translation2d] = [
             Translation2d(-oneftInMeters, oneftInMeters),
             Translation2d(oneftInMeters, oneftInMeters),
@@ -55,9 +49,14 @@ class SwerveDrive:
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
+        """
         if abs(joystickX) < 0.05:
             joystickX = 0
         if abs(joystickY) < 0.05:
+            joystickY = 0
+        """
+        if math.sqrt(joystickX**2 + joystickY**2) < 0.05:
+            joystickX = 0
             joystickY = 0
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
@@ -72,26 +71,13 @@ class SwerveDrive:
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
-        # self.driveX = self.proxyDeadZoneX * (
-        #     (LBumperSpeedToggle) + 1
-        # )  # self.table.getNumber("SD Joystick X offset", 0)
-        # self.driveY = self.proxyDeadZoneY * (
-        #     (LBumperSpeedToggle) + 1
-        # )  # self.table.getNumber("SD Joystick Y offset", 0)
-        # self.driveRotation = self.proxyDeadZoneR * (
-        #     (LBumperSpeedToggle) + 1
-        # )  # self.table.getNumber(
-        # # "SD Joystick Omega offset", 0
-        # # )
-
-        self.driveX = self.proxyDeadZoneX  # * 4**RTriggerScalar
-        self.driveY = self.proxyDeadZoneY  # * 4**RTriggerScalar
-        self.driveRotation = self.proxyDeadZoneR  # * 4**RTriggerScalar
+        self.driveX = self.proxyDeadZoneX
+        self.driveY = self.proxyDeadZoneY
+        self.driveRotation = self.proxyDeadZoneR
 
         driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
-        # self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
@@ -112,14 +98,11 @@ class SwerveDrive:
             "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
-        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
-
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
-        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
             swerveModuleStates[1], Rotation2d(hal.turnCCWFR)

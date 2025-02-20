@@ -99,15 +99,22 @@ class RobotHAL:
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
-        self.ArmMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
-        self.frontArmLimitSwitch = self.ArmMotor
-        self.backArmLimitSwitch = self.ArmMotor
-        ArmConfig = SparkMaxConfig()
-        # ArmConfig.limitSwitch.frontArmLimitSwitch(True)
-        # ArmConfig.limitSwitch.backLimitSwitchEnabled(True)
+        self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
+        self.armMotorEncoder = self.armMotor.getEncoder()
+        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
+        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
+        armConfig = SparkMaxConfig()
+        armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
 
-        self.frontArmLimitSwitch = self.ArmMotor.getForwardLimitSwitch()
-        self.backArmLimitSwitch = self.ArmMotor.getReverseLimitSwitch()
+        self.armMotor.configure(
+            armConfig,
+            SparkMax.ResetMode.kNoResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
+        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -133,10 +140,6 @@ class RobotHAL:
         self.turnMotorFRCANcoder = CANcoder(22)
         self.turnMotorBLCANcoder = CANcoder(23)
         self.turnMotorBRCANcoder = CANcoder(24)
-
-        self.ArmMotorEncoder = self.ArmMotor.getEncoder()
-        self.frontArmLimitSwitch = False
-        self.backArmLimitSwitch = False
 
         driveMotorPIDConfig = SparkMaxConfig()
         driveMotorPIDConfig.smartCurrentLimit(40)
@@ -355,7 +358,10 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.ArmMotor.setVoltage(buf.armVolts)
+        self.armMotor.setVoltage(buf.armVolts)
+
+        buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
+        buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
 
 
 class SwerveModuleController:

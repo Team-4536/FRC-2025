@@ -65,14 +65,14 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getBButton(),
         )
 
         self.manipulatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getAButton(),
             self.mechCtrlr.getLeftBumperPressed(),
-            self.mechCtrlr.getBButton(),
-            self.mechCtrlr.getRightBumper(),
         )
 
         if self.driveCtrlr.getStartButton():
