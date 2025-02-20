@@ -13,11 +13,9 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from IntakeChute import IntakeChute
 
+
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
 
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
@@ -65,8 +63,8 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightBumper(),
-            self.driveCtrlr.getLeftBumper()
+            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
         )
 
         if self.mechCtrlr.getBButton():
@@ -79,8 +77,6 @@ class Robot(wpilib.TimedRobot):
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
-
-
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
@@ -95,8 +91,6 @@ class Robot(wpilib.TimedRobot):
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
         self.hardware.update(self.hal, self.time)
-
-    
 
 
 if __name__ == "__main__":
