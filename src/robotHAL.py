@@ -45,7 +45,9 @@ class RobotHALBuffer:
         self.manipulatorSensorReverse: bool = False
         self.manipulatorVolts: float = 0
 
-        self.controllerTrigger = 0
+        self.setChuteVoltage = 0
+        self.chuteLimitSwitch = 0
+        self.chuteMotorVoltage = 0
 
         
 
@@ -102,12 +104,19 @@ class RobotHAL:
         self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
 
         chuteMotorConfig = SparkMaxConfig()
+        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchType(chuteMotorConfig.limitSwitch.Type.kNormallyClosed)
+        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+        chuteMotorConfig.smartCurrentLimit(20)
         
         self.chuteMotor.configure(
             chuteMotorConfig,
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters
         )
+
+        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
 
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
@@ -217,14 +226,10 @@ class RobotHAL:
             elevatorMotorPIDConfig,
             SparkMax.ControlType.kMAXMotionPositionControl,
         )
-        self.setChuteVoltage = 0
-        self.table.putNumber("Set Chute Voltage", self.setChuteVoltage)
-        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
-        self.setChuteControlMode = 3
-        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
 
-        self.startTime = wpilib.getTime()
-        self.currentTime = wpilib.getTime()
+        
+        
+
 
 
     # angle expected in CCW rads
@@ -322,39 +327,10 @@ class RobotHAL:
         self.elevatorController.update(buf.elevatorSetpoint, buf.elevatorArbFF)
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
-        self.chuteMotorVoltage = self.chuteMotor.getAppliedOutput()* self.chuteMotor.getBusVoltage()
-        self.table.putNumber("Intake Chute Voltage", self.chuteMotorVoltage)
-        self.setChuteControlMode = self.table.getNumber("Chute Control Mode", self.setChuteControlMode)
-        self.currentTime = wpilib.getTime()
-
-        mode = self.setChuteControlMode
-
-        chuteSpeed = 5
-
-        if mode == 1:
-            
-            #self.setChuteVoltage = self.table.getNumber("Set Chute Voltage", self.setChuteVoltage)
-            self.chuteMotor.setVoltage(buf.controllerTrigger*self.setChuteVoltage) # POSITIVE Pulls down Negative lets up
-
-        elif mode == 2:
-            
-            if self.chuteMotorLimitswitch.get() == False: #returns false if the limitSwitch is pressed
-                
-                self.chuteMotor.setVoltage(chuteSpeed)
-
-            else:
-                
-                self.chuteMotor.setVoltage(0)
+        buf.chuteMotorVoltage = self.chuteMotor.getAppliedOutput()* self.chuteMotor.getBusVoltage()
+        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
+        self.chuteMotor.setVoltage(buf.setChuteVoltage)
         
-        elif mode == 3:
-
-            if self.currentTime - self.startTime < 2:
-
-                self.chuteMotor.setVoltage(-chuteSpeed)
-            
-            else:
-                
-                self.chuteMotor.setVoltage(0)
 
         
         
@@ -501,3 +477,5 @@ class RevMotorController:
             arbFF,
             SparkClosedLoopController.ArbFFUnits.kVoltage,
         )
+
+        

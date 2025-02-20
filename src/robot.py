@@ -11,7 +11,7 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
-
+from IntakeChute import IntakeChute
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -37,6 +37,7 @@ class Robot(wpilib.TimedRobot):
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.elevatorSubsystem = ElevatorSubsystem()
+        self.intakeChute = IntakeChute()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -62,6 +63,12 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
         )
 
+        self.intakeChute.update(
+            self.hal,
+            self.driveCtrlr.getRightBumper(),
+            self.driveCtrlr.getLeftBumper()
+        )
+
         if self.mechCtrlr.getBButton():
             self.hal.manipulatorVolts = 5
         elif self.mechCtrlr.getAButton():
@@ -73,10 +80,6 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
 
-        if self.mechCtrlr.getRightTriggerAxis():
-            self.hal.controllerTrigger = -1
-        elif self.mechCtrlr.getRightBumperPressed():
-            self.hal.controllerTrigger = 1
 
 
     def autonomousPeriodic(self) -> None:
