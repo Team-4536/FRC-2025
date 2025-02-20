@@ -77,7 +77,8 @@ class Robot(wpilib.TimedRobot):
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
-
+        # if self.driveCtrlr.getLeftBumperPressed:
+        #     if self.driveCtrlr.get
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
