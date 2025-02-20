@@ -77,6 +77,8 @@ class SwerveDrive:
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
+    
+
     def update(
         self,
         hal: robotHAL.RobotHALBuffer,
@@ -160,14 +162,16 @@ class SwerveDrive:
                 hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
             ),
         )
+        
         self.odometry.update(Rotation2d(hal.yaw), modulePosList)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
-        self.OdomField.setRobotPose(self.odometry.getPose())
+        # self.OdomField.setRobotPose(self.odometry.getPose())
+        self.OdomField.setRobotPose(self.odometry.getPose().X, self.odometry.getPose().Y, self.odometry.getPose().rotation)
 
         self.table.putNumber("odomX", self.odomPos[0])
-        self.table.putNumber("odomy", self.odomPos[1])
+        self.table.putNumber("odomy", self.odomPos[1]) 
         wpilib.SmartDashboard.putData("Odom", self.OdomField)
 
     def optimizeTarget(
