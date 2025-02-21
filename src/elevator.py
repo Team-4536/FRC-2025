@@ -1,10 +1,13 @@
 # imports
 from robotHAL import RobotHALBuffer
+from robotHAL import RobotHAL
 from ntcore import NetworkTableInstance
 from rev import (
     SparkMax,
     ClosedLoopSlot,
 )
+import wpilib
+
 from enum import Enum
 
 
@@ -24,12 +27,16 @@ class ElevatorSubsystem:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
+
         self.velSetpoint = 0
         self.posSetpoint = 0
+
         # mode 0 is position control, 1 is velocity
         self.mode = ElevatorMode.MANUAL_MODE
         self.debugMode = False
+        # self.table.getNumber("Elevator Mode", self.mode)
 
+    # >:D
     def update(
         self,
         hal: RobotHALBuffer,
@@ -93,6 +100,9 @@ class ElevatorSubsystem:
                 hal.armVolts = 1
             elif armDown:
                 hal.armVolts = -1
+
+        if hal.firstManipulatorSensor:
+            self.posSetpoint = hal.elevatorPos
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
