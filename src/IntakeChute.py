@@ -28,10 +28,10 @@ class IntakeChute:
 
         self.table.putBoolean("pressed", self.yToggle)
 
-        if BButton:
+        if YButton:
             self.yToggle = not (self.yToggle)
 
-        if YButton:
+        if BButton:
             self.bToggle = not (self.bToggle)
 
         if self.yToggle:
