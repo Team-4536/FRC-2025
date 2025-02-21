@@ -50,6 +50,10 @@ class RobotHALBuffer:
 
         self.yaw: float = 0
 
+        self.setChuteVoltage = 0
+        self.chuteLimitSwitch = 0
+        self.chuteMotorVoltage = 0
+
     def resetEncoders(self) -> None:
         pass
 
@@ -101,6 +105,25 @@ class RobotHAL:
         self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
+
+        self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
+
+        chuteMotorConfig = SparkMaxConfig()
+        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
+            chuteMotorConfig.limitSwitch.Type.kNormallyClosed
+        )
+        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+        chuteMotorConfig.smartCurrentLimit(20)
+
+        self.chuteMotor.configure(
+            chuteMotorConfig,
+            SparkMax.ResetMode.kResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
 
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
@@ -333,6 +356,12 @@ class RobotHAL:
         buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
 
         buf.yaw = math.radians(-self.gyro.getAngle())
+
+        buf.chuteMotorVoltage = (
+            self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
+        )
+        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
+        self.chuteMotor.setVoltage(buf.setChuteVoltage)
 
 
 class SwerveModuleController:
