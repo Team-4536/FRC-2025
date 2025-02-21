@@ -106,6 +106,7 @@ class RobotHAL:
         armConfig = SparkMaxConfig()
         armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        armConfig.smartCurrentLimit(20)
 
         self.armMotor.configure(
             armConfig,
