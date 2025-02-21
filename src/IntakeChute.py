@@ -13,11 +13,10 @@ class IntakeChute:
         self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
         self.ctrlrBumber = 0
         self.resetMode3 = True
-        self.joystick = wpilib.XboxController(3)
         self.yToggle = False
         self.bToggle = False
 
-    def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger):
+    def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
 
         self.table.putNumber("time", wpilib.getTime())
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
@@ -29,10 +28,10 @@ class IntakeChute:
 
         self.table.putBoolean("pressed", self.yToggle)
 
-        if self.joystick.getYButtonPressed():
+        if BButton:
             self.yToggle = not (self.yToggle)
 
-        if self.joystick.getBButtonPressed():
+        if YButton:
             self.bToggle = not (self.bToggle)
 
         if self.yToggle:

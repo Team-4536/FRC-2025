@@ -65,6 +65,8 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.driveCtrlr.getRightTriggerAxis() >= 0.5,
             self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getBButtonPressed(),
+            self.driveCtrlr.getYButtonPressed(),
         )
 
         if self.mechCtrlr.getBButton():
