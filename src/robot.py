@@ -11,6 +11,7 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
+from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
 
 
@@ -35,6 +36,7 @@ class Robot(wpilib.TimedRobot):
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.elevatorSubsystem = ElevatorSubsystem()
+        self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
 
     def robotPeriodic(self) -> None:
@@ -59,6 +61,8 @@ class Robot(wpilib.TimedRobot):
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
+            self.mechCtrlr.getYButtonPressed(),
+            self.mechCtrlr.getPOV(),
         )
 
         self.intakeChute.update(
@@ -69,12 +73,12 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getYButtonPressed(),
         )
 
-        if self.mechCtrlr.getBButton():
-            self.hal.manipulatorVolts = 5
-        elif self.mechCtrlr.getAButton():
-            self.hal.manipulatorVolts = -5
-        else:
-            self.hal.manipulatorVolts = 0
+        self.manipulatorSubsystem.update(
+            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+        )
+
+        if self.driveCtrlr.getAButton():
+            self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
