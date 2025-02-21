@@ -66,7 +66,6 @@ class IntakeChute:
 
             else:
                 hal.setChuteVoltage = 0
-                self.resetMode3 = True
                 self.setChuteControlMode = 1
                 self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
 
@@ -82,3 +81,4 @@ class IntakeChute:
 
             else:
                 hal.setChuteVoltage = 0
+                self.setChuteControlMode = 1
