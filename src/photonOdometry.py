@@ -83,6 +83,8 @@ aprilTagDegrees = [
     0,
     300,
 ]
+
+
 class photonVision:
     photonTable = NetworkTableInstance.getDefault()
 
@@ -90,11 +92,11 @@ class photonVision:
         self.cameraNameReal = cameraName
         self.camera = PhotonCamera(cameraName)
         kRobotToCam = wpimath.geometry.Transform3d(
-    wpimath.geometry.Translation3d(intCamX, intCamY, intCamZ),
-    wpimath.geometry.Rotation3d.fromDegrees(0.0, camPitch, 0.0),
-)
+            wpimath.geometry.Translation3d(intCamX, intCamY, intCamZ),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, camPitch, 0.0),
+        )
         self.camPoseEst = PhotonPoseEstimator(
-        AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape),
+            AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape),
             PoseStrategy.LOWEST_AMBIGUITY,
             self.camera,
             kRobotToCam,
@@ -127,7 +129,7 @@ class photonVision:
 
     def savePos(self):
         with open("pyTest.txt", "a") as f:
-            f.write(self.cameraNameReal + " X = " + f"{self.robotX}""\n")
-            f.write(self.cameraNameReal + " Y = " + f"{self.robotY}""\n")
-            f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}""\n")
-        #Test.close()
+            f.write(self.cameraNameReal + " X = " + f"{self.robotX}" "\n")
+            f.write(self.cameraNameReal + " Y = " + f"{self.robotY}" "\n")
+            f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}" "\n")
+        # Test.close()
