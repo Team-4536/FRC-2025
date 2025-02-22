@@ -21,4 +21,5 @@ robotpy_extras = [
 requires = [
     "numpy",
     "photonlibpy",
+    "black",
 ]

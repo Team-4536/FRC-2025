@@ -15,13 +15,11 @@ from robotHAL import RobotHAL, RobotHALBuffer
 from swerveDrive import SwerveDrive
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
+from IntakeChute import IntakeChute
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
 
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
@@ -47,6 +45,7 @@ class Robot(wpilib.TimedRobot):
 
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
+        self.intakeChute = IntakeChute()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -98,6 +97,14 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+        )
+
+        self.intakeChute.update(
+            self.hal,
+            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getBButtonPressed(),
+            self.driveCtrlr.getYButtonPressed(),
         )
 
         self.manipulatorSubsystem.update(
