@@ -55,6 +55,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis(),
         )
 
         self.elevatorSubsystem.update(
@@ -63,6 +64,8 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getBButton(),
         )
 
         self.intakeChute.update(
@@ -74,7 +77,9 @@ class Robot(wpilib.TimedRobot):
         )
 
         self.manipulatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+            self.hal,
+            self.mechCtrlr.getAButton(),
+            self.mechCtrlr.getLeftBumperPressed(),
         )
 
         #reset gyro
