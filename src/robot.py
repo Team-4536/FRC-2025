@@ -68,12 +68,21 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getBButton(),
         )
 
+        #convert POV buttons to bool values (sorry michael this code may be hard to look at)
+        self.povUpPressed = False
+        self.povRightPressed = False
+        if self.driveCtrlr.getPOV() == 0 and povPrev != 0:
+            self.povUpPressed = True
+        if self.driveCtrlr.getPOV() == 90 and povPrev != 90:
+            self.povRightPressed = True
+        povPrev = self.driveCtrlr.getPOV()
+
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
+            self.driveCtrlr.getRightTriggerAxis() >= 0.5, #THIS BUTTON IS SPEED CONTROL, MUST BE REMAPPED
             self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
-            self.driveCtrlr.getBButtonPressed(),
-            self.driveCtrlr.getYButtonPressed(),
+            self.povRightPressed,
+            self.povUpPressed,
         )
 
         self.manipulatorSubsystem.update(
@@ -89,6 +98,19 @@ class Robot(wpilib.TimedRobot):
         #abs drive toggle
         if self.driveCtrlr.getLeftStickButtonPressed():
             self.hal.fieldOriented = not self.hal.fieldOriented
+
+        if self.driveCtrlr.getYButtonPressed():
+            self.hal.rotPIDsetpoint = 60
+            self.hal.rotPID = True
+        elif self.driveCtrlr.getXButtonPressed():
+            self.hal.rotPIDsetpoint = 120
+            self.hal.rotPID = True
+        elif self.driveCtrlr.getAButtonPressed():
+            self.hal.rotPIDsetpoint = 240
+            self.hal.rotPID = True
+        elif self.driveCtrlr.getBButtonPressed():
+            self.hal.rotPIDsetpoint = 300
+            self.hal.rotPID = True
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)

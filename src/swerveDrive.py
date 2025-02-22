@@ -32,11 +32,13 @@ class SwerveDrive:
         ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
 
+        #=======NEW, NOT TUNED=======================================
         self.holonomicController = HolonomicDriveController(
             PIDController(0.1, 0, 0),
             PIDController(0.1, 0, 0),
             ProfiledPIDController(0.1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3/4 * math.pi))
             )
+        #============================================================
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
@@ -78,35 +80,43 @@ class SwerveDrive:
         self.driveRotation = self.proxyDeadZoneR
 
         driveVector = Translation2d(self.driveX, self.driveY)
-        driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
-        #-------------
+        #abs drive toggle
+        if hal.fieldOriented:
+            driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
+
+        #disable rotatioanl PID if turn stick is moved
+        if self.driveRotation != 0:
+            self.hal.rotPID = False
+
+        #--------------EMMETT'S SCARY NEW STUFF-----------------------------------
         rotPos = Rotation2d(hal.yaw)
         fakeBotPos = Pose2d(0, 0, rotPos)
+        rotTarget = Rotation2d.fromDegrees(hal.rotPIDsetpoint)
 
-        rotTarget = Rotation2d(90) #TEMPORARY CONSTANT
-
-
-        adjustedSpeeds = self.holonomicController.calculate(fakeBotPos, 0, 0, rotTarget.fromDegrees)
-        
+        #returns chassis speeds
+        adjustedSpeeds = self.holonomicController.calculate(fakeBotPos, 0, 0, rotTarget)
+        #take only rotational speed
         rotPIDSpeed = adjustedSpeeds.omega
 
+        #only use rotational PID if it's activated
+        if hal.rotPID:
+            rotFinal = rotPIDSpeed
+        else:
+            rotFinal = -self.driveRotation * 3 #copied from HCPA code
 
-        driveVector = Translation2d(joystickX, joystickY)
-
-        #toggle abs drive
-        if hal.fieldOriented == True:
-            driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
+        #-------------------------------------------------------------------
 
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            -self.driveRotation * 3,
+            rotFinal,
         )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
         self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+        self.table.putNumber("SD RotPIDSpeed omega", adjustedSpeeds.omega)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(

@@ -56,6 +56,7 @@ class RobotHALBuffer:
 
         self.fieldOriented: bool = True
         self.rotPIDsetpoint: int = 0
+        self.rotPID: bool = False
 
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
