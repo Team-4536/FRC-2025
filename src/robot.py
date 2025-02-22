@@ -82,8 +82,13 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftBumperPressed(),
         )
 
-        if self.driveCtrlr.getStartButton():
+        #reset gyro
+        if self.driveCtrlr.getStartButtonPressed():
             self.hardware.resetGyroToAngle(0)
+
+        #abs drive toggle
+        if self.driveCtrlr.getLeftStickButtonPressed():
+            self.hal.fieldOriented = not self.hal.fieldOriented
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)

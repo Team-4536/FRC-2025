@@ -12,6 +12,8 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
+from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDController
+from wpimath.trajectory import TrapezoidProfileRadians
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -29,6 +31,12 @@ class SwerveDrive:
             Translation2d(oneftInMeters, -oneftInMeters),
         ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+
+        self.holonomicController = HolonomicDriveController(
+            PIDController(0.1, 0, 0),
+            PIDController(0.1, 0, 0),
+            ProfiledPIDController(0.1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3/4 * math.pi))
+            )
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
@@ -71,6 +79,24 @@ class SwerveDrive:
 
         driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
+
+        #-------------
+        rotPos = Rotation2d(hal.yaw)
+        fakeBotPos = Pose2d(0, 0, rotPos)
+
+        rotTarget = Rotation2d(90) #TEMPORARY CONSTANT
+
+
+        adjustedSpeeds = self.holonomicController.calculate(fakeBotPos, 0, 0, rotTarget.fromDegrees)
+        
+        rotPIDSpeed = adjustedSpeeds.omega
+
+
+        driveVector = Translation2d(joystickX, joystickY)
+
+        #toggle abs drive
+        if hal.fieldOriented == True:
+            driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
