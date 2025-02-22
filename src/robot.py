@@ -17,6 +17,7 @@ from robotAutos import RobotAutos
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
+from IntakeChute import IntakeChute
 
 
 class Robot(wpilib.TimedRobot):
@@ -59,6 +60,7 @@ class Robot(wpilib.TimedRobot):
 
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
+        self.intakeChute = IntakeChute()
 
     def robotPeriodic(self) -> None:
 
@@ -97,6 +99,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis(),
         )
 
         self.elevatorSubsystem.update(
@@ -105,13 +108,25 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getBButton(),
+        )
+
+        self.intakeChute.update(
+            self.hal,
+            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getBButtonPressed(),
+            self.driveCtrlr.getYButtonPressed(),
         )
 
         self.manipulatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+            self.hal,
+            self.mechCtrlr.getAButton(),
+            self.mechCtrlr.getLeftBumperPressed(),
         )
 
-        if self.driveCtrlr.getAButton():
+        if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)

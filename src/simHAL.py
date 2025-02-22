@@ -9,6 +9,9 @@ from timing import TimeData
 from wpimath.geometry import Rotation2d, Translation2d
 import wpilib
 from wpilib import SmartDashboard
+from manipulator import ManipulatorSubsystem
+from elevator import ElevatorSubsystem
+from elevator import ElevatorMode
 
 
 class RobotSimHAL:
@@ -17,6 +20,9 @@ class RobotSimHAL:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putBoolean("first manipulator sensor", False)
         self.table.putBoolean("second manipulator sensor", False)
+        self.table.putNumber("arm voltage", 0)
+        self.table.putNumber("manipulator voltage", 0)
+        # self.table.getNumber("Elevator Mode", self.mode)
         self.prev.yaw = 1
         self.drivePositionsList = [0, 0, 0, 0]
         self.steerPositionList = [0, 0, 0, 0]
@@ -32,6 +38,24 @@ class RobotSimHAL:
         self.drivePositionsList = [0, 0, 0, 0]
         self.steerPositionList = [0, 0, 0, 0]
         wpilib.SmartDashboard.putNumber("yaw", buf.yaw)
+
+        self.table.putNumber("arm voltage", buf.armVolts)
+        buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
+        # self.table.putNumber("Elevator State", self)
+
+        # elevator state
+        # elevator position
+
+        # limit switches
+
+        self.table.putNumber("arm voltage", buf.armVolts)
+        buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
+        # self.table.putNumber("Elevator State", self)
+
+    # elevator state
+    # elevator position
+
+    # limit switches
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass
