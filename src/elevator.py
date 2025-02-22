@@ -32,7 +32,7 @@ class ElevatorSubsystem:
         self.posSetpoint = 0
 
         # mode 0 is position control, 1 is velocity
-        self.mode = ElevatorMode.MANUAL_MODE
+        self.mode = ElevatorMode.POSITION_MODE
         self.debugMode = True
         # self.table.getNumber("Elevator Mode", self.mode)
 
@@ -84,13 +84,13 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-            """
             if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
                 hal.elevatorSetpoint = hal.elevatorPos
                 hal.armVolts = -1
             elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
                 hal.armVolts = 1
-            """
+            if hal.moveArmDown:
+                hal.armVolts = -1
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
@@ -110,5 +110,5 @@ class ElevatorSubsystem:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-            self.table.putNumber("Elevator State", self.mode.name)
+            self.table.putString("Elevator State", self.mode.name)
         hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)

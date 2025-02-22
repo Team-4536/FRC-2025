@@ -14,13 +14,12 @@ class IntakeChute:
         self.ctrlrBumber = 0
         self.resetMode3 = True
         self.yToggle = False
-        self.bToggle = False
+        self.bToggle = True
 
     def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
 
         self.table.putNumber("time", wpilib.getTime())
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
-        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
         self.currentTime = wpilib.getTime()
         self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
         self.table.putBoolean("right trigger", rightTrigger)
@@ -41,7 +40,7 @@ class IntakeChute:
                 self.setChuteControlMode = 3
             else:
                 self.setChuteControlMode = 2
-
+        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
         if leftTrigger:
             self.ctrlrBumber = -1
 
@@ -76,7 +75,7 @@ class IntakeChute:
 
             self.currentTime = wpilib.getTime()
 
-            if self.currentTime - self.startTime < 5:
+            if self.currentTime - self.startTime < 7.5:
                 hal.setChuteVoltage = -self.chuteSpeed
 
             else:

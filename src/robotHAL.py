@@ -58,6 +58,8 @@ class RobotHALBuffer:
         self.chuteLimitSwitch = 0
         self.chuteMotorVoltage = 0
 
+        self.moveArmDown = False
+
     def resetEncoders(self) -> None:
         pass
 
@@ -74,6 +76,11 @@ class RobotHALBuffer:
 
         table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
         table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
+
+        table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
+        table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
+
+        table.putBoolean("Move arm down", self.moveArmDown)
 
         table.putNumber("yaw", self.yaw)
 
