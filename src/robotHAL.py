@@ -50,6 +50,9 @@ class RobotHALBuffer:
 
         self.yaw: float = 0
 
+        self.fieldOriented: bool = True
+        self.rotPIDsetpoint: int = 0
+
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
         self.chuteMotorVoltage = 0
