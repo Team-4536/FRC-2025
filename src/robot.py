@@ -122,7 +122,7 @@ class Robot(wpilib.TimedRobot):
     def autonomousInit(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.auto, initialPose = self.autoSubsys.autoInit(self)
+        self.auto = self.autoSubsys.autoInit(self)
 
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)

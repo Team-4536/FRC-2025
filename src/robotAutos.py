@@ -4,10 +4,11 @@ import swerveDrive
 from swerveDrive import SwerveDrive
 from autos import AutoBuilder
 from wpimath.geometry import Translation2d
+import rev
 from rev import SparkMax
 from pathplannerlib.path import PathPlannerPath, PathPlannerTrajectory
-from pathplannerlib.config import RobotConfig, ModuleConfig
-
+from pathplannerlib.config import RobotConfig, ModuleConfig, DCMotor
+from robotHAL import RobotHAL as r
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
@@ -25,17 +26,14 @@ class RobotAutos:
         mass = 122 / 9.8
         moi = 1 / 2 * ((mass) * (mass))
         oneftInMeters = 0.3048
-        motor = SparkMax()
-        modConfig = ModuleConfig(
-            0.5,
-            1.1,
-            9.5,
-            motor,
-        )
+        # motor = SparkMax(1, rev.SparkMax.MotorType.kBrushless)
+        motor = DCMotor(12, 2.6, 105, 1.8, 5676, 1)
+        modConfig = ModuleConfig(0.05, 1.1, 9.5, motor, 42, 1)
         RConfig = RobotConfig(
             mass,
             moi,
-            modConfig[
+            modConfig,
+            [
                 Translation2d(-oneftInMeters, oneftInMeters),
                 Translation2d(oneftInMeters, oneftInMeters),
                 Translation2d(-oneftInMeters, -oneftInMeters),
