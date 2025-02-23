@@ -60,7 +60,7 @@ class RobotHALBuffer:
 
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
-        self.chuteMotorVoltage = 0
+        self.chuteMotorVoltage = 0.0
 
         self.moveArmDown = False
 

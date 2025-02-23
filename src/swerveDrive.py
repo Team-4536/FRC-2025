@@ -12,7 +12,11 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
-from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDController
+from wpimath.controller import (
+    HolonomicDriveController,
+    PIDController,
+    ProfiledPIDControllerRadians,
+)
 from wpimath.trajectory import TrapezoidProfileRadians
 
 
@@ -32,13 +36,16 @@ class SwerveDrive:
         ]
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
 
-        #=======NEW, NOT TUNED=======================================
-        self.holonomicController = HolonomicDriveController(
-            PIDController(0.1, 0, 0),
-            PIDController(0.1, 0, 0),
-            ProfiledPIDController(0.1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3/4 * math.pi))
-            )
-        #============================================================
+        # =======NEW, NOT TUNED=======================================
+        constraints = TrapezoidProfileRadians.Constraints(6.28, 3 / 4 * math.pi)
+        # constraints = TrapezoidProfileRadians(Contraint)
+        xPID = PIDController(0.1, 0, 0)
+        yPID = PIDController(0.1, 0, 0)
+        rotPID = ProfiledPIDControllerRadians(0.1, 0, 0, constraints)
+
+        self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
+
+        # ============================================================
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
@@ -81,31 +88,33 @@ class SwerveDrive:
 
         driveVector = Translation2d(self.driveX, self.driveY)
 
-        #abs drive toggle
+        # abs drive toggle
         if hal.fieldOriented:
             driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
-        #disable rotatioanl PID if turn stick is moved
+        # disable rotatioanl PID if turn stick is moved
         if self.driveRotation != 0:
             self.hal.rotPID = False
 
-        #--------------EMMETT'S SCARY NEW STUFF-----------------------------------
+        # --------------EMMETT'S SCARY NEW STUFF-----------------------------------
         rotPos = Rotation2d(hal.yaw)
         fakeBotPos = Pose2d(0, 0, rotPos)
         rotTarget = Rotation2d.fromDegrees(hal.rotPIDsetpoint)
 
-        #returns chassis speeds
-        adjustedSpeeds = self.holonomicController.calculate(fakeBotPos, 0, 0, rotTarget)
-        #take only rotational speed
+        # returns chassis speeds
+        adjustedSpeeds = self.holonomicController.calculate(
+            fakeBotPos, fakeBotPos, 0, rotTarget
+        )
+        # take only rotational speed
         rotPIDSpeed = adjustedSpeeds.omega
 
-        #only use rotational PID if it's activated
+        # only use rotational PID if it's activated
         if hal.rotPID:
             rotFinal = rotPIDSpeed
         else:
-            rotFinal = -self.driveRotation * 3 #copied from HCPA code
+            rotFinal = -self.driveRotation * 3  # copied from HCPA code
 
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
 
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
@@ -117,6 +126,7 @@ class SwerveDrive:
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
         self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
         self.table.putNumber("SD RotPIDSpeed omega", adjustedSpeeds.omega)
+        self.table.putBoolean("rotPIDToggle", hal.rotPID)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
