@@ -130,3 +130,8 @@ if a security page opens click more options and run anyways
 
 install C++ redistributable at https://aka.ms/vs/17/release/vc_redist.x64.exe
 Just simply accept license and continue with install
+
+Getting black to work with auto save:
+Go to settings and change Auto Save option and change to 'onFocusChange'
+This will cause file to auto save when you navigate to any other part of vs code (eg. terminal, another file)
+This allows for auto saving while also letting auto formatting to work 
