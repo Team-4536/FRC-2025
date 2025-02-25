@@ -41,7 +41,7 @@ class Robot(wpilib.TimedRobot):
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-        self.hal.publish(self.table)
+        self.hal.publish()
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
@@ -81,7 +81,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
-        self.hal.publish(self.table)
+        self.hal.publish()
         self.hardware.update(self.hal, self.time)
 
     def autonomousPeriodic(self) -> None:

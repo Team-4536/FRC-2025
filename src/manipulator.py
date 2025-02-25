@@ -17,7 +17,11 @@ class ManipulatorSubsystem:
     def __init__(self):
 
         self.state = self.ManipulatorState.IDLE
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Manipulator Subsystem")
+        )
 
     def update(self, buf: RobotHALBuffer, AButton: bool, LBumper: bool):
 
@@ -48,7 +52,8 @@ class ManipulatorSubsystem:
         elif self.state == self.ManipulatorState.SHOOT:
             buf.manipulatorVolts = 8
             if (
-                wpilib.getTime() - self.startTime > 1.5 and not buf.secondManipulatorSensor
+                wpilib.getTime() - self.startTime > 1.5
+                and not buf.secondManipulatorSensor
             ):  # <how long the shooting goes for in sec
                 self.state = self.ManipulatorState.IDLE
 
@@ -59,7 +64,5 @@ class ManipulatorSubsystem:
                 buf.manipulatorVolts = 0
             if LBumper:
                 self.state = self.ManipulatorState.IDLE
-
-        
 
         self.table.putString("state", self.state.name)
