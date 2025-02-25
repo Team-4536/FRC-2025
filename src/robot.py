@@ -68,7 +68,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getBButton(),
         )
 
-        #convert POV buttons to bool values (sorry michael this code may be hard to look at)
+        # convert POV buttons to bool values (sorry michael this code may be hard to look at)
         self.povUpPressed = False
         self.povRightPressed = False
         if self.driveCtrlr.getPOV() == 0 and povPrev != 0:
@@ -79,7 +79,8 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5, #THIS BUTTON IS SPEED CONTROL, MUST BE REMAPPED
+            self.driveCtrlr.getRightTriggerAxis()
+            >= 0.5,  # THIS BUTTON IS SPEED CONTROL, MUST BE REMAPPED
             self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
             self.povRightPressed,
             self.povUpPressed,
@@ -91,11 +92,11 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftBumperPressed(),
         )
 
-        #reset gyro
+        # reset gyro
         if self.driveCtrlr.getStartButtonPressed():
             self.hardware.resetGyroToAngle(0)
 
-        #abs drive toggle
+        # abs drive toggle
         if self.driveCtrlr.getLeftStickButtonPressed():
             self.hal.fieldOriented = not self.hal.fieldOriented
 
@@ -122,6 +123,14 @@ class Robot(wpilib.TimedRobot):
         self.hardware.update(
             self.hal, self.time
         )  # Keep this at the bottom of autonomousPeriodic
+
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
