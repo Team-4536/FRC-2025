@@ -3,6 +3,7 @@ from ntcore import NetworkTableInstance
 from timing import TimeData
 import wpilib
 from enum import Enum
+from codeProfile import profile
 
 
 class ManipulatorSubsystem:
@@ -23,6 +24,7 @@ class ManipulatorSubsystem:
             .getSubTable("Manipulator Subsystem")
         )
 
+    @profile(__name__)
     def update(self, buf: RobotHALBuffer, AButton: bool, LBumper: bool):
 
         if LBumper and not self.state == self.ManipulatorState.MANUAL:

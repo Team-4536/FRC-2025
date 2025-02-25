@@ -13,6 +13,9 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from codeProfile import profile
+import cProfile
+import pstats
 
 
 class Robot(wpilib.TimedRobot):
@@ -21,10 +24,11 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
-        if self.isSimulation():
-            self.hardware = RobotSimHAL()
-        else:
-            self.hardware = robotHAL.RobotHAL()
+        # if self.isSimulation():
+        #     self.hardware = RobotSimHAL()
+        # else:
+        #     self.hardware = robotHAL.RobotHAL()
+        self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -48,14 +52,21 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
+        profiler = cProfile.Profile(wpilib.getTime)
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
+        profiler.enable()
         self.swerveDrive.update(
             self.hal,
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
+        profiler.disable()
+
+        stats = pstats.Stats(profiler).sort_stats(pstats.SortKey.TIME)
+
+        stats.print_stats()
 
         self.elevatorSubsystem.update(
             self.hal,

@@ -17,6 +17,7 @@ from rev import (
     LimitSwitchConfig,
 )
 from wpimath.units import meters_per_second, radians
+from codeProfile import profile
 
 
 class RobotHALBuffer:
@@ -260,6 +261,7 @@ class RobotHAL:
     def resetCamEncoderPos(self, nPos: float) -> None:
         pass
 
+    @profile(__name__)
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
         # self.prev = copy.deepcopy(buf)
