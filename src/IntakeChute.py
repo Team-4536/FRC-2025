@@ -75,7 +75,7 @@ class IntakeChute:
 
             self.currentTime = wpilib.getTime()
 
-            if self.currentTime - self.startTime < 7.5:
+            if self.currentTime - self.startTime < 10:
                 hal.setChuteVoltage = -self.chuteSpeed
 
             else:

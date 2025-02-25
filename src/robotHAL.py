@@ -389,7 +389,7 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.armMotor.setVoltage(buf.armVolts)
+        # self.armMotor.setVoltage(buf.armVolts) arm broke
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()

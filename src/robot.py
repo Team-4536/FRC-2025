@@ -70,8 +70,8 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
-            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftBumper(),
+            self.driveCtrlr.getRightBumper(),
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
@@ -95,6 +95,14 @@ class Robot(wpilib.TimedRobot):
         self.hardware.update(
             self.hal, self.time
         )  # Keep this at the bottom of autonomousPeriodic
+
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
