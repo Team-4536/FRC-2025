@@ -1,6 +1,13 @@
 import wpilib
 from robotHAL import RobotHALBuffer
 from ntcore import NetworkTableInstance
+from enum import Enum
+
+
+class ChuteStates(Enum):
+    MANUAL = 1
+    UP = 2
+    DOWN = 3
 
 
 class IntakeChute:
@@ -9,69 +16,75 @@ class IntakeChute:
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.chuteSpeed = 5
-        self.setChuteControlMode = 3
-        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
-        self.ctrlrBumber = 0
-        self.resetMode3 = True
-        self.yToggle = False
-        self.bToggle = True
+        self.state = ChuteStates.DOWN
+        self.table.putNumber("Chute Control Mode", self.state.name)
+        self.chuteDirection = 0
+        self.resetStateUP = True
+        self.manualState = False
+        self.downState = True
 
-    def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
+    def update(
+        self,
+        hal: RobotHALBuffer,
+        chuteDown: bool,
+        chuteUp: bool,
+        switchAutoState: bool,
+        switchManualState: bool,
+    ):
 
         self.table.putNumber("time", wpilib.getTime())
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
-        self.currentTime = wpilib.getTime()
         self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
-        self.table.putBoolean("right trigger", rightTrigger)
-        self.table.putBoolean("left trigger", leftTrigger)
+        self.table.putBoolean("right trigger", chuteDown)
+        self.table.putBoolean("left trigger", chuteUp)
 
-        self.table.putBoolean("pressed", self.yToggle)
+        self.table.putBoolean("Chute In Manual", self.manualState)
 
-        if YButton:
-            self.yToggle = not (self.yToggle)
+        if switchManualState:
+            self.manualState = not (self.manualState)
 
-        if BButton:
-            self.bToggle = not (self.bToggle)
+        if switchAutoState:
+            self.downState = not (self.downState)
 
-        if self.yToggle:
-            self.setChuteControlMode = 1
+        if self.manualState:
+            self.state = ChuteStates.MANUAL
         else:
-            if self.bToggle:
-                self.setChuteControlMode = 3
+            if self.downState:
+                self.state = ChuteStates.DOWN
             else:
-                self.setChuteControlMode = 2
-        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
-        if leftTrigger:
-            self.ctrlrBumber = -1
+                self.state = ChuteStates.UP
 
-        elif rightTrigger:
-            self.ctrlrBumber = 1
+        self.table.putNumber("Chute Control Mode", self.state.name)
+
+        if chuteUp:
+            self.chuteDirection = -1
+
+        elif chuteDown:
+            self.chuteDirection = 1
 
         else:
-            self.ctrlrBumber = 0
+            self.chuteDirection = 0
 
-        self.table.putBoolean("mode 3 reset", self.resetMode3)
-
-        if self.setChuteControlMode == 1:
+        if self.state == ChuteStates.MANUAL:
             hal.setChuteVoltage = (
-                self.ctrlrBumber * self.chuteSpeed
+                self.chuteDirection * self.chuteSpeed
             )  # POSITIVE Pulls down Negative lets up
 
-        elif self.setChuteControlMode == 2:
+        elif self.state == ChuteStates.DOWN:
             if (
-                hal.chuteLimitSwitch == False
+                not hal.chuteLimitSwitch
             ):  # returns true if the hal.chuteLimitSwitch is pressed
                 hal.setChuteVoltage = self.chuteSpeed
 
             else:
                 hal.setChuteVoltage = 0
-                self.setChuteControlMode = 1
-                self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
+                self.state = ChuteStates.MANUAL
 
-        elif self.setChuteControlMode == 3:
-            if self.resetMode3:
+        elif self.state == ChuteStates.UP:
+
+            if self.resetStateUP:
                 self.startTime = wpilib.getTime()
-                self.resetMode3 = False
+                self.resetStateUP = False
 
             self.currentTime = wpilib.getTime()
 
@@ -80,4 +93,4 @@ class IntakeChute:
 
             else:
                 hal.setChuteVoltage = 0
-                self.setChuteControlMode = 1
+                self.state = ChuteStates.MANUAL
