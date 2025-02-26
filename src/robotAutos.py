@@ -53,7 +53,7 @@ class RobotAutos:
 
         auto = AutoBuilder()
         initialPose: Pose2d = Pose2d()
-        traj = self.loadTrajectory("blue_3_offline", r.onRedSide)
+        traj = self.loadTrajectory("Forward", r.onRedSide)
 
         if self.autoChooser.getSelected() == AUTO_NONE:
             pass
