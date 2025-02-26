@@ -105,8 +105,6 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        # self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-        # self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
