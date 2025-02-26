@@ -5,7 +5,6 @@ from rev import (
     ClosedLoopSlot,
 )
 from enum import Enum
-from codeProfile import profile
 
 
 class ElevatorMode(Enum):
@@ -34,7 +33,6 @@ class ElevatorSubsystem:
         self.mode = ElevatorMode.MANUAL_MODE
         self.debugMode = False
 
-    @profile(__name__)
     def update(
         self,
         hal: RobotHALBuffer,

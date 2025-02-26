@@ -12,7 +12,6 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
-from codeProfile import profile
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java

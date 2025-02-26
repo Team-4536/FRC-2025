@@ -13,9 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-from codeProfile import profile
-import cProfile
-import pstats
+import profiler
 
 
 class Robot(wpilib.TimedRobot):
@@ -24,11 +22,11 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
-        # if self.isSimulation():
-        #     self.hardware = RobotSimHAL()
-        # else:
-        #     self.hardware = robotHAL.RobotHAL()
-        self.hardware = robotHAL.RobotHAL()
+        if self.isSimulation():
+            self.hardware = RobotSimHAL()
+        else:
+            self.hardware = robotHAL.RobotHAL()
+        # self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -52,22 +50,10 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        profiler = cProfile.Profile(wpilib.getTime)
+        profiler.start()
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
-        profiler.enable()
-        self.swerveDrive.update(
-            self.hal,
-            self.driveCtrlr.getLeftX(),
-            -self.driveCtrlr.getLeftY(),
-            self.driveCtrlr.getRightX(),
-        )
-        profiler.disable()
-
-        stats = pstats.Stats(profiler).sort_stats(pstats.SortKey.TIME)
-
-        stats.print_stats()
-
+        profiler.start()
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -75,7 +61,9 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
         )
+        profiler.end("ElevatorSubsystem")
 
+        profiler.start()
         self.intakeChute.update(
             self.hal,
             self.driveCtrlr.getRightTriggerAxis() >= 0.5,
@@ -83,10 +71,13 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
+        profiler.end("IntakeSubsystem")
 
+        profiler.start()
         self.manipulatorSubsystem.update(
             self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
         )
+        profiler.end("ManipulatorSubsystem")
 
         if self.driveCtrlr.getAButton():
             self.hardware.resetGyroToAngle(0)
@@ -94,6 +85,8 @@ class Robot(wpilib.TimedRobot):
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish()
         self.hardware.update(self.hal, self.time)
+
+        profiler.end("TeleopPeriodic")
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
