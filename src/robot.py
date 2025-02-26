@@ -13,6 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+import profiler
 
 
 class Robot(wpilib.TimedRobot):
@@ -25,6 +26,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware = RobotSimHAL()
         else:
             self.hardware = robotHAL.RobotHAL()
+        # self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -41,22 +43,17 @@ class Robot(wpilib.TimedRobot):
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-        self.hal.publish(self.table)
+        self.hal.publish()
         self.hal.stopMotors()
 
     def teleopInit(self) -> None:
         pass
 
     def teleopPeriodic(self) -> None:
+        profiler.start()
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
-        self.swerveDrive.update(
-            self.hal,
-            self.driveCtrlr.getLeftX(),
-            -self.driveCtrlr.getLeftY(),
-            self.driveCtrlr.getRightX(),
-        )
-
+        profiler.start()
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -64,7 +61,9 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
         )
+        profiler.end("ElevatorSubsystem")
 
+        profiler.start()
         self.intakeChute.update(
             self.hal,
             self.driveCtrlr.getRightTriggerAxis() >= 0.5,
@@ -72,17 +71,22 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
+        profiler.end("IntakeSubsystem")
 
+        profiler.start()
         self.manipulatorSubsystem.update(
             self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
         )
+        profiler.end("ManipulatorSubsystem")
 
         if self.driveCtrlr.getAButton():
             self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
-        self.hal.publish(self.table)
+        self.hal.publish()
         self.hardware.update(self.hal, self.time)
+
+        profiler.end("TeleopPeriodic")
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
