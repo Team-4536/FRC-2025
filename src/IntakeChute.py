@@ -22,8 +22,8 @@ class IntakeChute:
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
         self.currentTime = wpilib.getTime()
         self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
-        self.table.putBoolean("right trigger", rightTrigger)
-        self.table.putBoolean("left trigger", leftTrigger)
+        self.table.putBoolean("right trigger pressed", rightTrigger)
+        self.table.putBoolean("left trigger pressed", leftTrigger)
 
         self.table.putBoolean("pressed", self.yToggle)
 

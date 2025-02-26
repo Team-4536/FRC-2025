@@ -72,7 +72,7 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.number = 1
+        self.number = 1  # why
 
         self.offsetX = 0.05 * np.sign(joystickX)
         self.offsetY = 0.05 * np.sign(joystickY)
@@ -94,7 +94,10 @@ class SwerveDrive:
 
         # disable rotatioanl PID if turn stick is moved
         if self.driveRotation != 0:
-            self.hal.rotPID = False
+            hal.rotPIDToggle = False
+
+        self.table.putNumber("z_PID Setpoint", hal.rotPIDsetpoint)
+        self.table.putBoolean("z_Absolute Drive", hal.fieldOriented)
 
         # --------------EMMETT'S SCARY NEW STUFF-----------------------------------
         rotPos = Rotation2d(hal.yaw)
@@ -109,7 +112,7 @@ class SwerveDrive:
         rotPIDSpeed = adjustedSpeeds.omega
 
         # only use rotational PID if it's activated
-        if hal.rotPID:
+        if hal.rotPIDToggle:
             rotFinal = rotPIDSpeed
         else:
             rotFinal = -self.driveRotation * 3  # copied from HCPA code
@@ -126,7 +129,7 @@ class SwerveDrive:
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
         self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
         self.table.putNumber("SD RotPIDSpeed omega", adjustedSpeeds.omega)
-        self.table.putBoolean("rotPIDToggle", hal.rotPID)
+        self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(

@@ -39,6 +39,8 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
 
+        self.povPrev = 0
+
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
@@ -71,17 +73,16 @@ class Robot(wpilib.TimedRobot):
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
         self.povUpPressed = False
         self.povRightPressed = False
-        if self.driveCtrlr.getPOV() == 0 and povPrev != 0:
+        if self.driveCtrlr.getPOV() == 0 and self.povPrev != 0:
             self.povUpPressed = True
-        if self.driveCtrlr.getPOV() == 90 and povPrev != 90:
+        if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
             self.povRightPressed = True
-        povPrev = self.driveCtrlr.getPOV()
+        self.povPrev = self.driveCtrlr.getPOV()
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis()
-            >= 0.5,  # THIS BUTTON IS SPEED CONTROL, MUST BE REMAPPED
-            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getRightBumperPressed(),
+            self.driveCtrlr.getLeftBumperPressed(),
             self.povRightPressed,
             self.povUpPressed,
         )
@@ -102,16 +103,16 @@ class Robot(wpilib.TimedRobot):
 
         if self.driveCtrlr.getYButtonPressed():
             self.hal.rotPIDsetpoint = 60
-            self.hal.rotPID = True
+            self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getXButtonPressed():
             self.hal.rotPIDsetpoint = 120
-            self.hal.rotPID = True
+            self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getAButtonPressed():
             self.hal.rotPIDsetpoint = 240
-            self.hal.rotPID = True
+            self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getBButtonPressed():
             self.hal.rotPIDsetpoint = 300
-            self.hal.rotPID = True
+            self.hal.rotPIDToggle = True
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
