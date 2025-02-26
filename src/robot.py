@@ -16,6 +16,7 @@ from swerveDrive import SwerveDrive
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from setpoints import setpoints
 
 
 class Robot(wpilib.TimedRobot):
@@ -47,6 +48,8 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
 
+        self.testHolo = setpoints()
+
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
@@ -68,15 +71,6 @@ class Robot(wpilib.TimedRobot):
                 self.photonCamera2.robotAngle,
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
-
-        if self.driveCtrlr.getAButtonPressed():  # and self.a == True:
-            self.photonCamera1.savePos()
-            self.photonCamera2.savePos()
-
-            # self.a = False
-
-        # if self.driveCtrlr.getAButtonReleased():
-        #     self.a = True
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
@@ -115,6 +109,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
+
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)

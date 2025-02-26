@@ -16,16 +16,32 @@ from wpimath.kinematics import (
     SwerveModuleState,
 )
 from wpimath.units import radians
+from wpimath.controller import (
+    HolonomicDriveController,
+    PIDController,
+    ProfiledPIDControllerRadians,
+)
+from wpimath.trajectory import TrapezoidProfileRadians
+from wpimath.geometry import Rotation2d
+from wpimath.geometry import Pose2d
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
+
     MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
 
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
         self.OdomField = Field2d()
+        self.controller = HolonomicDriveController(
+            PIDController(0.1, 0, 0),
+            PIDController(0.1, 0, 0),
+            ProfiledPIDControllerRadians(
+                1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
+            ),
+        )
 
         # self.modulePositions: list[Translation2d] = [
         #     Translation2d(oneftInMeters, oneftInMeters),
@@ -189,3 +205,12 @@ class SwerveDrive:
         output = SwerveModuleState(outputSpeed, outputAngleRot2d)
 
         return output
+
+    def setpointChooser(
+        self,
+    ):
+        self.currentPose = Pose2d(0, 0, 0)
+        self.desiredPose = Pose2d(1, 0, 0)
+        adjustedSpeeds = self.controller.calculate(
+            self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(70.0)
+        )
