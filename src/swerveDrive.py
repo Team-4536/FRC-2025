@@ -2,8 +2,11 @@ import math
 import robotHAL
 import robot
 
+import wpilib
+from wpilib import SmartDashboard, Field2d
 from ntcore import NetworkTableInstance
 from real import angleWrap
+import wpimath.units
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
     ChassisSpeeds,
@@ -12,15 +15,33 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
+from wpimath.units import radians
+from wpimath.controller import (
+    HolonomicDriveController,
+    PIDController,
+    ProfiledPIDControllerRadians,
+)
+from wpimath.trajectory import TrapezoidProfileRadians
+from wpimath.geometry import Rotation2d
+from wpimath.geometry import Pose2d
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
+
     MAX_METERS_PER_SEC = 4.0  # stolen from lastyears code
 
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = 0.3048
+        self.OdomField = Field2d()
+        self.controller = HolonomicDriveController(
+            PIDController(0.1, 0, 0),
+            PIDController(0.1, 0, 0),
+            ProfiledPIDControllerRadians(
+                1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
+            ),
+        )
 
         # self.modulePositions: list[Translation2d] = [
         #     Translation2d(oneftInMeters, oneftInMeters),
@@ -34,14 +55,43 @@ class SwerveDrive:
             Translation2d(-oneftInMeters, -oneftInMeters),
             Translation2d(oneftInMeters, -oneftInMeters),
         ]
+        # ModuleState = SwerveModuleState(wpimath.units.meters(0), Rotation2d(0))
+        ModulePos = SwerveModulePosition(0, Rotation2d(0))
+        modulePosList = [ModulePos, ModulePos, ModulePos, ModulePos]
+
+        self.angle = Rotation2d(0)
+        self.pose = Pose2d(
+            wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
+        )
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+        self.odometry = SwerveDrive4Odometry(
+            self.kinematics, self.angle, modulePosList, self.pose
+        )
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
-        pass
+
+        modulePosList = (
+            SwerveModulePosition(
+                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
+            ),
+        )
+        # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
+        self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
+
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
     def update(
         self,
@@ -61,19 +111,13 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
 
-        self.driveX = joystickX * 5 + self.table.getNumber("SD Joystick X offset", 0)
-        self.driveY = joystickY * 5 + self.table.getNumber("SD Joystick Y offset", 0)
-        self.driveRotation = joystickRotation * -6.5 + self.table.getNumber(
+        self.driveX = joystickX * 2.5 + self.table.getNumber("SD Joystick X offset", 0)
+        self.driveY = joystickY * 2.5 + self.table.getNumber("SD Joystick Y offset", 0)
+        self.driveRotation = joystickRotation * -2.5 + self.table.getNumber(
             "SD Joystick Omega offset", 0
         )
 
-        driveVector = Translation2d(joystickX, joystickY)
-        driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
-
-        # self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
-        self.chassisSpeeds = ChassisSpeeds(
-            driveVector.X() * 5, driveVector.Y() * 5, self.driveRotation
-        )
+        self.chassisSpeeds = ChassisSpeeds(self.driveX, self.driveY, self.driveRotation)
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
@@ -117,7 +161,30 @@ class SwerveDrive:
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
-        pass
+
+        modulePosList = (
+            SwerveModulePosition(
+                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
+            ),
+        )
+        self.odometry.update(Rotation2d(hal.yaw), modulePosList)
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+
+        self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
+        self.OdomField.setRobotPose(self.odometry.getPose())
+
+        self.table.putNumber("odomX", self.odomPos[0])
+        self.table.putNumber("odomy", self.odomPos[1])
+        wpilib.SmartDashboard.putData("Odom", self.OdomField)
 
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
@@ -138,3 +205,12 @@ class SwerveDrive:
         output = SwerveModuleState(outputSpeed, outputAngleRot2d)
 
         return output
+
+    def setpointChooser(
+        self,
+    ):
+        self.currentPose = Pose2d(0, 0, 0)
+        self.desiredPose = Pose2d(1, 0, 0)
+        adjustedSpeeds = self.controller.calculate(
+            self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(70.0)
+        )
