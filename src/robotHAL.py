@@ -52,6 +52,8 @@ class RobotHALBuffer:
         self.backArmLimitSwitch: bool = False
         self.armVolts: float = 0
 
+        self.elevServoAngle = 0
+
         self.yaw: float = 0
 
     def resetEncoders(self) -> None:
@@ -98,6 +100,8 @@ class RobotHAL:
         # self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
+
+        self.elevServo = wpilib.Servo(0)
 
         self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.armMotorEncoder = self.armMotor.getEncoder()
@@ -342,9 +346,12 @@ class RobotHAL:
         self.table.putNumber(
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
+        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
+
+        self.elevServo.setAngle(buf.elevServoAngle)
 
         self.elevatorController.update(
             buf.elevatorSetpoint,

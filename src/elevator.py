@@ -1,6 +1,7 @@
 # imports
 from robotHAL import RobotHALBuffer
 from ntcore import NetworkTableInstance
+from robotHAL import RobotHAL
 from rev import (
     SparkMax,
     ClosedLoopSlot,
@@ -93,6 +94,16 @@ class ElevatorSubsystem:
                 hal.armVolts = 1
             elif armDown:
                 hal.armVolts = -1
+
+        if (
+            not hal.elevatorPos <= 0.8
+            or hal.secondManipulatorSensor
+            or hal.firstManipulatorSensor
+            and hal.secondManipulatorSensor
+        ):
+            hal.elevServoAngle = 60
+        else:
+            hal.elevServoAngle = 0
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
