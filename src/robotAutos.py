@@ -21,6 +21,7 @@ class RobotAutos:
         self.autoChooser = wpilib.SendableChooser()
         self.autoChooser.setDefaultOption(AUTO_NONE, AUTO_NONE)
         self.autoChooser.addOption(DRIVE_FORWARD, DRIVE_FORWARD)
+        wpilib.SmartDashboard.putData("auto path chooser", self.autoChooser)
 
     def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
         mass = 122 / 9.8
@@ -58,7 +59,7 @@ class RobotAutos:
         if self.autoChooser.getSelected() == AUTO_NONE:
             pass
 
-        elif self.autoChooser.getSelected == DRIVE_FORWARD:
+        elif self.autoChooser.getSelected() == DRIVE_FORWARD:
             initialPose = traj.getInitialState().pose
             auto.addTelemetryStage(DRIVE_FORWARD)
             auto.addPathStage(traj)
