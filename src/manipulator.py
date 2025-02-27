@@ -18,7 +18,7 @@ class ManipulatorSubsystem:
         UP = 5
         GOINGDOWN = 6
 
-    debug = True
+    debug = False
 
     def __init__(self):
 
@@ -37,7 +37,7 @@ class ManipulatorSubsystem:
 
         if self.state == self.ManipulatorState.IDLE:
             buf.manipulatorVolts = 0
-
+            buf.moveArmDown = True
             if buf.firstManipulatorSensor:
                 self.state = self.ManipulatorState.INTAKE
 
@@ -52,6 +52,7 @@ class ManipulatorSubsystem:
 
         elif self.state == self.ManipulatorState.STORED:
             buf.manipulatorVolts = 0
+            buf.moveArmDown = False
             self.startTime = wpilib.getTime()
 
             if AButton:
@@ -61,7 +62,7 @@ class ManipulatorSubsystem:
             buf.manipulatorVolts = 8
 
             if (
-                wpilib.getTime() - self.startTime > 1.5
+                wpilib.getTime() - self.startTime > 0.5
                 and not buf.secondManipulatorSensor
             ):  # how long the shooting goes for in sec
                 self.state = self.ManipulatorState.IDLE

@@ -56,6 +56,12 @@ class RobotHALBuffer:
 
         self.yaw: float = 0
 
+        self.setChuteVoltage = 0
+        self.chuteLimitSwitch = 0
+        self.chuteMotorVoltage = 0
+
+        self.moveArmDown = False
+
     def resetEncoders(self) -> None:
         pass
 
@@ -73,10 +79,15 @@ class RobotHALBuffer:
         table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
         table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
 
+        table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
+        table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
+
+        table.putBoolean("Move arm down", self.moveArmDown)
+
         table.putNumber("yaw", self.yaw)
 
 
-debugMode = True
+debugMode = False
 
 
 class RobotHAL:
@@ -96,8 +107,6 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        # self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-        # self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
@@ -110,6 +119,7 @@ class RobotHAL:
         armConfig = SparkMaxConfig()
         armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        armConfig.smartCurrentLimit(20)
 
         self.armMotor.configure(
             armConfig,
@@ -129,6 +139,25 @@ class RobotHAL:
         self.driveMotorFR = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
+
+        self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
+
+        chuteMotorConfig = SparkMaxConfig()
+        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
+            chuteMotorConfig.limitSwitch.Type.kNormallyClosed
+        )
+        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+        chuteMotorConfig.smartCurrentLimit(20)
+
+        self.chuteMotor.configure(
+            chuteMotorConfig,
+            SparkMax.ResetMode.kResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
 
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
@@ -365,10 +394,15 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.armMotor.setVoltage(buf.armVolts)
+        # self.armMotor.setVoltage(buf.armVolts)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
+        buf.chuteMotorVoltage = (
+            self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
+        )
+        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
+        self.chuteMotor.setVoltage(buf.setChuteVoltage)
 
 
 class SwerveModuleController:

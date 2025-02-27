@@ -12,13 +12,11 @@ from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
+from IntakeChute import IntakeChute
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-
-        self.mechCtrlr = wpilib.XboxController(1)
-        self.buttonPanel = wpilib.Joystick(4)
 
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
@@ -39,6 +37,7 @@ class Robot(wpilib.TimedRobot):
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
+        self.intakeChute = IntakeChute()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -69,6 +68,14 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getBButton(),
         )
 
+        self.intakeChute.update(
+            self.hal,
+            self.driveCtrlr.getLeftBumper(),
+            self.driveCtrlr.getRightBumper(),
+            self.driveCtrlr.getBButtonPressed(),
+            self.driveCtrlr.getYButtonPressed(),
+        )
+
         self.manipulatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getAButton(),
@@ -84,6 +91,14 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
+
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
 
         self.hardware.update(
             self.hal, self.time

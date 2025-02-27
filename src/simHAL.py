@@ -8,6 +8,8 @@ from swerveDrive import SwerveDrive
 from timing import TimeData
 from wpimath.geometry import Rotation2d, Translation2d
 from manipulator import ManipulatorSubsystem
+from elevator import ElevatorSubsystem
+from elevator import ElevatorMode
 
 
 class RobotSimHAL:

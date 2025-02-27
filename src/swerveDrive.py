@@ -49,13 +49,7 @@ class SwerveDrive:
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
-        """
-        if abs(joystickX) < 0.05:
-            joystickX = 0
-        if abs(joystickY) < 0.05:
-            joystickY = 0
-        """
-        if math.sqrt(joystickX**2 + joystickY**2) < 0.05:
+        if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
             joystickY = 0
         if abs(joystickRotation) < 0.05:
@@ -92,10 +86,6 @@ class SwerveDrive:
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
             self.unleashedModules,
             self.MAX_METERS_PER_SEC,
-        )
-
-        self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
         FLModuleState = self.optimizeTarget(
