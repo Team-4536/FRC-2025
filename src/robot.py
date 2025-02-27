@@ -92,10 +92,6 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.hardware.update(
-            self.hal, self.time
-        )  # Keep this at the bottom of autonomousPeriodic
-
         self.intakeChute.update(
             self.hal,
             False,
@@ -103,6 +99,10 @@ class Robot(wpilib.TimedRobot):
             False,
             False,
         )
+
+        self.hardware.update(
+            self.hal, self.time
+        )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()

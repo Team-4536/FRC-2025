@@ -85,7 +85,7 @@ class RobotHALBuffer:
         table.putNumber("yaw", self.yaw)
 
 
-debugMode = True
+debugMode = False
 
 
 class RobotHAL:
@@ -105,8 +105,6 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        # self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-        # self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
@@ -389,7 +387,7 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.armMotor.setVoltage(buf.armVolts)
+        # self.armMotor.setVoltage(buf.armVolts)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
