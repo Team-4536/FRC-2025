@@ -88,10 +88,6 @@ class SwerveDrive:
             self.MAX_METERS_PER_SEC,
         )
 
-        self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
-        )
-
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )

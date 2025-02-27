@@ -85,7 +85,7 @@ class RobotHALBuffer:
         table.putNumber("yaw", self.yaw)
 
 
-debugMode = True
+debugMode = False
 
 
 class RobotHAL:
@@ -387,7 +387,7 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.armMotor.setVoltage(buf.armVolts)
+        # self.armMotor.setVoltage(buf.armVolts)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()

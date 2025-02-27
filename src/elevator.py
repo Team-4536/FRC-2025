@@ -31,12 +31,9 @@ class ElevatorSubsystem:
         self.velSetpoint = 0
         self.posSetpoint = 0
 
-        # mode 0 is position control, 1 is velocity
         self.mode = ElevatorMode.POSITION_MODE
         self.debugMode = True
-        # self.table.getNumber("Elevator Mode", self.mode)
 
-    # >:D
     def update(
         self,
         hal: RobotHALBuffer,
