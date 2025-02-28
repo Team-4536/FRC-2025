@@ -17,7 +17,7 @@ class IntakeChute:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.chuteSpeed = 5
         self.state = ChuteStates.DOWN
-        self.table.putNumber("Chute Control Mode", self.state.name)
+        self.table.putString("Chute Control Mode", self.state.name)
         self.chuteDirection = 0
         self.resetStateUP = True
         self.manualState = False
@@ -38,10 +38,10 @@ class IntakeChute:
         self.table.putBoolean("right trigger", chuteDown)
         self.table.putBoolean("left trigger", chuteUp)
 
-        self.table.putBoolean("Chute In Manual", self.manualState)
-
         if switchManualState:
             self.manualState = not (self.manualState)
+
+        self.table.putBoolean("Chute In Manual", self.manualState)
 
         if switchAutoState:
             self.downState = not (self.downState)
@@ -54,7 +54,7 @@ class IntakeChute:
             else:
                 self.state = ChuteStates.UP
 
-        self.table.putNumber("Chute Control Mode", self.state.name)
+        self.table.putString("Chute Control Mode", self.state.name)
 
         if chuteUp:
             self.chuteDirection = -1
