@@ -1,10 +1,13 @@
 # imports
 from robotHAL import RobotHALBuffer
+from robotHAL import RobotHAL
 from ntcore import NetworkTableInstance
 from rev import (
     SparkMax,
     ClosedLoopSlot,
 )
+import wpilib
+
 from enum import Enum
 
 
@@ -24,12 +27,12 @@ class ElevatorSubsystem:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
+
         self.velSetpoint = 0
         self.posSetpoint = 0
 
-        # mode 0 is position control, 1 is velocity
-        self.mode = ElevatorMode.MANUAL_MODE
-        self.debugMode = False
+        self.mode = ElevatorMode.POSITION_MODE
+        self.debugMode = True
 
     def update(
         self,
@@ -38,6 +41,8 @@ class ElevatorSubsystem:
         down: float,
         toggleMode: bool,
         POVSetpoint: float,
+        armUp: bool,
+        armDown: bool,
     ):
         # Dead-Zone
         if up < 0.1:
@@ -63,46 +68,40 @@ class ElevatorSubsystem:
         if self.debugMode:
             self.table.putNumber("Elevator State", self.mode.value)
 
-        if hal.firstManipulatorSensor:
-            hal.elevatorSlot = ClosedLoopSlot.kSlot2
-            self.posSetpoint = hal.elevatorPos
-
-        elif self.mode == ElevatorMode.POSITION_MODE:
+        if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
-            if POVSetpoint == 0:
+            if POVSetpoint == 180:
                 self.posSetpoint = self.INTAKE_POS
             elif POVSetpoint == 90:
                 self.posSetpoint = self.L2_POS
-            elif POVSetpoint == 180:
-                self.posSetpoint = self.L3_POS
             elif POVSetpoint == 270:
+                self.posSetpoint = self.L3_POS
+            elif POVSetpoint == 0:
                 self.posSetpoint = self.L4_POS
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
             )
 
-            if (
-                hal.elevatorPos > 10
-                and hal.elevatorPos < 35
-                or self.posSetpoint > hal.elevatorPos
-                and self.posSetpoint < 35
-                or self.posSetpoint < hal.elevatorPos
-                and self.posSetpoint > 10
-            ):
-                hal.elevatorSlot = ClosedLoopSlot.kSlot2
-            else:
-                hal.elevatorSlot = ClosedLoopSlot.kSlot1
-
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
-            self.velSetpoint = 75 * up + (-75 * down)  # moves the elevator
+            self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
+
+        # if self.mode == ElevatorMode.POSITION_MODE:
+        #    hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
+        #        "Elevator setpoint offset", 0
+        #    )
+        # if self.mode == ElevatorMode.MANUAL_MODE:
+        #    hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
+        #        "Elevator setpoint offset", 0
+        #    )
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-        hal.elevatorArbFF = 0.3 + self.table.getNumber("Elevator arbFF offset", 0)
+            self.table.putString("Elevator State", self.mode.name)
+        hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)
