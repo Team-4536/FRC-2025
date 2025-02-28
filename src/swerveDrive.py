@@ -206,11 +206,9 @@ class SwerveDrive:
 
         return output
 
-    def setpointChooser(
-        self,
-    ):
-        self.currentPose = Pose2d(0, 0, 0)
-        self.desiredPose = Pose2d(0, 1, 0)
+    def setpointChooser(self, yaw):
+        self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
+        self.desiredPose = Pose2d(0, 1, yaw)
         self.adjustedSpeeds = self.controller.calculate(
             self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(0.0)
         )

@@ -74,7 +74,7 @@ class Robot(wpilib.TimedRobot):
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
-        self.swerveDrive.setpointChooser()
+        self.setpointActive = False
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -85,10 +85,21 @@ class Robot(wpilib.TimedRobot):
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
-        if self.driveCtrlr.getAButton:
+        if self.driveCtrlr.getAButton():
+            self.setpointActive = True
+        if self.setpointActive:
+
+            self.swerveDrive.setpointChooser(self.hal.yaw)
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
+        if (
+            self.driveCtrlr.getLeftX()
+            or self.driveCtrlr.getLeftY()
+            or self.driveCtrlr.getRightX()
+            or self.driveCtrlr.getRightY()
+        ):
+            self.setpointActive = False
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
