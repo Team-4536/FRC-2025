@@ -2,6 +2,7 @@
 from robotHAL import RobotHALBuffer
 from robotHAL import RobotHAL
 from ntcore import NetworkTableInstance
+from robotHAL import RobotHAL
 from rev import (
     SparkMax,
     ClosedLoopSlot,
@@ -90,14 +91,13 @@ class ElevatorSubsystem:
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
 
-        # if self.mode == ElevatorMode.POSITION_MODE:
-        #    hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
-        # if self.mode == ElevatorMode.MANUAL_MODE:
-        #    hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-        #        "Elevator setpoint offset", 0
-        #    )
+            if armUp:
+                hal.armVolts = 1
+            elif armDown:
+                hal.armVolts = -1
+
+        if hal.firstManipulatorSensor:
+            self.posSetpoint = hal.elevatorPos
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
