@@ -1,7 +1,7 @@
 import math
 import robotHAL
 import robot
-
+import math
 import wpilib
 from wpilib import SmartDashboard, Field2d
 from ntcore import NetworkTableInstance
@@ -210,7 +210,54 @@ class SwerveDrive:
         self,
     ):
         self.currentPose = Pose2d(0, 0, 0)
-        self.desiredPose = Pose2d(1, 0, 0)
-        adjustedSpeeds = self.controller.calculate(
-            self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(70.0)
+        self.desiredPose = Pose2d(0, 1, 0)
+        self.adjustedSpeeds = self.controller.calculate(
+            self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(0.0)
         )
+
+    def updateWithoutSticks(
+        self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
+    ):
+
+        self.chassisSpeeds = chassisSpeed
+
+        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
+            self.unleashedModules,
+            self.MAX_METERS_PER_SEC,
+        )
+
+        self.table.putNumber(
+            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+        )
+
+        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+
+        FLModuleState = self.optimizeTarget(
+            swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
+        )
+        hal.driveFLSetpoint = FLModuleState.speed
+        hal.turnFLSetpoint = FLModuleState.angle.radians()
+        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
+
+        FRModuleState = self.optimizeTarget(
+            swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
+        )
+        hal.driveFRSetpoint = FRModuleState.speed
+        hal.turnFRSetpoint = FRModuleState.angle.radians()
+
+        BLModuleState = self.optimizeTarget(
+            swerveModuleStates[2], Rotation2d(hal.turnCCWBL)
+        )
+        hal.driveBLSetpoint = BLModuleState.speed
+        hal.turnBLSetpoint = BLModuleState.angle.radians()
+
+        BRModuleState = self.optimizeTarget(
+            swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
+        )
+        hal.driveBRSetpoint = BRModuleState.speed
+        hal.turnBRSetpoint = BRModuleState.angle.radians()

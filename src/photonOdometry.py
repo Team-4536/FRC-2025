@@ -96,7 +96,7 @@ class photonVision:
             wpimath.geometry.Rotation3d.fromDegrees(0.0, camPitch, 0.0),
         )
         self.camPoseEst = PhotonPoseEstimator(
-            AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape),
+            AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded),
             PoseStrategy.LOWEST_AMBIGUITY,
             self.camera,
             kRobotToCam,
