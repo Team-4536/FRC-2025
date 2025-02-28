@@ -102,16 +102,16 @@ class Robot(wpilib.TimedRobot):
             self.hal.fieldOriented = not self.hal.fieldOriented
 
         if self.driveCtrlr.getYButtonPressed():
-            self.hal.rotPIDsetpoint = 60
-            self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getXButtonPressed():
-            self.hal.rotPIDsetpoint = 120
-            self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getAButtonPressed():
             self.hal.rotPIDsetpoint = 240
             self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getBButtonPressed():
+        elif self.driveCtrlr.getXButtonPressed():
             self.hal.rotPIDsetpoint = 300
+            self.hal.rotPIDToggle = True
+        elif self.driveCtrlr.getAButtonPressed():
+            self.hal.rotPIDsetpoint = 60
+            self.hal.rotPIDToggle = True
+        elif self.driveCtrlr.getBButtonPressed():
+            self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
 
         # Keep the lines below at the bottom of teleopPeriodic

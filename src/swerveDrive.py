@@ -37,11 +37,11 @@ class SwerveDrive:
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
 
         # =======NEW, NOT TUNED=======================================
-        constraints = TrapezoidProfileRadians.Constraints(6.28, 3 / 4 * math.pi)
+        constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 8 * math.pi)
         # constraints = TrapezoidProfileRadians(Contraint)
         xPID = PIDController(0.1, 0, 0)
         yPID = PIDController(0.1, 0, 0)
-        rotPID = ProfiledPIDControllerRadians(0.1, 0, 0, constraints)
+        rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
 
         self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
 
@@ -66,13 +66,11 @@ class SwerveDrive:
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
-        if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
+        if math.sqrt(joystickX**2 + joystickY**2) < 0.07:
             joystickX = 0
             joystickY = 0
-        if abs(joystickRotation) < 0.05:
+        if abs(joystickRotation) < 0.04:
             joystickRotation = 0
-
-        self.number = 1  # why
 
         self.offsetX = 0.05 * np.sign(joystickX)
         self.offsetY = 0.05 * np.sign(joystickY)
@@ -113,7 +111,7 @@ class SwerveDrive:
 
         # only use rotational PID if it's activated
         if hal.rotPIDToggle:
-            rotFinal = rotPIDSpeed
+            rotFinal = rotPIDSpeed * 4
         else:
             rotFinal = -self.driveRotation * 3  # copied from HCPA code
 
@@ -128,8 +126,12 @@ class SwerveDrive:
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
         self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
-        self.table.putNumber("SD RotPIDSpeed omega", adjustedSpeeds.omega)
+        self.table.putNumber(
+            "SD RotPIDSpeed omega", adjustedSpeeds.omega * (180 / math.pi)
+        )
         self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
+        self.table.putNumber("z_target rot", rotTarget.degrees())
+        self.table.putNumber("z_current rot", fakeBotPos.rotation().degrees())
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
