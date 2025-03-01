@@ -61,6 +61,8 @@ class RobotSimHAL:
     # elevator position
 
     # limit switches
+        buf.armVolts = self.table.getNumber("arm voltage", 0)
+        buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass

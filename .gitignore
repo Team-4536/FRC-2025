@@ -24,3 +24,7 @@ ctre_sim/*.dat
 
 .vscode
 .venv/
+
+
+# mypy
+.mypy_cache

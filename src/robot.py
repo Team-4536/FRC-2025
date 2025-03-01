@@ -114,8 +114,8 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
-            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftBumper(),
+            self.driveCtrlr.getRightBumper(),
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
@@ -153,8 +153,18 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
+<<<<<<< HEAD
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+=======
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
+>>>>>>> 1d80a8fcc6ffa12fa6bd50eb40bc2e91fb7f1884
 
         self.hardware.update(
             self.hal, self.time

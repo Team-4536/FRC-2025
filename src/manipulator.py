@@ -18,7 +18,7 @@ class ManipulatorSubsystem:
         UP = 5
         GOINGDOWN = 6
 
-    debug = True
+    debug = False
 
     def __init__(self):
 
