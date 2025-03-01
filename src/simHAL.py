@@ -3,7 +3,7 @@ import math
 
 from ntcore import NetworkTableInstance
 from real import angleWrap, lerp
-from robotHAL import RobotHALBuffer
+from robotHAL import RobotHALBuffer, RobotHAL
 from swerveDrive import SwerveDrive
 from timing import TimeData
 from wpimath.geometry import Rotation2d, Translation2d
@@ -12,6 +12,7 @@ from wpilib import SmartDashboard
 from manipulator import ManipulatorSubsystem
 from elevator import ElevatorSubsystem
 from elevator import ElevatorMode
+from wpimath.units import meter
 
 
 class RobotSimHAL:
@@ -50,6 +51,10 @@ class RobotSimHAL:
 
         self.table.putNumber("arm voltage", buf.armVolts)
         buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
+        buf.drivePositionsList[0] += ((buf.driveFLSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
+        buf.drivePositionsList[1] += ((buf.driveFRSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
+        buf.drivePositionsList[2] += ((buf.driveBLSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
+        buf.drivePositionsList[3] += ((buf.driveBRSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
         # self.table.putNumber("Elevator State", self)
 
     # elevator state
