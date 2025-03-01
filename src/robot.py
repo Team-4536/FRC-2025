@@ -153,10 +153,9 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-<<<<<<< HEAD
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
-=======
+
         self.intakeChute.update(
             self.hal,
             False,
@@ -164,7 +163,6 @@ class Robot(wpilib.TimedRobot):
             False,
             False,
         )
->>>>>>> 1d80a8fcc6ffa12fa6bd50eb40bc2e91fb7f1884
 
         self.hardware.update(
             self.hal, self.time
