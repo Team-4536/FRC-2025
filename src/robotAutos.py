@@ -65,6 +65,8 @@ class RobotAutos:
             auto.addPathStage(traj)
 
         else:
-            assert(False)
+
+            assert False
+
 
         return auto, initialPose
