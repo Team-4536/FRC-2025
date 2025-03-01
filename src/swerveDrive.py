@@ -18,7 +18,7 @@ from wpimath.kinematics import (
 from wpimath.units import radians
 
 
-# adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
+# adapted from here https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
@@ -32,9 +32,14 @@ class SwerveDrive:
             Translation2d(-oneftInMeters, -oneftInMeters),
             Translation2d(oneftInMeters, -oneftInMeters),
         ]
-        # ModuleState = SwerveModuleState(wpimath.units.meters(0), Rotation2d(0))
+
         ModulePos = SwerveModulePosition(0, Rotation2d(0))
-        modulePosList = [ModulePos, ModulePos, ModulePos, ModulePos]
+        modulePosList: list[SwerveModulePosition * 4] = [  # type: ignore
+            ModulePos,
+            ModulePos,
+            ModulePos,
+            ModulePos,
+        ]
 
         self.angle = Rotation2d(0)
         self.pose = Pose2d(
@@ -42,7 +47,7 @@ class SwerveDrive:
         )
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
         self.odometry = SwerveDrive4Odometry(
-            self.kinematics, self.angle, modulePosList, self.pose
+            self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
 
         self.table.putNumber("SD Joystick X offset", 0)

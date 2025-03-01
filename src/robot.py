@@ -16,7 +16,7 @@ import robotAutos
 from robotAutos import RobotAutos
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
-from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
+from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  # type: ignore
 from IntakeChute import IntakeChute
 
 
@@ -137,7 +137,7 @@ class Robot(wpilib.TimedRobot):
     def autonomousInit(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.auto = self.autoSubsys.autoInit(self)
+        self.auto, _ = self.autoSubsys.autoInit(self)
 
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
@@ -152,9 +152,9 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
-
+        self.auto.run(self)
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
         self.intakeChute.update(
             self.hal,

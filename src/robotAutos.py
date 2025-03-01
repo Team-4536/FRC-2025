@@ -6,21 +6,23 @@ from autos import AutoBuilder
 from wpimath.geometry import Translation2d
 import rev
 from rev import SparkMax
-from pathplannerlib.path import PathPlannerPath, PathPlannerTrajectory
-from pathplannerlib.config import RobotConfig, ModuleConfig, DCMotor
+from pathplannerlib.path import PathPlannerPath, PathPlannerTrajectory  # type: ignore
+from pathplannerlib.config import RobotConfig, ModuleConfig, DCMotor  # type: ignore
 from robotHAL import RobotHAL as r
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
 AUTO_NONE = "do nothng"
-DRIVE_FORWARD = "drive off the starting line"
+FORWARD_A = "Forward A"
+REEF4_A = "reef4 A"
 
 
 class RobotAutos:
     def __init__(self) -> None:
         self.autoChooser = wpilib.SendableChooser()
         self.autoChooser.setDefaultOption(AUTO_NONE, AUTO_NONE)
-        self.autoChooser.addOption(DRIVE_FORWARD, DRIVE_FORWARD)
+        self.autoChooser.addOption(FORWARD_A, FORWARD_A)
+        self.autoChooser.addOption(REEF4_A, REEF4_A)
         wpilib.SmartDashboard.putData("auto path chooser", self.autoChooser)
 
     def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -54,19 +56,25 @@ class RobotAutos:
 
         auto = AutoBuilder()
         initialPose: Pose2d = Pose2d()
-        traj = self.loadTrajectory("Forward", r.onRedSide)
+        traj = self.loadTrajectory("leftCorner-leftDiag", r.onRedSide)
 
         if self.autoChooser.getSelected() == AUTO_NONE:
             pass
 
-        elif self.autoChooser.getSelected() == DRIVE_FORWARD:
-            initialPose = traj.getInitialState().pose()
-            auto.addTelemetryStage(DRIVE_FORWARD)
+        elif self.autoChooser.getSelected() == FORWARD_A:
+            initialPose = traj.getInitialState().pose
+            auto.addTelemetryStage(FORWARD_A)
+            auto.addPathStage(traj)
+
+        elif self.autoChooser.getSelected() == REEF4_A:
+            initialPose = traj.getInitialState().pose
+            auto.addTelemetryStage(FORWARD_A)
+            auto.addPathStage(traj)
+            traj = self.loadTrajectory("leftDiag-reef4", r.onRedSide)
             auto.addPathStage(traj)
 
         else:
 
             assert False
-
 
         return auto, initialPose

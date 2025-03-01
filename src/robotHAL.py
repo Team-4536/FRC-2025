@@ -58,8 +58,8 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
-        self.drivePositionsList = [0, 0, 0, 0]
-        self.steerPositionList = [0, 0, 0, 0]
+        self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
+        self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
 
         self.moduleFL = SwerveModulePosition(0, Rotation2d(radians(0)))
         self.moduleFR = SwerveModulePosition(0, Rotation2d(radians(0)))
@@ -103,6 +103,8 @@ class RobotHALBuffer:
         table.putBoolean("Move arm down", self.moveArmDown)
 
         table.putNumber("yaw", self.yaw)
+        table.putNumber("setpointD fl", self.driveFLSetpoint)
+        table.putNumber("setpointT fl", self.turnFLSetpoint)
 
 
 debugMode = False

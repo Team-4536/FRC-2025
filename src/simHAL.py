@@ -12,7 +12,6 @@ from wpilib import SmartDashboard
 from manipulator import ManipulatorSubsystem
 from elevator import ElevatorSubsystem
 from elevator import ElevatorMode
-from wpimath.units import meter
 
 
 class RobotSimHAL:
@@ -35,7 +34,7 @@ class RobotSimHAL:
         buf.firstManipulatorSensor = self.table.getBoolean(
             "first manipulator sensor", False
         )
-        buf.yaw += 0.1
+        # buf.yaw += 0.1
         self.drivePositionsList = [0, 0, 0, 0]
         self.steerPositionList = [0, 0, 0, 0]
         wpilib.SmartDashboard.putNumber("yaw", buf.yaw)
@@ -51,16 +50,28 @@ class RobotSimHAL:
 
         self.table.putNumber("arm voltage", buf.armVolts)
         buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
-        buf.drivePositionsList[0] += ((buf.driveFLSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
-        buf.drivePositionsList[1] += ((buf.driveFRSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
-        buf.drivePositionsList[2] += ((buf.driveBLSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
-        buf.drivePositionsList[3] += ((buf.driveBRSetpoint*0.002) / ((2*math.pi) * 0.05)) * 2 * math.pi
+        buf.drivePositionsList[0] += (
+            ((buf.driveFLSetpoint * 0.002) / ((2 * math.pi) * 0.05)) * 2 * math.pi
+        )
+        buf.drivePositionsList[1] += (
+            ((buf.driveFRSetpoint * 0.002) / ((2 * math.pi) * 0.05)) * 2 * math.pi
+        )
+        buf.drivePositionsList[2] += (
+            ((buf.driveBLSetpoint * 0.002) / ((2 * math.pi) * 0.05)) * 2 * math.pi
+        )
+        buf.drivePositionsList[3] += (
+            ((buf.driveBRSetpoint * 0.002) / ((2 * math.pi) * 0.05)) * 2 * math.pi
+        )
+        buf.steerPositionList[0] += buf.turnFLSetpoint
+        buf.steerPositionList[1] += buf.turnFLSetpoint
+        buf.steerPositionList[2] += buf.turnFLSetpoint
+        buf.steerPositionList[3] += buf.turnFLSetpoint
         # self.table.putNumber("Elevator State", self)
 
-    # elevator state
-    # elevator position
+        # elevator state
+        # elevator position
 
-    # limit switches
+        # limit switches
         buf.armVolts = self.table.getNumber("arm voltage", 0)
         buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
 

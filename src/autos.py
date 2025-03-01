@@ -3,7 +3,7 @@ from copy import copy
 from typing import TYPE_CHECKING, Callable
 
 from ntcore import NetworkTableInstance
-from pathplannerlib.path import PathPlannerTrajectory
+from pathplannerlib.path import PathPlannerTrajectory  # type: ignore
 
 
 from real import angleWrap
@@ -105,7 +105,7 @@ class AutoBuilder:
             table.putNumber("pathVelY", adjustedSpeeds.vy)
             table.putNumber("pathVelR", adjustedSpeeds.omega)
 
-            r.swerveDrive.updateWithoutSticks(r.time.dt, r.hal, adjustedSpeeds)
+            r.swerveDrive.updateWithoutSticks(r.hal, adjustedSpeeds)
             return (r.time.timeSinceInit - r.auto.stageStart) > t.getTotalTimeSeconds()
 
         s = Stage(func, f"path '{trajName}'")
