@@ -13,7 +13,7 @@ except ImportError:
 def test_black():
     # black doesn't have an api for some reason so this will do
     ret = subprocess.call(
-        "py -m black --check ../"
+        "py -m black --check ./"
     )  # doesnt reformat, just checks if files are formatted
     if ret == 1:  # 0 on success
         print(errhead + "Your code is not formatted with balck." + errtail)
