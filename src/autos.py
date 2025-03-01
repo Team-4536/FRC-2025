@@ -105,7 +105,7 @@ class AutoBuilder:
             table.putNumber("pathVelY", adjustedSpeeds.vy)
             table.putNumber("pathVelR", adjustedSpeeds.omega)
 
-            r.drive.update(r.time.dt, r.hal, adjustedSpeeds)
+            r.swerveDrive.update(r.time.dt, r.hal, adjustedSpeeds)
             return (r.time.timeSinceInit - r.auto.stageStart) > t.getTotalTimeSeconds()
 
         s = Stage(func, f"path '{trajName}'")
