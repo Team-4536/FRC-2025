@@ -37,8 +37,7 @@ class SwerveDrive:
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
 
         # =======NEW, NOT TUNED=======================================
-        constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 8 * math.pi)
-        # constraints = TrapezoidProfileRadians(Contraint)
+        constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
         xPID = PIDController(0.1, 0, 0)
         yPID = PIDController(0.1, 0, 0)
         rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
@@ -66,10 +65,10 @@ class SwerveDrive:
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
-        if math.sqrt(joystickX**2 + joystickY**2) < 0.07:
+        if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
             joystickY = 0
-        if abs(joystickRotation) < 0.04:
+        if abs(joystickRotation) < 0.06:
             joystickRotation = 0
 
         self.offsetX = 0.05 * np.sign(joystickX)
@@ -78,11 +77,11 @@ class SwerveDrive:
 
         self.proxyDeadZoneX = (joystickX - self.offsetX) * 3.5
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
-        self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
+        self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 10
 
         self.driveX = self.proxyDeadZoneX
         self.driveY = self.proxyDeadZoneY
-        self.driveRotation = self.proxyDeadZoneR
+        self.driveRotation = self.proxyDeadZoneR  # radians per second
 
         driveVector = Translation2d(self.driveX, self.driveY)
 
@@ -111,9 +110,9 @@ class SwerveDrive:
 
         # only use rotational PID if it's activated
         if hal.rotPIDToggle:
-            rotFinal = rotPIDSpeed * 4
+            rotFinal = rotPIDSpeed * 5
         else:
-            rotFinal = -self.driveRotation * 3  # copied from HCPA code
+            rotFinal = -self.driveRotation  # copied from HCPA code
 
         # -------------------------------------------------------------------
 
@@ -125,13 +124,16 @@ class SwerveDrive:
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
         self.table.putNumber(
-            "SD RotPIDSpeed omega", adjustedSpeeds.omega * (180 / math.pi)
+            "SD ChassisSpeeds omega (rotFinal)", self.chassisSpeeds.omega
+        )
+        self.table.putNumber(
+            "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
+            adjustedSpeeds.omega,  # * (180 / math.pi)
         )
         self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
-        self.table.putNumber("z_target rot", rotTarget.degrees())
-        self.table.putNumber("z_current rot", fakeBotPos.rotation().degrees())
+        self.table.putNumber("z_target rotDeg", rotTarget.degrees())
+        self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
@@ -140,7 +142,7 @@ class SwerveDrive:
         )
 
         self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+            "SD Module Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
         FLModuleState = self.optimizeTarget(
