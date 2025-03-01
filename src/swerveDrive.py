@@ -24,6 +24,7 @@ from wpimath.controller import (
 from wpimath.trajectory import TrapezoidProfileRadians
 from wpimath.geometry import Rotation2d
 from wpimath.geometry import Pose2d
+import setpoints
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -206,9 +207,21 @@ class SwerveDrive:
 
         return output
 
-    def setpointChooser(self, yaw):
+    def setpointChooser(self, yaw, fiducialID, side):
+
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-        self.desiredPose = Pose2d(0, 1, yaw)
+        if side == "left":
+            self.desiredPose = Pose2d(
+                setpoints.tagLeft[fiducialID][0],
+                setpoints.tagLeft[fiducialID][1],
+                setpoints.tagLeft[fiducialID][2],
+            )
+        if side == "left":
+            self.desiredPose = Pose2d(
+                setpoints.tagRight[fiducialID][0],
+                setpoints.tagRight[fiducialID][1],
+                setpoints.tagRight[fiducialID][2],
+            )
         self.adjustedSpeeds = self.controller.calculate(
             self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(0.0)
         )
@@ -259,3 +272,10 @@ class SwerveDrive:
         )
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
+
+    def savePos(self, fiducialID, yaw):
+        with open("pyTest.txt", "a") as f:
+            f.write("tag" + fiducialID + " X = " + f"{self.odomPos[0]}" "\n")
+            f.write("tag" + fiducialID + " Y = " + f"{self.odomPos[1]}" "\n")
+            f.write("tag" + fiducialID + " Angle = " + f"{yaw}" "\n")
+        # Test.close()

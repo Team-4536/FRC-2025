@@ -16,7 +16,6 @@ from swerveDrive import SwerveDrive
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-from setpoints import setpoints
 
 
 class Robot(wpilib.TimedRobot):
@@ -48,8 +47,6 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
 
-        self.testHolo = setpoints()
-
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
@@ -74,7 +71,8 @@ class Robot(wpilib.TimedRobot):
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
-        self.setpointActive = False
+        self.setpointActiveLeft = False
+        self.setpointActiveRight = False
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -85,11 +83,23 @@ class Robot(wpilib.TimedRobot):
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
         )
-        if self.driveCtrlr.getAButton():
-            self.setpointActive = True
-        if self.setpointActive:
+        if self.driveCtrlr.getLeftBumperButtonPressed():
+            self.setpointActiveLeft = True
+        if self.driveCtrlr.getRightBumperButtonPressed():
+            self.setpointActiveRight = True
+        if self.setpointActiveLeft:
 
-            self.swerveDrive.setpointChooser(self.hal.yaw)
+            self.swerveDrive.setpointChooser(
+                self.hal.yaw, self.photonCamera1.fiducialId, "left"
+            )
+            self.swerveDrive.updateWithoutSticks(
+                self.hal, self.swerveDrive.adjustedSpeeds
+            )
+        if self.setpointActiveRight:
+
+            self.swerveDrive.setpointChooser(
+                self.hal.yaw, self.photonCamera2.fiducialId, "right"
+            )
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
@@ -99,7 +109,8 @@ class Robot(wpilib.TimedRobot):
             or self.driveCtrlr.getRightX()
             or self.driveCtrlr.getRightY()
         ):
-            self.setpointActive = False
+            self.setpointActiveLeft = False
+            self.setpointActiveRight = False
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -124,7 +135,11 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
-
+        if self.driveCtrlr.getBackButtonPressed:
+            if self.photonCamera1.fiducialId > -1:
+                self.swerveDrive.savePos(self.photonCamera1.fiducialId, self.hal.yaw)
+            if self.photonCamera2.fiducialId > -1:
+                self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
