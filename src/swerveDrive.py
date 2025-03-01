@@ -52,7 +52,12 @@ class SwerveDrive:
         ]
         # ModuleState = SwerveModuleState(wpimath.units.meters(0), Rotation2d(0))
         ModulePos = SwerveModulePosition(0, Rotation2d(0))
-        modulePosList = [ModulePos, ModulePos, ModulePos, ModulePos]
+        modulePosList: list[SwerveModulePosition * 4] = [  # type: ignore
+            ModulePos,
+            ModulePos,
+            ModulePos,
+            ModulePos,
+        ]
 
         self.angle = Rotation2d(0)
         self.pose = Pose2d(
@@ -60,7 +65,7 @@ class SwerveDrive:
         )
         self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
         self.odometry = SwerveDrive4Odometry(
-            self.kinematics, self.angle, modulePosList, self.pose
+            self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
 
         self.table.putNumber("SD Joystick X offset", 0)
@@ -275,9 +280,9 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-    def savePos(self, fiducialID, yaw):
+    def savePos(self, fiducialID: int, yaw: float):
         with open("pyTest.txt", "a") as f:
-            f.write("tag" + fiducialID + " X = " + f"{self.odomPos[0]}" "\n")
-            f.write("tag" + fiducialID + " Y = " + f"{self.odomPos[1]}" "\n")
-            f.write("tag" + fiducialID + " Angle = " + f"{yaw}" "\n")
+            f.write("tag" + str(fiducialID) + " X = " + f"{self.odomPos[0]}" "\n")
+            f.write("tag" + str(fiducialID) + " Y = " + f"{self.odomPos[1]}" "\n")
+            f.write("tag" + str(fiducialID) + " Angle = " + f"{yaw}" "\n")
         # Test.close()

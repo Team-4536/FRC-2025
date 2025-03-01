@@ -62,15 +62,9 @@ class ManipulatorSubsystem:
             buf.manipulatorVolts = 8
 
             if (
-<<<<<<< HEAD
-                wpilib.getTime() - self.startTime > 1.5
-                and not buf.secondManipulatorSensor
-            ):  # <how long the shooting goes for in sec
-=======
                 wpilib.getTime() - self.startTime > 0.5
                 and not buf.secondManipulatorSensor
             ):  # how long the shooting goes for in sec
->>>>>>> origin/main
                 self.state = self.ManipulatorState.IDLE
 
         elif self.state == self.ManipulatorState.MANUAL:
@@ -82,10 +76,6 @@ class ManipulatorSubsystem:
             if LBumper:
                 self.state = self.ManipulatorState.IDLE
 
-<<<<<<< HEAD
-        self.table.putString("state", self.state.name)
-=======
         if self.debug == True:
             self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
->>>>>>> origin/main

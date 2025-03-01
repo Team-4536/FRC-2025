@@ -119,10 +119,11 @@ class photonVision:
             self.ambiguity = self.target[0].getPoseAmbiguity()
             if self.ambiguity < 0.16:
                 self.camEstPose = self.camPoseEst.update()
-                self.robotX = self.camEstPose.estimatedPose.x
-                self.robotY = self.camEstPose.estimatedPose.y
-                self.robotAngle = self.camEstPose.estimatedPose.rotation().z
-                self.photonTable.putNumber(self.cameraNameReal + "x", self.robotX)
+                if self.camEstPose != None:
+                    self.robotX = self.camEstPose.estimatedPose.x
+                    self.robotY = self.camEstPose.estimatedPose.y
+                    self.robotAngle = self.camEstPose.estimatedPose.rotation().z
+                    self.photonTable.putNumber(self.cameraNameReal + "x", self.robotX)
         else:
             self.ambiguity = 1
             self.fiducialId = 0

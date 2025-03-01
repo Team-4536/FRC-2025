@@ -140,7 +140,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
-        if self.driveCtrlr.getBackButtonPressed:
+        if self.driveCtrlr.getBackButtonPressed():
             if self.photonCamera1.fiducialId > -1:
                 self.swerveDrive.savePos(self.photonCamera1.fiducialId, self.hal.yaw)
             if self.photonCamera2.fiducialId > -1:
