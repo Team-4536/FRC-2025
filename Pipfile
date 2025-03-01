@@ -4,10 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-
-robotpy = { version="<2025", extras=["navx","rev","pathplannerlib","phoenix5","phoenix6", "apriltag"]}
-photonlibpy = "*"
-
+robotpy = { version="==2025.3.1.1", extras=["navx","rev","pathplannerlib","phoenix6"]}
 numpy = "*"
 photonlibpy = "*"
 robotpy-apriltag = "*"
@@ -16,6 +13,7 @@ robotpy-apriltag = "*"
 flake8 = "*"
 pytest = "*"
 black = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.12"

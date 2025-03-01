@@ -82,6 +82,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftX(),
             -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis(),
         )
         if self.driveCtrlr.getLeftBumperButtonPressed():
             self.setpointActiveLeft = True
@@ -117,18 +118,22 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getBButton(),
         )
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
-            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftBumper(),
+            self.driveCtrlr.getRightBumper(),
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
 
         self.manipulatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+            self.hal,
+            self.mechCtrlr.getAButton(),
+            self.mechCtrlr.getLeftBumperPressed(),
         )
 
         if self.driveCtrlr.getStartButton():
@@ -149,6 +154,13 @@ class Robot(wpilib.TimedRobot):
 
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
 
         self.hardware.update(
             self.hal, self.time
