@@ -60,6 +60,11 @@ class RobotAutos:
             pass
 
         elif self.autoChooser.getSelected() == DRIVE_FORWARD:
-            initialPose = traj.getInitialState().pose
+            initialPose = traj.getInitialState().pose()
             auto.addTelemetryStage(DRIVE_FORWARD)
             auto.addPathStage(traj)
+
+        else:
+            assert(False)
+
+        return auto, initialPose
