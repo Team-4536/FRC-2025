@@ -14,9 +14,6 @@ class ManipulatorSubsystem:
         STORED = 2
         SHOOT = 3
         MANUAL = -1
-        GOINGUP = 4
-        UP = 5
-        GOINGDOWN = 6
 
     debug = False
 
@@ -54,6 +51,7 @@ class ManipulatorSubsystem:
             buf.manipulatorVolts = 0
             buf.moveArmDown = False
             self.startTime = wpilib.getTime()
+            # side elevator lights
 
             if AButton:
                 self.state = self.ManipulatorState.SHOOT
