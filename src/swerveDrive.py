@@ -37,8 +37,8 @@ class SwerveDrive:
         oneftInMeters = 0.3048
         self.OdomField = Field2d()
         self.controller = HolonomicDriveController(
-            PIDController(0.1, 0, 0),
-            PIDController(0.1, 0, 0),
+            PIDController(0.3, 0, 0),
+            PIDController(0.3, 0, 0),
             ProfiledPIDControllerRadians(
                 1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
             ),
@@ -217,20 +217,28 @@ class SwerveDrive:
     def setpointChooser(self, yaw, fiducialID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-        if side == "left":
+        if (side == "left") and (
+            setpoints.tagRight[fiducialID][0] > self.odomPos[0]
+            and setpoints.tagRight[fiducialID][1] > self.odomPos[1]
+        ):
             self.desiredPose = Pose2d(
                 setpoints.tagLeft[fiducialID][0],
                 setpoints.tagLeft[fiducialID][1],
                 setpoints.tagLeft[fiducialID][2],
             )
-        if side == "left":
+        elif (side == "right") and (
+            setpoints.tagRight[fiducialID][0] > self.odomPos[0]
+            and setpoints.tagRight[fiducialID][1] > self.odomPos[1]
+        ):
             self.desiredPose = Pose2d(
                 setpoints.tagRight[fiducialID][0],
                 setpoints.tagRight[fiducialID][1],
                 setpoints.tagRight[fiducialID][2],
             )
+        else:
+            self.desiredPose = Pose2d(0, 0, 0)
         self.adjustedSpeeds = self.controller.calculate(
-            self.currentPose, self.desiredPose, 0.25, Rotation2d.fromDegrees(0.0)
+            self.currentPose, self.desiredPose, 0, Rotation2d.fromDegrees(0.0)
         )
 
     def updateWithoutSticks(

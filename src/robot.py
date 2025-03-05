@@ -46,6 +46,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        self.tempFidId = -1
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -86,32 +87,31 @@ class Robot(wpilib.TimedRobot):
         )
         if self.driveCtrlr.getLeftBumperButtonPressed():
             self.setpointActiveLeft = True
+            self.tempFidId = self.photonCamera1.fiducialId
         if self.driveCtrlr.getRightBumperButtonPressed():
             self.setpointActiveRight = True
+            self.tempFidId = self.photonCamera2.fiducialId
         if self.setpointActiveLeft:
 
-            self.swerveDrive.setpointChooser(
-                self.hal.yaw, self.photonCamera1.fiducialId, "left"
-            )
+            self.swerveDrive.setpointChooser(self.hal.yaw, self.tempFidId, "right")
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
         if self.setpointActiveRight:
 
-            self.swerveDrive.setpointChooser(
-                self.hal.yaw, self.photonCamera2.fiducialId, "right"
-            )
+            self.swerveDrive.setpointChooser(self.hal.yaw, self.tempFidId, "left")
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
         if (
-            self.driveCtrlr.getLeftX()
-            or self.driveCtrlr.getLeftY()
-            or self.driveCtrlr.getRightX()
-            or self.driveCtrlr.getRightY()
+            self.driveCtrlr.getLeftX() > 0.07
+            or self.driveCtrlr.getLeftY() > 0.07
+            or self.driveCtrlr.getRightX() > 0.07
+            or self.driveCtrlr.getRightY() > 0.07
         ):
             self.setpointActiveLeft = False
             self.setpointActiveRight = False
+            self.tempFidId = -1
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
