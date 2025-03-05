@@ -11,6 +11,8 @@ from pathplannerlib.config import RobotConfig, ModuleConfig, DCMotor  # type: ig
 from robotHAL import RobotHAL as r
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
+from wpimath import units
+
 
 AUTO_NONE = "do nothng"
 FORWARD_A = "Forward A"
@@ -26,9 +28,13 @@ class RobotAutos:
         wpilib.SmartDashboard.putData("auto path chooser", self.autoChooser)
 
     def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
-        mass = 122 / 9.8
-        moi = 1 / 2 * ((mass) * (mass))
-        oneftInMeters = 0.3048
+        oneftInMeters = units.feetToMeters(1)
+        mass = units.lbsToKilograms(122)
+        moi = (
+            (1 / 12)
+            * mass
+            * (oneftInMeters * oneftInMeters + oneftInMeters * oneftInMeters)
+        )
         # motor = SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         motor = DCMotor(12, 2.6, 105, 1.8, 5676, 1)
         modConfig = ModuleConfig(0.05, 1.1, 9.5, motor, 42, 1)
@@ -48,7 +54,9 @@ class RobotAutos:
             p = p.flipPath()
 
         t = p.generateTrajectory(
-            ChassisSpeeds(), p.getStartingHolonomicPose().rotation(), RConfig
+            ChassisSpeeds(),
+            p.getStartingHolonomicPose().rotation(),
+            RConfig,
         )
         return t
 
