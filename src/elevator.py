@@ -66,6 +66,9 @@ class ElevatorSubsystem:
             "Elevator setpoint offset", 0
         )
 
+        if self.debugMode:
+            self.table.putNumber("Elevator State", self.mode.value)
+
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
@@ -82,14 +85,6 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-            if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
-                hal.elevatorSetpoint = hal.elevatorPos
-                hal.armVolts = -1
-            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
-                hal.armVolts = 1
-            if hal.moveArmDown:
-                hal.armVolts = -1
-
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
@@ -101,15 +96,8 @@ class ElevatorSubsystem:
             elif armDown:
                 hal.armVolts = -1
 
-        if (
-            not hal.elevatorPos <= 0.8
-            or hal.secondManipulatorSensor
-            or hal.firstManipulatorSensor
-            and hal.secondManipulatorSensor
-        ):
-            hal.elevServoAngle = 60
-        else:
-            hal.elevServoAngle = 0
+        if hal.firstManipulatorSensor:
+            self.posSetpoint = hal.elevatorPos
 
         if self.debugMode:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
