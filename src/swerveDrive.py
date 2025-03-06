@@ -112,12 +112,7 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-        if (abs(hal.totalspeed) <= 0.1) and (
-            abs(hal.turnCCWFL - FLModuleState.angle.radians()) <= 0.1
-            and abs(hal.turnCCWFR - FRModuleState.angle.radians()) <= 0.1
-            and abs(hal.turnCCWBL - BLModuleState.angle.radians()) <= 0.1
-            and abs(hal.turnCCWBR - BRModuleState.angle.radians()) <= 0.1
-        ):
+        if (abs(hal.totalspeed) <= 1) and ():
             hal.driveFLSetpoint = 0
             hal.driveFRSetpoint = 0
             hal.driveBLSetpoint = 0
