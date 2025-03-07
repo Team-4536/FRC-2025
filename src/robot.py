@@ -18,6 +18,7 @@ from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  # type: ignore
 from IntakeChute import IntakeChute
+from autos import djoAutoStage
 
 
 class Robot(wpilib.TimedRobot):
@@ -139,12 +140,25 @@ class Robot(wpilib.TimedRobot):
 
         self.auto, _ = self.autoSubsys.autoInit(self)
 
-        self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
-        )
+        self.dictOfAutoAvailable: list[djoAutoStage] = {"test1auto": djoAutoStage(self)}
+        self.dictOfAutoAvailable["test2auto"] = djoAutoStage(self)
+        self.dictOfAutoAvailable
 
-        # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.listOfAutosToRun = [
+            "test2auto",
+            "test1auto",
+        ]  # any order, can repeat, just strings
+
+        self.curAutoStage: djoAutoStage = self.dictOfAutoAvailable[
+            self.listOfAutosToRun.pop()
+        ]
+
+        # self.holonomicDriveController = PPHolonomicDriveController(
+        #     PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+        # )
+
+        # # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
         self.hardware.update(
             self.hal, self.time
@@ -152,7 +166,14 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
-        self.auto.run(self)
+
+        # check here for if self.listOfAutosToRun is empty, if so do nothing.
+        if self.curAutoStage.isNotFinished():
+            self.curAutoStage.run()
+        else:
+            self.curAutoStage = self.dictOfAutoAvailable[self.listOfAutosToRun.pop()]
+
+        # self.auto.run(self)
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 

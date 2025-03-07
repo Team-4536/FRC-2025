@@ -19,6 +19,27 @@ FORWARD_A = "Forward A"
 REEF4_A = "reef4 A"
 
 
+class djoAutoStage:
+    def __init__(self, r: "robot.Robot") -> None:
+        self.count = 0
+        pass
+
+    def run(self, r: "robot.Robot") -> None:
+        # Do stuff here, like:
+        # r.swerveDrive.updateWithoutSticks(blahblah)
+        self.count = self.count + 1
+        pass
+
+    def isFinished(self) -> None:
+        if self.count == 100:
+            return True
+        else:
+            return False
+
+    def isNotFinished(self) -> None:
+        return not self.isFinished()
+
+
 class RobotAutos:
     def __init__(self) -> None:
         self.autoChooser = wpilib.SendableChooser()
