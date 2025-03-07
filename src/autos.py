@@ -3,7 +3,7 @@ from copy import copy
 from typing import TYPE_CHECKING, Callable
 
 from ntcore import NetworkTableInstance
-from pathplannerlib.path import PathPlannerTrajectory  # type: ignore
+from pathplannerlib.path import PathPlannerTrajectory, PathPlannerTrajectoryState  # type: ignore
 
 
 from real import angleWrap
@@ -85,6 +85,8 @@ class AutoBuilder:
 
     def _newPathStage(self, t: PathPlannerTrajectory, trajName: str) -> Stage:
         def func(r: "Robot") -> bool | None:
+
+            # goal = t.sample(0)
             goal = t.sample(r.time.timeSinceInit - r.auto.stageStart)
 
             table = NetworkTableInstance.getDefault().getTable("autos")
@@ -101,12 +103,23 @@ class AutoBuilder:
             adjustedSpeeds = r.holonomicDriveController.calculateRobotRelativeSpeeds(
                 r.swerveDrive.odometry.getPose(), goal
             )
+            adjustedSpeeds.omega = adjustedSpeeds.omega
             table.putNumber("pathVelX", adjustedSpeeds.vx)
             table.putNumber("pathVelY", adjustedSpeeds.vy)
             table.putNumber("pathVelR", adjustedSpeeds.omega)
 
+            table.putNumber("timeSinceInit", r.time.timeSinceInit)
+            table.putNumber("stageStart time", r.auto.stageStart)
+            table.putNumber("total time", t.getTotalTimeSeconds())
+            table.putBoolean(
+                "autostage check",
+                (r.time.timeSinceInit - r.auto.stageStart) > t.getTotalTimeSeconds(),
+            )
+
             r.swerveDrive.updateWithoutSticks(r.hal, adjustedSpeeds)
-            return (r.time.timeSinceInit - r.auto.stageStart) > t.getTotalTimeSeconds()
+            return (
+                r.time.timeSinceInit - r.auto.stageStart
+            ) > 3  # t.getTotalTimeSeconds()
 
         s = Stage(func, f"path '{trajName}'")
         return s

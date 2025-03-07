@@ -12,6 +12,7 @@ from robotHAL import RobotHAL as r
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 from wpimath import units
+from ntcore import NetworkTableInstance
 
 
 AUTO_NONE = "do nothng"
@@ -61,21 +62,29 @@ class RobotAutos:
         return t
 
     def autoInit(self, r: "robot.Robot") -> tuple[AutoBuilder, Pose2d]:
-
+        table = NetworkTableInstance.getDefault().getTable("autos")
         auto = AutoBuilder()
         initialPose: Pose2d = Pose2d()
         traj = self.loadTrajectory("leftCorner-leftDiag", r.onRedSide)
+        table.putNumber("auto getTotaltime seconds", traj.getTotalTimeSeconds())
 
         if self.autoChooser.getSelected() == AUTO_NONE:
             pass
 
         elif self.autoChooser.getSelected() == FORWARD_A:
             initialPose = traj.getInitialState().pose
+            r.hardware.resetGyroToAngle(initialPose.rotation().radians())
+            r.swerveDrive.resetOdometry(initialPose, r.hal)
+            # table.putNumber("initial pose", initialPose.rotation().radians())
             auto.addTelemetryStage(FORWARD_A)
             auto.addPathStage(traj)
 
         elif self.autoChooser.getSelected() == REEF4_A:
             initialPose = traj.getInitialState().pose
+            r.hardware.resetGyroToAngle(initialPose.rotation().radians())
+            r.swerveDrive.resetOdometry(initialPose, r.hal)
+            # r.hal.resetOdometry(initialPose)
+            # table.putNumber("initial pose", initialPose.rotation().radians())
             auto.addTelemetryStage(FORWARD_A)
             auto.addPathStage(traj)
             traj = self.loadTrajectory("leftDiag-reef4", r.onRedSide)

@@ -483,6 +483,8 @@ class RobotHAL:
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
 
+        buf.yaw = math.radians(-self.gyro.getAngle())
+
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters

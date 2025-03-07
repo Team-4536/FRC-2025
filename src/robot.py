@@ -140,11 +140,11 @@ class Robot(wpilib.TimedRobot):
         self.auto, _ = self.autoSubsys.autoInit(self)
 
         self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+            PIDConstants(0.4, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
         self.hardware.update(
             self.hal, self.time
