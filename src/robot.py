@@ -13,6 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from LimeLight import LimeLight
 
 
 class Robot(wpilib.TimedRobot):
@@ -38,11 +39,13 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        self.limeLight = LimeLight()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
         self.hal.stopMotors()
+        self.limeLight.update(self.hal)
 
     def teleopInit(self) -> None:
         pass
