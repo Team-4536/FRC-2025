@@ -35,6 +35,8 @@ class ElevatorSubsystem:
         self.mode = ElevatorMode.POSITION_MODE
         self.debugMode = True
 
+        self.armUp = False
+
     def update(
         self,
         hal: RobotHALBuffer,
@@ -42,9 +44,10 @@ class ElevatorSubsystem:
         down: float,
         toggleMode: bool,
         POVSetpoint: float,
-        armUp: bool,
-        armDown: bool,
+        armToggle: bool,
     ):
+        if armToggle:
+            self.armUp = not self.armUp
         # Dead-Zone
         if up < 0.1:
             up = 0
@@ -85,9 +88,9 @@ class ElevatorSubsystem:
             if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
                 hal.elevatorSetpoint = hal.elevatorPos
                 hal.armVolts = -1
-            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
+            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5 and self.armUp:
                 hal.armVolts = 1
-            if hal.moveArmDown:
+            else:
                 hal.armVolts = -1
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
@@ -95,11 +98,6 @@ class ElevatorSubsystem:
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
-
-            if armUp:
-                hal.armVolts = 1
-            elif armDown:
-                hal.armVolts = -1
 
         if (
             not hal.elevatorPos <= 0.8

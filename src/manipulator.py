@@ -37,7 +37,6 @@ class ManipulatorSubsystem:
 
         if self.state == self.ManipulatorState.IDLE:
             buf.manipulatorVolts = 0
-            buf.moveArmDown = True
             if buf.firstManipulatorSensor:
                 self.state = self.ManipulatorState.INTAKE
 
@@ -52,7 +51,6 @@ class ManipulatorSubsystem:
 
         elif self.state == self.ManipulatorState.STORED:
             buf.manipulatorVolts = 0
-            buf.moveArmDown = False
             self.startTime = wpilib.getTime()
 
             if AButton:
