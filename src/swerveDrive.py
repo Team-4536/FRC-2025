@@ -12,7 +12,8 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
-
+from wpimath.units import meters, radians
+import wpimath.units
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
@@ -34,8 +35,41 @@ class SwerveDrive:
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
 
+        ModulePos = SwerveModulePosition(0, Rotation2d(0))
+        modulePosList: list[SwerveModulePosition * 4] = [  # type: ignore
+            ModulePos,
+            ModulePos,
+            ModulePos,
+            ModulePos,
+        ]
+
+        self.angle = Rotation2d(0)
+        self.pose = Pose2d(
+            wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
+        )
+        self.odometry = SwerveDrive4Odometry(
+            self.kinematics, self.angle, tuple(modulePosList), self.pose
+        )
+
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
-        pass
+         modulePosList = (
+            SwerveModulePosition(
+                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
+            ),
+        )
+        # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
+         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
+
+         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
     def update(
         self,
@@ -113,7 +147,28 @@ class SwerveDrive:
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
-        pass
+        modulePosList = (
+            SwerveModulePosition(
+                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
+            ),
+            SwerveModulePosition(
+                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
+            ),
+        )
+
+        self.odometry.update(Rotation2d(hal.yaw), modulePosList)
+        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+
+        # self.OdomField.setRobotPose(self.odometry.getPose().X, self.odometry.getPose().Y, self.odometry.getPose().rotation)
+
+        self.table.putNumber("odomX", self.odometry.getPose().x)
+        self.table.putNumber("odomy", self.odometry.getPose().y)
 
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
@@ -134,3 +189,52 @@ class SwerveDrive:
         output = SwerveModuleState(outputSpeed, outputAngleRot2d)
 
         return output
+    
+    def updateWithoutSticks(
+        self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
+    ):
+
+        self.chassisSpeeds = chassisSpeed
+
+        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
+            self.unleashedModules,
+            self.MAX_METERS_PER_SEC,
+        )
+
+        self.table.putNumber(
+            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+        )
+
+        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+
+        FLModuleState = self.optimizeTarget(
+            swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
+        )
+        hal.driveFLSetpoint = FLModuleState.speed
+        hal.turnFLSetpoint = FLModuleState.angle.radians()
+        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
+
+        FRModuleState = self.optimizeTarget(
+            swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
+        )
+        hal.driveFRSetpoint = FRModuleState.speed
+        hal.turnFRSetpoint = FRModuleState.angle.radians()
+
+        BLModuleState = self.optimizeTarget(
+            swerveModuleStates[2], Rotation2d(hal.turnCCWBL)
+        )
+        hal.driveBLSetpoint = BLModuleState.speed
+        hal.turnBLSetpoint = BLModuleState.angle.radians()
+
+        BRModuleState = self.optimizeTarget(
+            swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
+        )
+        hal.driveBRSetpoint = BRModuleState.speed
+        hal.turnBRSetpoint = BRModuleState.angle.radians()
+
+        

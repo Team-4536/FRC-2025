@@ -16,7 +16,7 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
-from wpimath.units import meters_per_second, radians
+from wpimath.units import meters_per_second, radians, degreesToRadians
 
 
 class RobotHALBuffer:
@@ -61,6 +61,9 @@ class RobotHALBuffer:
         self.chuteMotorVoltage = 0.0
 
         self.moveArmDown = False
+        self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
+        self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
+
 
     def resetEncoders(self) -> None:
         pass
@@ -404,6 +407,58 @@ class RobotHAL:
         )
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
+
+        #buf.yaw = degreesToRadians(-self.gyro.getAngle())
+
+        drivePosFL = (
+            (2 * math.pi)
+            * (
+                self.driveMotorFLEncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosFR = (
+            (2 * math.pi)
+            * (
+                self.driveMotorFREncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosBL = (
+            (2 * math.pi)
+            * (
+                self.driveMotorBLEncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosBR = (
+            (2 * math.pi)
+            * (
+                self.driveMotorBREncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+
+        buf.drivePositionsList = [drivePosFL, drivePosFR, drivePosBL, drivePosBR]
+
+        steerPosFL = (2 * math.pi) * (
+            self.turnMotorFLEncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosFR = (2 * math.pi) * (
+            self.turnMotorFREncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosBL = (2 * math.pi) * (
+            self.turnMotorBLEncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosBR = (2 * math.pi) * (
+            self.turnMotorBREncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+
+        buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
 
 
 class SwerveModuleController:

@@ -13,7 +13,9 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-
+from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants
+import autoStages
+from autoStages import followPath
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -38,6 +40,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -88,6 +91,16 @@ class Robot(wpilib.TimedRobot):
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
+
+    def autonomousInit(self) -> None:
+        self.holonomicDriveController = PPHolonomicDriveController(
+            PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+        )
+        
+        self.availableAutosDict = {'follow traj1': followPath('traj1', False, self)}
+
+
+
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
