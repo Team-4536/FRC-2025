@@ -53,17 +53,26 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
+        self.frontArmLimitSwitch: bool = False
+        self.backArmLimitSwitch: bool = False
+        self.armVolts: float = 0
+
+        self.elevServoAngle = 0
+
         self.yaw: float = 0
 
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
-        self.chuteMotorVoltage = 0
+        self.chuteMotorVoltage = 0.0
+
+        self.moveArmDown = False
 
     def resetEncoders(self) -> None:
         pass
 
     def stopMotors(self) -> None:
         self.manipulatorVolts = 0
+        self.armVolts = 0
 
     def publish(self) -> None:
         self.table.putNumber("Elevator Pos(rot)", self.elevatorPos)
@@ -75,7 +84,15 @@ class RobotHALBuffer:
         self.table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
         self.table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
 
+        self.table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
+        self.table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
+
+        self.table.putBoolean("Move arm down", self.moveArmDown)
+
         self.table.putNumber("yaw", self.yaw)
+
+
+debugMode = False
 
 
 class RobotHAL:
@@ -92,8 +109,28 @@ class RobotHAL:
             SparkMax.ResetMode.kResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
         )
-        self.secondManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-        self.firstManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
+        self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
+        self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
+
+        self.elevServo = wpilib.Servo(0)
+
+        self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
+        self.armMotorEncoder = self.armMotor.getEncoder()
+        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
+        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
+        armConfig = SparkMaxConfig()
+        armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
+        armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        armConfig.smartCurrentLimit(20)
+
+        self.armMotor.configure(
+            armConfig,
+            SparkMax.ResetMode.kNoResetSafeParameters,
+            SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
+        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -108,12 +145,13 @@ class RobotHAL:
         self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
 
         chuteMotorConfig = SparkMaxConfig()
-        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake)
+        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake.value)
         chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
             chuteMotorConfig.limitSwitch.Type.kNormallyClosed
         )
         chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+
         chuteMotorConfig.smartCurrentLimit(20)
 
         self.chuteMotor.configure(
@@ -211,10 +249,10 @@ class RobotHAL:
         self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
         self.elevatorMotorEncoder = self.elevatorMotor.getEncoder()
         elevatorMotorPIDConfig = SparkMaxConfig()
-        elevatorMotorPIDConfig.smartCurrentLimit(25)  # 20 in comp
+        elevatorMotorPIDConfig.smartCurrentLimit(35)  # 20 in comp
         elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-0.5, 0.5)
+        ).outputRange(-0.7, 0.7)
 
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
@@ -301,8 +339,50 @@ class RobotHAL:
             self.turnMotorFRCANcoder.get_absolute_position().value_as_double,
         )
 
+        self.table.putNumber(
+            "FL Turn Encoder Raw", self.turnMotorFLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "FR Turn Encoder Raw", self.turnMotorFREncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BL Turn Encoder Raw", self.turnMotorBLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BR Turn Encoder Raw", self.turnMotorBREncoder.getPosition()
+        )
+
+        self.table.putNumber(
+            "FL Drive Encoder Raw", self.driveMotorFLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "FR Drive Encoder Raw", self.driveMotorFREncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BL Drive Encoder Raw", self.driveMotorBLEncoder.getPosition()
+        )
+        self.table.putNumber(
+            "BR Drive Encoder Raw", self.driveMotorBREncoder.getPosition()
+        )
+
+        self.table.putNumber(
+            "FR Drive Vel(RPM)", self.driveMotorFREncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "FL Drive Vel(RPM)", self.driveMotorFLEncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "BR Drive Vel(RPM)", self.driveMotorBREncoder.getVelocity()
+        )
+        self.table.putNumber(
+            "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
+        )
+        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
+
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
+
+        self.elevServo.setAngle(buf.elevServoAngle)
 
         self.elevatorController.update(
             buf.elevatorSetpoint,
@@ -316,6 +396,10 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
+        # self.armMotor.setVoltage(buf.armVolts)
+
+        buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
+        buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
         buf.chuteMotorVoltage = (
             self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
         )
@@ -401,8 +485,8 @@ class RevMotorController:
         self.config = SparkMaxConfig()
         self.config.apply(config)
         self.controlType: SparkMax.ControlType = controlType
-        self.setpoint = 0
         self.debugMode = False
+        self.setpoint = 0.0
 
         self.motor.configure(
             self.config,

@@ -37,7 +37,7 @@ class IntakeChute:
                 self.setChuteControlMode = 3
             else:
                 self.setChuteControlMode = 2
-
+        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
         if leftTrigger:
             self.ctrlrBumber = -1
 
@@ -72,7 +72,7 @@ class IntakeChute:
 
             self.currentTime = wpilib.getTime()
 
-            if self.currentTime - self.startTime < 5:
+            if self.currentTime - self.startTime < 10:
                 hal.setChuteVoltage = -self.chuteSpeed
 
             else:

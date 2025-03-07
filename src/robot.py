@@ -54,20 +54,30 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
         profiler.start()
+        self.swerveDrive.update(
+            self.hal,
+            self.driveCtrlr.getLeftX(),
+            -self.driveCtrlr.getLeftY(),
+            self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis(),
+        )
+
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
+            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getBButton(),
         )
         profiler.end("ElevatorSubsystem")
 
         profiler.start()
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightTriggerAxis() >= 0.5,
-            self.driveCtrlr.getLeftTriggerAxis() >= 0.5,
+            self.driveCtrlr.getLeftBumper(),
+            self.driveCtrlr.getRightBumper(),
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
@@ -75,11 +85,13 @@ class Robot(wpilib.TimedRobot):
 
         profiler.start()
         self.manipulatorSubsystem.update(
-            self.hal, self.mechCtrlr.getAButton(), self.mechCtrlr.getLeftBumperPressed()
+            self.hal,
+            self.mechCtrlr.getAButton(),
+            self.mechCtrlr.getLeftBumperPressed(),
         )
         profiler.end("ManipulatorSubsystem")
 
-        if self.driveCtrlr.getAButton():
+        if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
 
         # Keep the lines below at the bottom of teleopPeriodic
@@ -90,6 +102,14 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
+
+        self.intakeChute.update(
+            self.hal,
+            False,
+            False,
+            False,
+            False,
+        )
 
         self.hardware.update(
             self.hal, self.time
