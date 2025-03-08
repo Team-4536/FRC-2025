@@ -149,7 +149,7 @@ class Robot(wpilib.TimedRobot):
         )
 
         self.availableAutosDict = {
-            "follow traj1": ASfollowPath("leftCorner-leftDiag", self.onRedSide)
+            "follow traj1": ASfollowPath("leftCorner-leftDiag", self.onRedSide, self)
         }
 
         # if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
@@ -163,7 +163,7 @@ class Robot(wpilib.TimedRobot):
         self.currentAuto = self.availableAutosDict["follow traj1"]
 
         if not self.currentAuto.done == True:
-            self.currentAuto.run(self)
+            self.currentAuto.run()
         # else:
         #     self.autoList.remove(self.currentAuto)
 

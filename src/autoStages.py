@@ -60,13 +60,16 @@ def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
 
 class ASfollowPath:
 
-    def __init__(self, trajName: str, flipped: bool):
+    def __init__(self, trajName: str, flipped: bool, r: "Robot"):
+        self.r = r
         self.done = False
         self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
         self.startTime = wpilib.getTime()
+        self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
+
         # self.traj = PathPlannerTrajectory()
 
-    def run(self, r: "Robot"):
+    def run(self):
         self.currentTime = wpilib.getTime()
         self.time = self.currentTime - self.startTime
         goal = self.traj.sample(self.time)
@@ -78,21 +81,23 @@ class ASfollowPath:
         table.putNumber("pathGoalX", goal.pose.X())
         table.putNumber("pathGoalY", goal.pose.Y())
         table.putNumber("pathGoalR", goal.pose.rotation().radians())
-        table.putNumber("odomR", r.swerveDrive.odometry.getPose().rotation().radians())
-        adjustedSpeeds = r.holonomicDriveController.calculateRobotRelativeSpeeds(
-            r.swerveDrive.odometry.getPose(), goal
+        table.putNumber(
+            "odomR", self.r.swerveDrive.odometry.getPose().rotation().radians()
+        )
+        adjustedSpeeds = self.r.holonomicDriveController.calculateRobotRelativeSpeeds(
+            self.r.swerveDrive.odometry.getPose(), goal
         )
         adjustedSpeeds.omega = adjustedSpeeds.omega
         table.putNumber("pathVelX", adjustedSpeeds.vx)
         table.putNumber("pathVelY", adjustedSpeeds.vy)
         table.putNumber("pathVelR", adjustedSpeeds.omega)
 
-        r.swerveDrive.updateWithoutSticks(r.hal, adjustedSpeeds)
+        self.r.swerveDrive.updateWithoutSticks(self.r.hal, adjustedSpeeds)
 
-    def isDone(self, r: "Robot"):
-        x = r.swerveDrive.odometry.getPose().X()
-        y = r.swerveDrive.odometry.getPose().Y()
-        rot = r.swerveDrive.odometry.getPose().rotation()
+    def isDone(self):
+        x = self.r.swerveDrive.odometry.getPose().X()
+        y = self.r.swerveDrive.odometry.getPose().Y()
+        rot = self.r.swerveDrive.odometry.getPose().rotation()
 
         end = self.traj.getEndState().pose
 
