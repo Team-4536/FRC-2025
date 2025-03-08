@@ -19,7 +19,6 @@ from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  
 from IntakeChute import IntakeChute
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants
 import autoStages
-from autoStages import followPath
 
 
 class Robot(wpilib.TimedRobot):
@@ -28,8 +27,6 @@ class Robot(wpilib.TimedRobot):
         AUTO_SIDE_RED = "red"
         AUTO_SIDE_BLUE = "blue"
         AUTO_SIDE_FMS = "FMS side"
-
-        FORWARD_DRIVE = "drive forward"
 
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
@@ -51,7 +48,14 @@ class Robot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putData("auto side chooser", self.autoSideChooser)
 
         self.autoRoutineChooser = wpilib.SendableChooser()
-        self.autoRoutineChooser.setDefaultOption(FORWARD_DRIVE, FORWARD_DRIVE)
+        self.autoRoutineChooser.setDefaultOption(
+            autoStages.RobotAutos.DO_NOTHING.value,
+            autoStages.RobotAutos.DO_NOTHING.value,
+        )
+        for stage in autoStages.RobotAutos:
+            self.autoRoutineChooser.addOption(stage.value, stage.value)
+
+        wpilib.SmartDashboard.putData("auto routine chooser", self.autoRoutineChooser)
 
         self.hardware.update(self.hal, self.time)
 
@@ -141,25 +145,38 @@ class Robot(wpilib.TimedRobot):
         self.hardware.update(self.hal, self.time)
 
     def autonomousInit(self) -> None:
-        FORWARD_DRIVE = "drive forward"
         self.hal.stopMotors()
 
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
-        self.availableAutosDict = {
-            "follow traj1": followPath("traj1", "leftCorner-leftDiag", self.onRedSide)
-        }
+        self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
+            self.autoRoutineChooser.getSelected(), self
+        )
 
-        if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
-            self.autoList = ["follow traj"]
+        self.autoKeys = list(self.auto.keys())
+        self.currentAuto = 0
+        self.autoFinished = False
+
+        self.table.putString("Chosen Auto is", "temp")
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
-        self.auto.run(self)
+        # self.auto.run(self)
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+
+        if self.currentAuto >= len(self.autoKeys):
+            self.autoFinished = True
+
+        self.table.putBoolean("Auto finished", self.autoFinished)
+
+        if not self.autoFinished:
+            self.auto[self.autoKeys[self.currentAuto]].run(self)
+            if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
+                self.currentAuto += 1
+            self.table.putString("Current Stage", self.autoKeys[self.currentAuto])
 
         self.intakeChute.update(
             self.hal,

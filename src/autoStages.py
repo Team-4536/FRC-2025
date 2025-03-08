@@ -12,15 +12,22 @@ from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 from wpimath import units
 from wpimath.units import seconds
-from ntcore import NetworkTableInstance
+from ntcore import NetworkTableInstance, NetworkTable
 from typing import TYPE_CHECKING, Callable
 from ntcore import Value
+from enum import Enum
 
 if TYPE_CHECKING:
     from robot import Robot
 
 StageFunc = Callable[["Robot"], bool | None]
 # Auto tools
+
+
+class RobotAutos(Enum):
+    NO_AUTO = "NO Auto"
+    MOVE_FORWARD_A = "Move Forward A"
+    DO_NOTHING = "DO Nothing"
 
 
 def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -57,11 +64,22 @@ def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
     return t
 
 
-class followPath:
+class AutoStage:
+    def __init__(self):
+        pass
 
-    def __init__(self, trajName: str, flipped: bool, r: robot.Robot):
+    def run(self, r: "Robot"):
+        pass
+
+    def isDone(self, r: "Robot") -> bool:
+        return True
+
+
+class FollowPath(AutoStage):
+
+    def __init__(self, trajName: str, flipped: bool, r: "Robot"):
         self.done = False
-        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, False)
+        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, "!!!", False)
         self.startTime = wpilib.getTime()
         # self.traj = PathPlannerTrajectory()
 
@@ -102,5 +120,16 @@ class followPath:
         ):
             self.done = True
 
-    def isNotDone(self):
-        return not self.done
+
+# returns a dict with strings as key and AutoStage as value
+def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
+    ret: dict[str, AutoStage] = dict()
+
+    if stageChooser == RobotAutos.NO_AUTO.value:
+        pass
+    elif stageChooser == RobotAutos.DO_NOTHING.value:
+        pass
+    elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
+        ret["Move Forward"] = FollowPath("!!!", True, r)
+
+    return ret

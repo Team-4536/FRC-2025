@@ -79,8 +79,6 @@ class RobotHALBuffer:
         self.chuteMotorVoltage = 0.0
 
         self.moveArmDown = False
-        self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
 
     def resetEncoders(self) -> None:
         pass
