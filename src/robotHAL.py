@@ -26,7 +26,7 @@ from wpimath.units import (
     radians,
     rotationsToRadians,
     degreesToRadians,
-), degreesToRadians
+)
 
 
 class RobotHALBuffer:

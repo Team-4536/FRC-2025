@@ -12,8 +12,7 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL, RobotHALBuffer
 from swerveDrive import SwerveDrive
-import robotAutos
-from robotAutos import RobotAutos
+
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  # type: ignore
@@ -29,10 +28,11 @@ class Robot(wpilib.TimedRobot):
         AUTO_SIDE_RED = "red"
         AUTO_SIDE_BLUE = "blue"
         AUTO_SIDE_FMS = "FMS side"
+
+        FORWARD_DRIVE = "drive forward"
+
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
-
-        self.autoSubsys = robotAutos.RobotAutos()
 
         self.OdomField = wpilib.Field2d()
 
@@ -49,6 +49,9 @@ class Robot(wpilib.TimedRobot):
         self.autoSideChooser.addOption(AUTO_SIDE_RED, AUTO_SIDE_RED)
         self.autoSideChooser.addOption(AUTO_SIDE_BLUE, AUTO_SIDE_BLUE)
         wpilib.SmartDashboard.putData("auto side chooser", self.autoSideChooser)
+
+        self.autoRoutineChooser = wpilib.SendableChooser()
+        self.autoRoutineChooser.setDefaultOption(FORWARD_DRIVE, FORWARD_DRIVE)
 
         self.hardware.update(self.hal, self.time)
 
@@ -138,12 +141,15 @@ class Robot(wpilib.TimedRobot):
         self.hardware.update(self.hal, self.time)
 
     def autonomousInit(self) -> None:
+        self.hal.stopMotors()
 
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
-        self.availableAutosDict = {"follow traj1": followPath("traj1", False, self)}
+        self.availableAutosDict = {"follow traj1": followPath("traj1", "leftCorner-leftDiag", self.onRedSide)}
+
+        if self.autoRoutineChooser.getSelected == DRIVE_FORWARD:
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
