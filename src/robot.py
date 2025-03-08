@@ -13,6 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from LED import LEDSignals
 
 
 class Robot(wpilib.TimedRobot):
@@ -38,11 +39,16 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        self.LEDSignals: LEDSignals = LEDSignals()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
         self.hal.stopMotors()
+
+        self.LEDSignals.update(
+            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        )
 
     def teleopInit(self) -> None:
         pass
@@ -84,6 +90,8 @@ class Robot(wpilib.TimedRobot):
 
         if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
+
+        self.table.putNumber("LED counter", self.LEDcounter)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
