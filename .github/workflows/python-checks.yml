@@ -48,10 +48,10 @@ jobs:
         if [ -f Pipfile ]; then pip install -q pipenv && pipenv install --system --deploy --dev; fi
     - name: Check format with black
       run: |
-        black --check --diff src || :
+        black --check --diff src
     - name: Type checking with mypy
       run: |
-        mypy src || :
+        mypy src
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
