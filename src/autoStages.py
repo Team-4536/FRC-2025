@@ -84,10 +84,13 @@ class ASfollowPath(AutoStage):
         self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
         self.startTime = wpilib.getTime()
         self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
+        self.r.hardware.resetGyroToAngle(
+            self.traj.getInitialPose().rotation().radians()
+        )
 
         # self.traj = PathPlannerTrajectory()
 
-    def run(self):
+    def run(self, r: "Robot"):
         self.currentTime = wpilib.getTime()
         self.time = self.currentTime - self.startTime
         goal = self.traj.sample(self.time)
@@ -110,9 +113,11 @@ class ASfollowPath(AutoStage):
         table.putNumber("pathVelY", adjustedSpeeds.vy)
         table.putNumber("pathVelR", adjustedSpeeds.omega)
 
+        table.putNumber("gyro", self.r.hal.yaw)
+
         self.r.swerveDrive.updateWithoutSticks(self.r.hal, adjustedSpeeds)
 
-    def isDone(self):
+    def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
         y = self.r.swerveDrive.odometry.getPose().Y()
         rot = self.r.swerveDrive.odometry.getPose().rotation()
@@ -142,6 +147,6 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     elif stageChooser == RobotAutos.DO_NOTHING.value:
         pass
     elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
-        ret["Move Forward"] = ASfollowPath("!!!", True)
+        ret["Move Forward"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
 
     return ret
