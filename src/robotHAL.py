@@ -52,11 +52,13 @@ class RobotHALBuffer:
         self.backArmLimitSwitch: bool = False
         self.armVolts: float = 0
 
+        self.elevServoAngle = 0
+
         self.yaw: float = 0
 
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
-        self.chuteMotorVoltage = 0
+        self.chuteMotorVoltage = 0.0
 
         self.moveArmDown = False
 
@@ -110,6 +112,7 @@ class RobotHAL:
 
         self.sideElevLED = self
         self.intakeElevLED = self
+        self.elevServo = wpilib.Servo(0)
 
         self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.armMotorEncoder = self.armMotor.getEncoder()
@@ -142,12 +145,13 @@ class RobotHAL:
         self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
 
         chuteMotorConfig = SparkMaxConfig()
-        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake)
+        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake.value)
         chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
             chuteMotorConfig.limitSwitch.Type.kNormallyClosed
         )
         chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
+
         chuteMotorConfig.smartCurrentLimit(20)
 
         self.chuteMotor.configure(
@@ -374,9 +378,12 @@ class RobotHAL:
         self.table.putNumber(
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
+        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
+
+        self.elevServo.setAngle(buf.elevServoAngle)
 
         self.elevatorController.update(
             buf.elevatorSetpoint,
@@ -470,7 +477,7 @@ class RevMotorController:
         self.config = SparkMaxConfig()
         self.config.apply(config)
         self.controlType: SparkMax.ControlType = controlType
-        self.setpoint = 0
+        self.setpoint = 0.0
 
         self.motor.configure(
             self.config,
