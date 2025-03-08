@@ -1,6 +1,7 @@
 import limelight  # type: ignore
 import limelightresults  # type: ignore
 from ntcore import NetworkTableInstance
+import ntcore
 from wpimath.controller import (
     HolonomicDriveController,
     PIDController,
@@ -10,10 +11,9 @@ from wpimath.trajectory import TrapezoidProfileRadians
 from robotHAL import RobotHALBuffer
 from swerveDrive import SwerveDrive
 import math
-import json
 
 
-class LimeLight:
+class LimeLightClass:
 
     def __init__(self):
 
@@ -22,9 +22,11 @@ class LimeLight:
         self.ll = None
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        self.table.putNumber("Limelight X and Y P", self.driveMotorP)
-        self.table.putNumber("Limelight Rotation P", self.turnMotorP)
-        self.discoveredLimelight: bool = limelight.discover_limelights(debug=True)
+        bobsUncle = False
+        self.llTable.setBoolean("X ad Y pos", bobsUncle)
+        anotherCopy = self.llTable.getBoolean("X and Y pos")
+        # ntcore.NetworkTableInstance.startServer()
+        self.discoveredLimelight = limelight.discover_limelights(debug=True)
 
         if self.discoveredLimelight:
             print("discovered limelight")
@@ -38,22 +40,17 @@ class LimeLight:
             print("no limelight discovered")
 
     def update(self, hal: RobotHALBuffer):
-        # pass
+        pass
         if self.ll is not None:
-            self.driveMotorP = self.table.getNumber(
-                "Limelight X and Y P", self.driveMotorP
-            )
-            self.turnMotorP = self.table.getNumber(
-                "Limelight Rotation P", self.turnMotorP
-            )
 
-            self.table.putNumber("Limelight X and Y P", self.driveMotorP)
-            self.table.putNumber("Limelight Rotation P", self.turnMotorP)
             self.results = self.ll.get_latest_results()
+            self.parse = limelightresults.parse_results(self.llResults)
 
-        tx: float = self.llTable.getNumber("tx", 0.0)
+        for tag in self.parse.fiducialResults:
+            tx: float = self.results.get("tx", None)
+        self.table.putNumber("tx", tx)
         # from -28.5 (left) to 28.5 (right) degrees
-        validTarget: bool = 1 == self.llTable.getNumber("tv", 0)
+        validTarget: bool = 1 == self.parse.validity
         # 1 means a valid target is found
 
         alowedError: float = 5  # in degrees

@@ -13,7 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-from LimeLight import LimeLight
+from LimeLightClass import LimeLightClass
 
 
 class Robot(wpilib.TimedRobot):
@@ -39,7 +39,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.limeLight = LimeLight()
+        self.limeLight = LimeLightClass()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
