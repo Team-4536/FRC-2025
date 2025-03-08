@@ -1,5 +1,6 @@
 import robot
 import wpilib
+import math
 import swerveDrive
 from swerveDrive import SwerveDrive
 from wpimath.geometry import Translation2d
@@ -30,7 +31,7 @@ class RobotAutos(Enum):
     DO_NOTHING = "DO Nothing"
 
 
-def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
+def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
     oneftInMeters = units.feetToMeters(1)
     mass = units.lbsToKilograms(122)
     moi = (
@@ -75,11 +76,11 @@ class AutoStage:
         return True
 
 
-class FollowPath(AutoStage):
+class ASfollowPath(AutoStage):
 
-    def __init__(self, trajName: str, flipped: bool, r: "Robot"):
+    def __init__(self, trajName: str, flipped: bool):
         self.done = False
-        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, "!!!", False)
+        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
         self.startTime = wpilib.getTime()
         # self.traj = PathPlannerTrajectory()
 
@@ -109,14 +110,20 @@ class FollowPath(AutoStage):
     def isDone(self, r: "Robot"):
         x = r.swerveDrive.odometry.getPose().X()
         y = r.swerveDrive.odometry.getPose().Y()
-        z = r.swerveDrive.odometry.getPose().rotation()
+        rot = r.swerveDrive.odometry.getPose().rotation()
 
         end = self.traj.getEndState().pose
 
+        error = 0.2
+        rotError = math.pi / 20
+
         if (
-            end.X() - 0.2 > x > end.X() + 0.2
-            and end.Y() - 0.2 > y > end.Y() + 0.2
-            and end.rotation().radians() - 0.2 > z > end.rotation().radians() + 0.2
+            (end.X() - error > x)
+            and (x > end.X() + error)
+            and (end.Y() - error > y)
+            and (y > end.Y() + error)
+            and (end.rotation().radians() - rotError > rot)
+            and (rot > end.rotation().radians() + rotError)
         ):
             self.done = True
 
@@ -130,6 +137,6 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     elif stageChooser == RobotAutos.DO_NOTHING.value:
         pass
     elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
-        ret["Move Forward"] = FollowPath("!!!", True, r)
+        ret["Move Forward"] = ASfollowPath("!!!", True)
 
     return ret

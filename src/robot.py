@@ -19,6 +19,7 @@ from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  
 from IntakeChute import IntakeChute
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants
 import autoStages
+from autoStages import ASfollowPath
 
 
 class Robot(wpilib.TimedRobot):
@@ -148,7 +149,7 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
         self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+            PIDConstants(0.15, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
         self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
