@@ -140,11 +140,13 @@ class Robot(wpilib.TimedRobot):
 
         self.auto, _ = self.autoSubsys.autoInit(self)
 
-        self.dictOfAutoAvailable: list[djoAutoStage] = {"test1auto": djoAutoStage(self)}
-        self.dictOfAutoAvailable["test2auto"] = djoAutoStage(self)
-        self.dictOfAutoAvailable
+        self.dictOfAutoAvailable: list[djoAutoStage] = {
+            "test1auto": djoAutoStage(self, "myTraj"),
+            "test2auto": djoAutoStage(self, "myTraj2"),
+        }
+        self.dictOfAutoAvailable["test3auto"] = djoAutoStage(self)
 
-        self.listOfAutosToRun = [
+        self.listOfAutosToRunForAParticleAutoSelect = [
             "test2auto",
             "test1auto",
         ]  # any order, can repeat, just strings
