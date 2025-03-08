@@ -148,10 +148,12 @@ class Robot(wpilib.TimedRobot):
             PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
-        self.availableAutosDict = {"follow traj1": followPath("traj1", "leftCorner-leftDiag", self.onRedSide)}
+        self.availableAutosDict = {
+            "follow traj1": followPath("traj1", "leftCorner-leftDiag", self.onRedSide)
+        }
 
-        if self.autoRoutineChooser.getSelected == :
-
+        if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
+            self.autoList = ["follow traj"]
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
