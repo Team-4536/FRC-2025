@@ -9,7 +9,7 @@ except ImportError:
 
 
 def test_mypy():
-    result = api.run(["."])
+    result = api.run(["."])  # the path is in FRC-205/src/tests
 
     if result[0]:
         print("\nType checking report:\n\n" + errhead + result[0] + errtail)

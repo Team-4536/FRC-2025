@@ -1,10 +1,13 @@
 import copy
 import math
+from wpimath import units
 from real import angleWrap
 import navx
+from navx import AHRS
 import ntcore
 import rev
 import wpilib
+from wpilib import SerialPort
 from phoenix6.hardware import CANcoder
 from timing import TimeData
 from ntcore import NetworkTableInstance
@@ -16,7 +19,14 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
-from wpimath.units import meters_per_second, radians, degreesToRadians
+from wpimath.kinematics import SwerveModulePosition
+from wpimath.geometry import Rotation2d
+from wpimath.units import (
+    meters_per_second,
+    radians,
+    rotationsToRadians,
+    degreesToRadians,
+), degreesToRadians
 
 
 class RobotHALBuffer:
@@ -48,6 +58,14 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
+        self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
+        self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
+
+        self.moduleFL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleFR = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBR = SwerveModulePosition(0, Rotation2d(radians(0)))
+
         self.frontArmLimitSwitch: bool = False
         self.backArmLimitSwitch: bool = False
         self.armVolts: float = 0
@@ -63,7 +81,6 @@ class RobotHALBuffer:
         self.moveArmDown = False
         self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
         self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
-
 
     def resetEncoders(self) -> None:
         pass
@@ -88,6 +105,8 @@ class RobotHALBuffer:
         table.putBoolean("Move arm down", self.moveArmDown)
 
         table.putNumber("yaw", self.yaw)
+        table.putNumber("setpointD fl", self.driveFLSetpoint)
+        table.putNumber("setpointT fl", self.turnFLSetpoint)
 
 
 debugMode = False
@@ -100,6 +119,8 @@ class RobotHAL:
 
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
+
+        self.wheelRadius = 0.05  # meters
 
         manipulatorConfig = SparkMaxConfig()
         manipulatorConfig.limitSwitch.forwardLimitSwitchEnabled(False)
@@ -300,7 +321,7 @@ class RobotHAL:
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
-        self.prev = copy.deepcopy(buf)
+        self.prev = copy.copy(buf)
 
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
@@ -384,31 +405,7 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
-        self.elevServo.setAngle(buf.elevServoAngle)
-
-        self.elevatorController.update(
-            buf.elevatorSetpoint,
-            buf.elevatorArbFF,
-            buf.elevatorSlot,
-            buf.elevatorControl,
-        )
-        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
-
-        buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
-
-        buf.yaw = math.radians(-self.gyro.getAngle())
-
-        # self.armMotor.setVoltage(buf.armVolts)
-
-        buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
-        buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
-        buf.chuteMotorVoltage = (
-            self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
-        )
-        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
-        self.chuteMotor.setVoltage(buf.setChuteVoltage)
-
-        #buf.yaw = degreesToRadians(-self.gyro.getAngle())
+        buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
@@ -459,6 +456,36 @@ class RobotHAL:
         )
 
         buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
+
+        buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))
+        buf.moduleFR = SwerveModulePosition(drivePosFR, Rotation2d(radians(steerPosFR)))
+        buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
+        buf.moduleBR = SwerveModulePosition(drivePosBR, Rotation2d(radians(steerPosBR)))
+        self.elevServo.setAngle(buf.elevServoAngle)
+
+        self.elevatorController.update(
+            buf.elevatorSetpoint,
+            buf.elevatorArbFF,
+            buf.elevatorSlot,
+            buf.elevatorControl,
+        )
+        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
+
+        buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
+
+        buf.yaw = math.radians(-self.gyro.getAngle())
+
+        # self.armMotor.setVoltage(buf.armVolts)
+
+        buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
+        buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
+        buf.chuteMotorVoltage = (
+            self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
+        )
+        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
+        self.chuteMotor.setVoltage(buf.setChuteVoltage)
+
+        buf.yaw = math.radians(-self.gyro.getAngle())
 
 
 class SwerveModuleController:
