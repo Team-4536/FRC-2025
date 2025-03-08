@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Remove bot comments
-      if: github.event_name == 'pull_request' 
+      if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
@@ -49,6 +49,9 @@ jobs:
     - name: Check format with black
       run: |
         black --check --diff src || :
+    - name: Type checking with mypy
+      run: |
+        mypy src || :
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

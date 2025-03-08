@@ -10,6 +10,7 @@ photonlibpy = "*"
 robotpy-apriltag = "*"
 
 [dev-packages]
+pre-commit = "*"
 flake8 = "*"
 pytest = "*"
 black = "*"
