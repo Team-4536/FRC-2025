@@ -1,10 +1,13 @@
 import copy
 import math
+from wpimath import units
 from real import angleWrap
 import navx
+from navx import AHRS
 import ntcore
 import rev
 import wpilib
+from wpilib import SerialPort
 from phoenix6.hardware import CANcoder
 from timing import TimeData
 from ntcore import NetworkTableInstance
@@ -16,7 +19,14 @@ from rev import (
     ClosedLoopSlot,
     LimitSwitchConfig,
 )
-from wpimath.units import meters_per_second, radians
+from wpimath.kinematics import SwerveModulePosition
+from wpimath.geometry import Rotation2d
+from wpimath.units import (
+    meters_per_second,
+    radians,
+    rotationsToRadians,
+    degreesToRadians,
+)
 
 
 class RobotHALBuffer:
@@ -48,6 +58,13 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
+        self.drivePositionsList: list[float] = [0.0, 0.0, 0.0, 0.0]
+        self.steerPositionList: list[float] = [0.0, 0.0, 0.0, 0.0]
+
+        self.moduleFL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleFR = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBL = SwerveModulePosition(0, Rotation2d(radians(0)))
+        self.moduleBR = SwerveModulePosition(0, Rotation2d(radians(0)))
         self.frontArmLimitSwitch: bool = False
         self.backArmLimitSwitch: bool = False
         self.armVolts: float = 0
@@ -97,6 +114,8 @@ class RobotHAL:
 
         global debugMode
         self.table.putBoolean("Debug Mode", debugMode)
+
+        self.wheelRadius = 0.05  # meters
 
         manipulatorConfig = SparkMaxConfig()
         manipulatorConfig.limitSwitch.forwardLimitSwitchEnabled(False)
@@ -297,7 +316,7 @@ class RobotHAL:
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         prev = self.prev
-        self.prev = copy.deepcopy(buf)
+        self.prev = copy.copy(buf)
 
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
@@ -381,6 +400,62 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
+        buf.yaw = degreesToRadians(-self.gyro.getAngle())
+
+        drivePosFL = (
+            (2 * math.pi)
+            * (
+                self.driveMotorFLEncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosFR = (
+            (2 * math.pi)
+            * (
+                self.driveMotorFREncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosBL = (
+            (2 * math.pi)
+            * (
+                self.driveMotorBLEncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+        drivePosBR = (
+            (2 * math.pi)
+            * (
+                self.driveMotorBREncoder.getPosition()
+                / SwerveModuleController.DRIVE_GEARING
+            )
+            * self.wheelRadius
+        )
+
+        buf.drivePositionsList = [drivePosFL, drivePosFR, drivePosBL, drivePosBR]
+
+        steerPosFL = (2 * math.pi) * (
+            self.turnMotorFLEncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosFR = (2 * math.pi) * (
+            self.turnMotorFREncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosBL = (2 * math.pi) * (
+            self.turnMotorBLEncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+        steerPosBR = (2 * math.pi) * (
+            self.turnMotorBREncoder.getPosition() / SwerveModuleController.TURN_GEARING
+        )
+
+        buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
+
+        buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))
+        buf.moduleFR = SwerveModulePosition(drivePosFR, Rotation2d(radians(steerPosFR)))
+        buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
+        buf.moduleBR = SwerveModulePosition(drivePosBR, Rotation2d(radians(steerPosBR)))
         self.elevServo.setAngle(buf.elevServoAngle)
 
         self.elevatorController.update(
