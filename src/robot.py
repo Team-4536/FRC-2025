@@ -1,6 +1,5 @@
 import math
 import rev
-import wpilib.counter
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -41,7 +40,6 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
         self.LEDSignals: LEDSignals = LEDSignals()
-        self.LEDcounter = 0
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
