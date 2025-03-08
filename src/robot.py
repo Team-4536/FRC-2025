@@ -107,8 +107,8 @@ class Robot(wpilib.TimedRobot):
 
         self.swerveDrive.update(
             self.hal,
-            -self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getLeftX(),
+            self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
             self.driveCtrlr.getRightTriggerAxis(),
         )
