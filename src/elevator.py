@@ -1,4 +1,3 @@
-# imports
 from robotHAL import RobotHALBuffer
 from robotHAL import RobotHAL
 from ntcore import NetworkTableInstance
@@ -25,7 +24,12 @@ class ElevatorSubsystem:
     L4_POS = 45
 
     def __init__(self):
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Elevator Subsystem")
+        )
+        self.table.putBoolean("Elevator Debug Mode", False)
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
 
@@ -33,7 +37,7 @@ class ElevatorSubsystem:
         self.posSetpoint = 0
 
         self.mode = ElevatorMode.POSITION_MODE
-        self.debugMode = True
+        self.debugMode = False
 
     def update(
         self,
@@ -50,9 +54,7 @@ class ElevatorSubsystem:
             up = 0
         if down < 0.1:
             down = 0
-        if self.debugMode:
-            self.table.putNumber("Elevator up", up)
-            self.table.putNumber("Elevator down", down)
+
         if toggleMode:
             if self.mode == ElevatorMode.MANUAL_MODE:
                 self.mode = ElevatorMode.POSITION_MODE
@@ -62,6 +64,7 @@ class ElevatorSubsystem:
                 self.mode = ElevatorMode.MANUAL_MODE
                 self.velSetpoint = 0
                 self.posSetpoint = 0
+
         hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
             "Elevator setpoint offset", 0
         )
@@ -78,9 +81,7 @@ class ElevatorSubsystem:
                 self.posSetpoint = self.L3_POS
             elif POVSetpoint == 0:
                 self.posSetpoint = self.L4_POS
-            hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-                "Elevator setpoint offset", 0
-            )
+            hal.elevatorSetpoint = self.posSetpoint
 
             if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
                 hal.elevatorSetpoint = hal.elevatorPos
@@ -111,8 +112,11 @@ class ElevatorSubsystem:
         else:
             hal.elevServoAngle = 0
 
+        self.debugMode = self.table.getBoolean("Elevator Debug Mode", False)
         if self.debugMode:
-            self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
+            self.table.putNumber("Elevator up", up)
+            self.table.putNumber("Elevator down", down)
+            self.table.putNumber("Elevator Setpoint", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
             self.table.putString("Elevator State", self.mode.name)

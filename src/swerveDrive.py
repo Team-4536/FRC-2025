@@ -19,7 +19,12 @@ class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
     def __init__(self) -> None:
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Swerve Drive Subsystem")
+        )
+        self.debugMode = False
         oneftInMeters = 0.3048
 
         self.modulePositions: list[Translation2d] = [
@@ -33,6 +38,7 @@ class SwerveDrive:
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
         self.table.putNumber("SD Joystick Omega offset", 0)
+        self.table.putBoolean("Swerve Drive Debug Mode", False)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
         pass
@@ -45,17 +51,17 @@ class SwerveDrive:
         joystickRotation: float,
         RTriggerScalar: float,
     ):
-        self.table.putNumber("Drive Ctrl X", joystickX)
-        self.table.putNumber("Drive Ctrl Y", joystickY)
-        self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
+        self.debugMode = self.table.getBoolean("Swerve Drive Debug Mode", False)
+        if self.debugMode:
+            self.table.putNumber("Drive Ctrl X", joystickX)
+            self.table.putNumber("Drive Ctrl Y", joystickY)
+            self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
 
         if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
             joystickY = 0
         if abs(joystickRotation) < 0.05:
             joystickRotation = 0
-
-        self.number = 1
 
         self.offsetX = 0.05 * np.sign(joystickX)
         self.offsetY = 0.05 * np.sign(joystickY)
@@ -78,9 +84,10 @@ class SwerveDrive:
             -self.driveRotation * 3,
         )
 
-        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+        if self.debugMode:
+            self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+            self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+            self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
