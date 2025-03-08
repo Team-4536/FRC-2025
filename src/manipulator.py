@@ -7,7 +7,6 @@ from rev import SparkMax
 
 
 class ManipulatorSubsystem:
-
     class ManipulatorState(Enum):
         IDLE = 0
         INTAKE = 1

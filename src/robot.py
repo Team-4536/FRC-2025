@@ -1,5 +1,6 @@
 import math
 import rev
+import wpilib.counter
 import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
@@ -39,14 +40,21 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.LEDSignals = LEDSignals()
+        self.LEDSignals: LEDSignals = LEDSignals()
+        self.LEDcounter = 0
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
         self.hal.stopMotors()
 
-        self.LEDSignals.update(self.manipulatorSubsystem.state, self.hal.elevatorPos)
+        self.LEDcounter += 1
+
+        if self.LEDcounter >= 10:
+            self.LEDSignals.update(
+                self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+            )
+            self.LEDcounter = 0
 
     def teleopInit(self) -> None:
         pass
@@ -88,6 +96,8 @@ class Robot(wpilib.TimedRobot):
 
         if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
+
+        self.table.putNumber("LED counter", self.LEDcounter)
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
