@@ -1,5 +1,6 @@
 import robot
 import wpilib
+import math
 import swerveDrive
 from swerveDrive import SwerveDrive
 from wpimath.geometry import Translation2d
@@ -57,7 +58,7 @@ def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
     return t
 
 
-class followPath:
+class ASfollowPath:
 
     def __init__(self, trajName: str, flipped: bool, r: robot.Robot):
         self.done = False
@@ -91,14 +92,20 @@ class followPath:
     def isDone(self, r: "Robot"):
         x = r.swerveDrive.odometry.getPose().X()
         y = r.swerveDrive.odometry.getPose().Y()
-        z = r.swerveDrive.odometry.getPose().rotation()
+        rot = r.swerveDrive.odometry.getPose().rotation()
 
         end = self.traj.getEndState().pose
 
+        error = 0.2
+        rotError = math.pi / 20
+
         if (
-            end.X() - 0.2 > x > end.X() + 0.2
-            and end.Y() - 0.2 > y > end.Y() + 0.2
-            and end.rotation().radians() - 0.2 > z > end.rotation().radians() + 0.2
+            (end.X() - error > x)
+            and (x > end.X() + error)
+            and (end.Y() - error > y)
+            and (y > end.Y() + error)
+            and (end.rotation().radians() - rotError > rot)
+            and (rot > end.rotation().radians() + rotError)
         ):
             self.done = True
 

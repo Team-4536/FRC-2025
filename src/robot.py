@@ -19,7 +19,7 @@ from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController  
 from IntakeChute import IntakeChute
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants
 import autoStages
-from autoStages import followPath
+from autoStages import ASfollowPath
 
 
 class Robot(wpilib.TimedRobot):
@@ -149,7 +149,7 @@ class Robot(wpilib.TimedRobot):
         )
 
         self.availableAutosDict = {
-            "follow traj1": followPath("traj1", "leftCorner-leftDiag", self.onRedSide)
+            "follow traj1": ASfollowPath("traj1", "leftCorner-leftDiag", self.onRedSide)
         }
 
         if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
@@ -157,9 +157,13 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
-        self.auto.run(self)
-        # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+
+        self.currentAuto = self.autoList[1]
+
+        if not self.currentAuto.done == True:
+            self.currentAuto.run()
+        else:
+            self.autoList.remove(self.currentAuto)
 
         self.intakeChute.update(
             self.hal,
