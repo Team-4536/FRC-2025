@@ -29,6 +29,9 @@ class ManipulatorSubsystem:
             .getSubTable("Manipulator Subsystem")
         )
 
+        self.debug = False
+        self.table.putBoolean("Manipulator Debug Mode", self.debug)
+
     def update(
         self,
         buf: RobotHALBuffer,
@@ -80,6 +83,7 @@ class ManipulatorSubsystem:
             if LBumper:
                 self.state = self.ManipulatorState.IDLE
 
+        self.debug = self.table.getBoolean("Manipulator Debug Mode", False)
         if self.debug == True:
             self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)

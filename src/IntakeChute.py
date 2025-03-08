@@ -20,6 +20,7 @@ class IntakeChute:
         self.yToggle = False
         self.bToggle = False
         self.debug = False
+        self.table.putBoolean("Chute Debug Mode", self.debug)
 
     def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
         self.currentTime = wpilib.getTime()
@@ -79,6 +80,7 @@ class IntakeChute:
                 hal.setChuteVoltage = 0
                 self.setChuteControlMode = 1
 
+        self.debug = self.table.getBoolean("Chute Debug Mode", False)
         if self.debug:
             self.table.putNumber("time", wpilib.getTime())
             self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)

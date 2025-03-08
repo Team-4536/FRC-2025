@@ -50,8 +50,8 @@ class Robot(wpilib.TimedRobot):
         pass
 
     def teleopPeriodic(self) -> None:
-        profiler.start()
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+        profiler.start()
 
         profiler.start()
         self.swerveDrive.update(
@@ -61,7 +61,9 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getRightX(),
             self.driveCtrlr.getRightTriggerAxis(),
         )
+        profiler.end("SwerveDriveSubsystem")
 
+        profiler.start()
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -96,7 +98,10 @@ class Robot(wpilib.TimedRobot):
 
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish()
+
+        profiler.start()
         self.hardware.update(self.hal, self.time)
+        profiler.end("HardwareUpdate-Teleop")
 
         profiler.end("TeleopPeriodic")
 
@@ -116,11 +121,13 @@ class Robot(wpilib.TimedRobot):
         )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
-        self.disabledPeriodic()
+        pass
 
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
+        profiler.start()
         self.hardware.update(self.hal, self.time)
+        profiler.end("HardwareUpdate-Disabled")
 
 
 if __name__ == "__main__":

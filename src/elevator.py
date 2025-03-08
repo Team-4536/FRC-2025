@@ -112,6 +112,7 @@ class ElevatorSubsystem:
         else:
             hal.elevServoAngle = 0
 
+        self.debugMode = self.table.getBoolean("Elevator Debug Mode", False)
         if self.debugMode:
             self.table.putNumber("Elevator up", up)
             self.table.putNumber("Elevator down", down)

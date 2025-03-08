@@ -7,7 +7,7 @@ import rev
 import wpilib
 from phoenix6.hardware import CANcoder
 from timing import TimeData
-from ntcore import NetworkTableInstance
+from ntcore import NetworkTableInstance, NetworkTable
 from rev import (
     SparkMax,
     SparkMaxConfig,
@@ -17,6 +17,7 @@ from rev import (
     LimitSwitchConfig,
 )
 from wpimath.units import meters_per_second, radians
+import profiler
 
 
 class RobotHALBuffer:
@@ -90,9 +91,6 @@ class RobotHALBuffer:
         self.table.putBoolean("Move arm down", self.moveArmDown)
 
         self.table.putNumber("yaw", self.yaw)
-
-
-debugMode = False
 
 
 class RobotHAL:
@@ -299,9 +297,9 @@ class RobotHAL:
         pass
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
-        prev = self.prev
-        # self.prev = copy.deepcopy(buf)
-        self.prev = copy.copy(buf)
+        # prev = self.prev
+        # self.prev = copy.copy(buf)
+        self.prev, buf = buf, self.prev
 
         TURN_GEARING = 21.4
         buf.turnCCWFL = angleWrap(
@@ -317,10 +315,12 @@ class RobotHAL:
             self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
 
+        profiler.start()
         self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
         self.FRSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
         self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
         self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
+        profiler.end("Hardware-SwerveDrive")
 
         self.table.putNumber(
             "BL Turning Pos Can",
@@ -379,17 +379,22 @@ class RobotHAL:
         )
         self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
+        profiler.start()
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
+        profiler.end("Hardware-ManipulatorSensors")
 
         self.elevServo.setAngle(buf.elevServoAngle)
 
+        profiler.start()
         self.elevatorController.update(
             buf.elevatorSetpoint,
             buf.elevatorArbFF,
             buf.elevatorSlot,
             buf.elevatorControl,
         )
+        profiler.end("Hardware-ElevatorController")
+
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
         buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
@@ -404,7 +409,7 @@ class RobotHAL:
             self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
         )
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
-        self.chuteMotor.setVoltage(buf.setChuteVoltage)
+        # self.chuteMotor.setVoltage(buf.setChuteVoltage)
 
 
 class SwerveModuleController:
@@ -474,7 +479,7 @@ class RevMotorController:
         motor: SparkMax,
         config: SparkMaxConfig,
         controlType: SparkMax.ControlType,
-        table: NetworkTableInstance,
+        table: NetworkTable,
     ) -> None:
         self.name = name
         self.table = table.getSubTable(self.name + " Controller")
@@ -486,7 +491,8 @@ class RevMotorController:
         self.config.apply(config)
         self.controlType: SparkMax.ControlType = controlType
         self.debugMode = False
-        self.setpoint = 0.0
+        self.prevSetpoint = 0.0
+        self.prevControlType: SparkMax.ControlType | None = None
 
         self.motor.configure(
             self.config,
@@ -541,26 +547,35 @@ class RevMotorController:
                     SparkMax.PersistMode.kNoPersistParameters,
                 )
 
+        profiler.start()
         measuredPercentVoltage = self.motor.getAppliedOutput()
         measuredSpeed = self.encoder.getVelocity()
         measuredPosition = -self.encoder.getPosition()
         measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
         measuredAmps = self.motor.getOutputCurrent()
+        profiler.end(self.name + "SwerveDrive-GetValues")
         self.table.putNumber("Voltage", measuredVoltage)
         self.table.putNumber("Velocity (RPM)", measuredSpeed)
         self.table.putNumber("Position (rot)", measuredPosition)
         self.table.putNumber("percent voltage", measuredPercentVoltage)
         self.table.putNumber("current", measuredAmps)
-        self.setpoint = setpoint
-        self.table.putNumber("setpoint", self.setpoint)
+        self.table.putNumber("setpoint", setpoint)
 
         if controlType == None:
             controlType = self.controlType
 
-        self.controller.setReference(
-            setpoint,
-            controlType,
-            slot,
-            arbFF,
-            SparkClosedLoopController.ArbFFUnits.kVoltage,
-        )
+        profiler.start()
+        if (
+            abs(setpoint - self.prevSetpoint) > 0.001
+            or self.prevControlType != controlType
+        ):
+            self.controller.setReference(
+                setpoint,
+                controlType,
+                slot,
+                arbFF,
+                SparkClosedLoopController.ArbFFUnits.kVoltage,
+            )
+            self.prevSetpoint = setpoint
+            self.prevControlType = controlType
+        profiler.end(self.name + "SwerveDrive-SetReference")
