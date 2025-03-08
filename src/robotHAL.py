@@ -108,9 +108,6 @@ class RobotHAL:
         self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
         self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
 
-        self.sideElevLED = self
-        self.intakeElevLED = self
-
         self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.armMotorEncoder = self.armMotor.getEncoder()
         self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()

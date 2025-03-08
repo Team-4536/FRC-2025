@@ -90,9 +90,6 @@ class ElevatorSubsystem:
             if hal.moveArmDown:
                 hal.armVolts = -1
 
-            # if hal.elevatorPos <= 0.75:
-            #     LEDSignals.ElevatorIntake()
-
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1

@@ -48,13 +48,9 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.hal.stopMotors()
 
-        self.LEDcounter += 1
-
-        if self.LEDcounter >= 10:
-            self.LEDSignals.update(
-                self.manipulatorSubsystem.state.value, self.hal.elevatorPos
-            )
-            self.LEDcounter = 0
+        self.LEDSignals.update(
+            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        )
 
     def teleopInit(self) -> None:
         pass
