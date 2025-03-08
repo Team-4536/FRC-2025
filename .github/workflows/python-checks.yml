@@ -43,7 +43,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install -q --upgrade pip
-        pip install flake8 pytest black
+        pip install flake8 pytest black mypy
         if [ -f requirements.txt ]; then pip install -q -r requirements.txt; fi
         if [ -f Pipfile ]; then pip install -q pipenv && pipenv install --system; fi
     - name: Check format with black
