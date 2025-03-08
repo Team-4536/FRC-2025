@@ -117,3 +117,20 @@ class ElevatorSubsystem:
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
             self.table.putString("Elevator State", self.mode.name)
         hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)
+
+    def level4AutoUpdate(self, hal: RobotHALBuffer):
+
+        # Dead-Zone
+
+        self.posSetpoint = self.L4_POS
+        hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
+            "Elevator setpoint offset", 0
+        )
+
+        if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
+            hal.elevatorSetpoint = hal.elevatorPos
+            hal.armVolts = -1
+        elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
+            hal.armVolts = 1
+        if hal.moveArmDown:
+            hal.armVolts = -1

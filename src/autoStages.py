@@ -29,6 +29,7 @@ class RobotAutos(Enum):
     NO_AUTO = "NO Auto"
     MOVE_FORWARD_A = "Move Forward A"
     DO_NOTHING = "DO Nothing"
+    HIGH4_CENTER = "place highL4"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -115,7 +116,7 @@ class ASfollowPath(AutoStage):
 
         table.putNumber("gyro", self.r.hal.yaw)
 
-        self.r.swerveDrive.updateWithoutSticks(self.r.hal, adjustedSpeeds)
+        self.r.swerveDrive.updateForAutos(self.r.hal, adjustedSpeeds)
 
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
@@ -138,6 +139,22 @@ class ASfollowPath(AutoStage):
             self.done = True
 
 
+class ASelevatorHigh(AutoStage):
+    def __init__(self):
+        self.done = False
+
+    def run(self, r: "Robot"):
+
+        r.elevatorSubsystem.level4AutoUpdate(r.hal)
+
+    def isDone(self, r: "Robot"):
+
+        if (r.hal.elevatorPos > r.hal.elevatorSetpoint - 1) and (
+            r.hal.elevatorPos < r.hal.elevatorSetpoint + 1
+        ):
+            self.done = True
+
+
 # returns a dict with strings as key and AutoStage as value
 def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     ret: dict[str, AutoStage] = dict()
@@ -148,5 +165,8 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         pass
     elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
         ret["Move Forward"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+    # elif stageChooser == RobotAutos.HIGH4_CENTER:
+    #     ret["elevator up"] = ASelevatorHigh(r)
+    #     ret
 
     return ret
