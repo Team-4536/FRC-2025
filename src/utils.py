@@ -29,7 +29,7 @@ class Scalar:
     def setExponent(self, exponent):
         self.exponent = exponent
 
-    @deadzone.setter
+    @deadzone.setter  # type: ignore
     def deadzone(self, deadZone):
         deadZone = abs(deadZone)
         self._deadZone = deadZone
