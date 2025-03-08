@@ -145,25 +145,27 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
         self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(0.00019, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+            PIDConstants(0.15, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
 
         self.availableAutosDict = {
-            "follow traj1": ASfollowPath("traj1", "leftCorner-leftDiag", self.onRedSide)
+            "follow traj1": ASfollowPath("leftCorner-leftDiag", self.onRedSide)
         }
 
-        if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
-            self.autoList = ["follow traj"]
+        # if self.autoRoutineChooser.getSelected == FORWARD_DRIVE:
+        #     self.autoList = ["follow traj"]
+
+        # self.autoList = []
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.currentAuto = self.autoList[1]
+        self.currentAuto = self.availableAutosDict["follow traj1"]
 
         if not self.currentAuto.done == True:
-            self.currentAuto.run()
-        else:
-            self.autoList.remove(self.currentAuto)
+            self.currentAuto.run(self)
+        # else:
+        #     self.autoList.remove(self.currentAuto)
 
         self.intakeChute.update(
             self.hal,

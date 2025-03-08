@@ -16,7 +16,8 @@ from wpimath.kinematics import (
     SwerveModuleState,
 )
 from wpimath.units import meters, radians
-import wpimath.unitsfrom wpimath.units import radians
+import wpimath.units
+from wpimath.units import radians
 
 
 # adapted from here https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java

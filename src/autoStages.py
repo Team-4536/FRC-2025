@@ -24,7 +24,7 @@ StageFunc = Callable[["Robot"], bool | None]
 # Auto tools
 
 
-def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
+def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
     oneftInMeters = units.feetToMeters(1)
     mass = units.lbsToKilograms(122)
     moi = (
@@ -60,9 +60,9 @@ def loadTrajectory(self, fileName: str, flipped: bool) -> PathPlannerTrajectory:
 
 class ASfollowPath:
 
-    def __init__(self, trajName: str, flipped: bool, r: robot.Robot):
+    def __init__(self, trajName: str, flipped: bool):
         self.done = False
-        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, False)
+        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
         self.startTime = wpilib.getTime()
         # self.traj = PathPlannerTrajectory()
 
