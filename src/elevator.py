@@ -8,6 +8,7 @@ from rev import (
     ClosedLoopSlot,
 )
 import wpilib
+from LED import LEDSignals
 
 from enum import Enum
 
