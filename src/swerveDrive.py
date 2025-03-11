@@ -26,6 +26,7 @@ from wpimath.trajectory import TrapezoidProfileRadians
 from wpimath.geometry import Rotation2d
 from wpimath.geometry import Pose2d
 import setpoints
+from wpimath.units import feetToMeters
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -33,9 +34,24 @@ class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
     def __init__(self) -> None:
+        self.angle = Rotation2d(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-        oneftInMeters = 0.3048
+        oneftInMeters = feetToMeters(1)
+
+        frontLeftLocation = Translation2d(oneftInMeters, oneftInMeters)
+        frontRightLocation = Translation2d(oneftInMeters, -oneftInMeters)
+        backLeftLocation = Translation2d(-oneftInMeters, oneftInMeters)
+        backRightLocation = Translation2d(-oneftInMeters, -oneftInMeters)
+        self.kinematics = SwerveDrive4Kinematics(
+            frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation
+        )
         self.OdomField = Field2d()
+        self.table.putNumber("SD Joystick X offset", 0)
+        self.table.putNumber("SD Joystick Y offset", 0)
+        self.table.putNumber("SD Joystick Omega offset", 0)
+        self.pose = Pose2d(
+            wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
+        )
         self.controller = HolonomicDriveController(
             PIDController(0.3, 0, 0),
             PIDController(0.3, 0, 0),
@@ -43,14 +59,6 @@ class SwerveDrive:
                 1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
             ),
         )
-
-        self.modulePositions: list[Translation2d] = [
-            Translation2d(-oneftInMeters, oneftInMeters),
-            Translation2d(oneftInMeters, oneftInMeters),
-            Translation2d(-oneftInMeters, -oneftInMeters),
-            Translation2d(oneftInMeters, -oneftInMeters),
-        ]
-        # ModuleState = SwerveModuleState(wpimath.units.meters(0), Rotation2d(0))
         ModulePos = SwerveModulePosition(0, Rotation2d(0))
         modulePosList: list[SwerveModulePosition * 4] = [  # type: ignore
             ModulePos,
@@ -58,19 +66,9 @@ class SwerveDrive:
             ModulePos,
             ModulePos,
         ]
-
-        self.angle = Rotation2d(0)
-        self.pose = Pose2d(
-            wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
-        )
-        self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
         self.odometry = SwerveDrive4Odometry(
             self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
-
-        self.table.putNumber("SD Joystick X offset", 0)
-        self.table.putNumber("SD Joystick Y offset", 0)
-        self.table.putNumber("SD Joystick Omega offset", 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
 
@@ -121,9 +119,9 @@ class SwerveDrive:
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
-        self.driveX = self.proxyDeadZoneX
-        self.driveY = self.proxyDeadZoneY
-        self.driveRotation = self.proxyDeadZoneR
+        self.driveY = -self.proxyDeadZoneX
+        self.driveX = -self.proxyDeadZoneY
+        self.driveRotation = -self.proxyDeadZoneR
 
         driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
@@ -131,7 +129,7 @@ class SwerveDrive:
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            -self.driveRotation * 3,
+            self.driveRotation * 3,
         )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
