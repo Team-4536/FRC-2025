@@ -79,3 +79,11 @@ class ManipulatorSubsystem:
         if self.debug == True:
             self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
+
+    def autoShootStored(self, buf: RobotHALBuffer):
+        buf.manipulatorVolts = 8
+
+        if (
+            wpilib.getTime() - self.startTime > 0.5 and not buf.secondManipulatorSensor
+        ):  # how long the shooting goes for in sec
+            self.state = self.ManipulatorState.IDLE

@@ -30,6 +30,8 @@ class RobotAutos(Enum):
     MOVE_FORWARD_A = "Move Forward A"
     DO_NOTHING = "DO Nothing"
     HIGH4_CENTER = "place highL4"
+    TEST = "test"
+    REEF4_l4 = "reef:4 L_4"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -139,7 +141,7 @@ class ASfollowPath(AutoStage):
             self.done = True
 
 
-class ASelevatorHigh(AutoStage):
+class ASelevator4(AutoStage):
     def __init__(self):
         self.done = False
 
@@ -155,6 +157,20 @@ class ASelevatorHigh(AutoStage):
             self.done = True
 
 
+class ASShootStored(AutoStage):
+    def __init__(self, r: "Robot"):
+        self.done = False
+        r.manipulatorSubsystem.state = 2
+        self.buf = r.hal
+
+    def run(self, r: "Robot"):
+        r.manipulatorSubsystem.autoShootStored(r.hal)
+
+    def isDone(self, r: "Robot"):
+        if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.IDLE:
+            self.done = True
+
+
 # returns a dict with strings as key and AutoStage as value
 def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     ret: dict[str, AutoStage] = dict()
@@ -164,7 +180,14 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     elif stageChooser == RobotAutos.DO_NOTHING.value:
         pass
     elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
-        ret["Move Forward"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+        ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+    elif stageChooser == RobotAutos.TEST.value:
+        ret["test"] = ASfollowPath("test", r.onRedSide, r)
+    elif stageChooser == RobotAutos.REEF4_l4.value:
+        ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+        ret["leftDiag-reef4"] = ASfollowPath("leftDiag-reef4", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-piece"] = ASShootStored(r)
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)
     #     ret

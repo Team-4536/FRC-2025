@@ -249,9 +249,9 @@ class SwerveDrive:
 
         self.chassisSpeeds = chassisSpeed
 
-        temp = chassisSpeed.vx
-        chassisSpeed.vx = chassisSpeed.vy
-        chassisSpeed.vy = temp
+        # temp = chassisSpeed.vx
+        # chassisSpeed.vx = chassisSpeed.vy
+        # chassisSpeed.vy = temp
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
