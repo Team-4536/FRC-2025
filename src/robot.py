@@ -91,8 +91,6 @@ class Robot(wpilib.TimedRobot):
         if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
 
-        self.table.putNumber("LED counter", self.LEDcounter)
-
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
