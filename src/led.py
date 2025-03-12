@@ -17,7 +17,7 @@ class LEDSignals:
                 byte_array[1] = manipulatorState
                 self.can.writePacket(byte_array, 0)
                 self.LEDcounter = 0
-            except e:
+            except Exception as e:
                 print(e)
 
             self.counter = self.period

@@ -13,7 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-from LED import LEDSignals
+from led import LEDSignals
 
 
 class Robot(wpilib.TimedRobot):
