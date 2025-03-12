@@ -17,14 +17,14 @@ class LimeLightClass:
 
     def __init__(self):
 
-        self.driveMotorP: float = 0
-        self.turnMotorP: float = 0
+        # self.driveMotorP: float = 0
+        # self.turnMotorP: float = 0
         self.ll = None
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        bobsUncle = False
-        self.llTable.setBoolean("X ad Y pos", bobsUncle)
-        anotherCopy = self.llTable.getBoolean("X and Y pos")
+        # bobsUncle = False
+        # self.llTable.setBoolean("X ad Y pos", bobsUncle)
+        # anotherCopy = self.llTable.getBoolean("X and Y pos")
         # ntcore.NetworkTableInstance.startServer()
         self.discoveredLimelight = limelight.discover_limelights(debug=True)
 
@@ -50,20 +50,20 @@ class LimeLightClass:
             tx: float = self.results.get("tx", None)
         self.table.putNumber("tx", tx)
         # from -28.5 (left) to 28.5 (right) degrees
-        validTarget: bool = 1 == self.parse.validity
-        # 1 means a valid target is found
+        # validTarget: bool = 1 == self.parse.validity
+        # # 1 means a valid target is found
 
-        alowedError: float = 5  # in degrees
-        strafeDirection: float = 0
+        # alowedError: float = 5  # in degrees
+        # strafeDirection: float = 0
 
-        if validTarget:
+        # if validTarget:
 
-            if tx > alowedError:
-                strafeDirection = 1
+        #     if tx > alowedError:
+        #         strafeDirection = 1
 
-            elif tx < -alowedError:
-                strafeDirection = -1
+        #     elif tx < -alowedError:
+        #         strafeDirection = -1
 
         # SwerveDrive.update(self, hal, strafeDirection, 0, 0, 0)
 
-        self.table.putNumber("strafe direction", strafeDirection)
+        # self.table.putNumber("strafe direction", strafeDirection)
