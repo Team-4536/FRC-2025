@@ -23,7 +23,14 @@ class ManipulatorSubsystem:
     def __init__(self):
 
         self.state = self.ManipulatorState.IDLE
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Manipulator Subsystem")
+        )
+
+        self.debug = False
+        self.table.putBoolean("Manipulator Debug Mode", self.debug)
 
     def update(
         self,
@@ -76,6 +83,7 @@ class ManipulatorSubsystem:
             if LBumper:
                 self.state = self.ManipulatorState.IDLE
 
+        self.debug = self.table.getBoolean("Manipulator Debug Mode", False)
         if self.debug == True:
             self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)

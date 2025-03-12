@@ -7,25 +7,23 @@ class IntakeChute:
 
     def __init__(self):
 
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Chute Subsystem")
+        )
         self.chuteSpeed = 5
         self.setChuteControlMode = 3
         self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
         self.ctrlrBumber = 0
         self.resetMode3 = True
         self.yToggle = False
-        self.bToggle = True
+        self.bToggle = False
+        self.debug = False
+        self.table.putBoolean("Chute Debug Mode", self.debug)
 
     def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
-
-        self.table.putNumber("time", wpilib.getTime())
-        self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
         self.currentTime = wpilib.getTime()
-        self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
-        self.table.putBoolean("right trigger", rightTrigger)
-        self.table.putBoolean("left trigger", leftTrigger)
-
-        self.table.putBoolean("pressed", self.yToggle)
 
         if YButton:
             self.yToggle = not (self.yToggle)
@@ -50,7 +48,8 @@ class IntakeChute:
         else:
             self.ctrlrBumber = 0
 
-        self.table.putBoolean("mode 3 reset", self.resetMode3)
+        if self.debug:
+            self.table.putBoolean("mode 3 reset", self.resetMode3)
 
         if self.setChuteControlMode == 1:
             hal.setChuteVoltage = (
@@ -66,7 +65,6 @@ class IntakeChute:
             else:
                 hal.setChuteVoltage = 0
                 self.setChuteControlMode = 1
-                self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
 
         elif self.setChuteControlMode == 3:
             if self.resetMode3:
@@ -81,3 +79,13 @@ class IntakeChute:
             else:
                 hal.setChuteVoltage = 0
                 self.setChuteControlMode = 1
+
+        self.debug = self.table.getBoolean("Chute Debug Mode", False)
+        if self.debug:
+            self.table.putNumber("time", wpilib.getTime())
+            self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
+            self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
+            self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
+            self.table.putBoolean("right trigger", rightTrigger)
+            self.table.putBoolean("left trigger", leftTrigger)
+            self.table.putBoolean("pressed", self.yToggle)
