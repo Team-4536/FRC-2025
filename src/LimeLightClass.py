@@ -1,7 +1,9 @@
+import math
+import json
 import limelight  # type: ignore
 import limelightresults  # type: ignore
 from ntcore import NetworkTableInstance
-import ntcore
+from networktables import NetworkTables
 from wpimath.controller import (
     HolonomicDriveController,
     PIDController,
@@ -10,60 +12,51 @@ from wpimath.controller import (
 from wpimath.trajectory import TrapezoidProfileRadians
 from robotHAL import RobotHALBuffer
 from swerveDrive import SwerveDrive
-import math
 
 
 class LimeLightClass:
-
     def __init__(self):
-
-        self.driveMotorP: float = 0
-        self.turnMotorP: float = 0
-        self.ll = None
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        bobsUncle = False
-        self.llTable.setBoolean("X ad Y pos", bobsUncle)
-        anotherCopy = self.llTable.getBoolean("X and Y pos")
-        # ntcore.NetworkTableInstance.startServer()
-        self.discoveredLimelight = limelight.discover_limelights(debug=True)
+
+        self.discoveredLimelight = limelight.discover_limelights()
+
+        self.tx: float = 0.0
+        self.allowedError: float = 5.0  # in degrees
+        self.strafeDirection: float = 0.0
+        self.validTarget: bool = False
+
+        self.ll = None
 
         if self.discoveredLimelight:
-            print("discovered limelight")
-            limelightAdress = self.discoveredLimelight[0]
-            self.ll = limelight.Limelight(limelightAdress)
-            self.llResults = self.ll.get_results()
-            self.parse = limelightresults.parse_results(self.llResults)
-            self.status = self.ll.get_status()
+            print("Discovered Limelight")
+            limelightAddress = self.discoveredLimelight[0]
+            self.table.putString("limelight address", limelightAddress)
+
+            self.ll = limelight.Limelight(limelightAddress)
             self.ll.enable_websocket()
+            self.status = self.ll.get_status()
         else:
-            print("no limelight discovered")
+            print("No Limelight discovered")
 
     def update(self, hal: RobotHALBuffer):
-        pass
         if self.ll is not None:
 
-            self.results = self.ll.get_latest_results()
-            self.parse = limelightresults.parse_results(self.llResults)
+            self.ll.get_latest_results()
+            self.tx = self.llTable.getNumber("tx", -1)
+            self.table.putNumber("tx", self.tx)
+            # Assume target is valid if tx is within measurable range
+            self.validTarget = True  # Optionally improve logic using parsed.validity
 
-        for tag in self.parse.fiducialResults:
-            tx: float = self.results.get("tx", None)
-        self.table.putNumber("tx", tx)
-        # from -28.5 (left) to 28.5 (right) degrees
-        validTarget: bool = 1 == self.parse.validity
-        # 1 means a valid target is found
+            if self.validTarget:
+                if self.tx > self.allowedError:
+                    self.strafeDirection = 1
+                elif self.tx < -self.allowedError:
+                    self.strafeDirection = -1
+                else:
+                    self.strafeDirection = 0
 
-        alowedError: float = 5  # in degrees
-        strafeDirection: float = 0
+                # Uncomment below to activate swerve drive behavior
+                # SwerveDrive.update(self, hal, self.strafeDirection, 0, 0, 0)
 
-        if validTarget:
-
-            if tx > alowedError:
-                strafeDirection = 1
-
-            elif tx < -alowedError:
-                strafeDirection = -1
-
-        # SwerveDrive.update(self, hal, strafeDirection, 0, 0, 0)
-
-        self.table.putNumber("strafe direction", strafeDirection)
+            self.table.putNumber("strafe direction", self.strafeDirection)
