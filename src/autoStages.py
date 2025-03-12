@@ -32,6 +32,8 @@ class RobotAutos(Enum):
     HIGH4_CENTER = "place highL4"
     TEST = "test"
     REEF4_l4 = "reef:4 L_4"
+    REEF1_2PIECE ='reef:1 2piece'
+  
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -156,6 +158,18 @@ class ASelevator4(AutoStage):
         ):
             self.done = True
 
+class ASelvator0(AutoStage):
+    def __init__(self):
+        self.done = False
+
+    def run(self, r: "Robot"):
+        r.elevatorSubsystem.level0AutoUpdate(r.hal)
+
+    def isDone(self, r: "Robot"):
+        if (r.hal.elevatorPos > r.hal.elevatorSetpoint - 1) and (
+            r.hal.elevatorPos < r.hal.elevatorSetpoint + 1
+        ):
+            self.done = True
 
 class ASShootStored(AutoStage):
     def __init__(self, r: "Robot"):
@@ -169,6 +183,18 @@ class ASShootStored(AutoStage):
     def isDone(self, r: "Robot"):
         if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.IDLE:
             self.done = True
+
+class ASintakeCoraL(AutoStage):
+    def __init__(self):
+        self.done = False
+
+    def run(self, r: "Robot"):
+        r.manipulatorSubsystem.autoIntake(r.hal)
+
+    def isDone(self, r):
+        if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.STORED:
+            self.done = True
+
 
 
 # returns a dict with strings as key and AutoStage as value
@@ -188,6 +214,17 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["leftDiag-reef4"] = ASfollowPath("leftDiag-reef4", r.onRedSide, r)
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-piece"] = ASShootStored(r)
+    elif stageChooser == RobotAutos.REEF1_2PIECE.value:
+        ret['middle-reef1'] = ASfollowPath('middle-reef1', r.onRedSide, r)
+        ret['elevator-level4'] = ASelevator4()
+        ret['shoot-piece'] = ASShootStored(r)
+        ret['elevator-level0'] = ASelvator0()
+        ret['reef1-intake'] = ASfollowPath('reef1-intake', r.onRedSide, r)
+        ret['intake-coral'] = ASintakeCoraL()
+        ret['intake-reef6'] = ASfollowPath('intake-reef6', r.onRedSide, r)
+        ret['elevator-level4'] = ASelevator4()
+        ret['shoot-piece'] = ASShootStored(r)
+  
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)
     #     ret
