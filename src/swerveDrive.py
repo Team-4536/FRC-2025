@@ -66,6 +66,8 @@ class SwerveDrive:
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
+        # the controller's x axis the the ChassisSpeeds' y axis and same for the other x and y axies
+        # the signes are flipped for the differences too
         self.driveY = -self.proxyDeadZoneX
         self.driveX = -self.proxyDeadZoneY
         self.driveRotation = -self.proxyDeadZoneR
