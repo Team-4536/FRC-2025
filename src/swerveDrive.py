@@ -12,6 +12,7 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
+from wpimath.units import feetToMeters
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -20,15 +21,15 @@ class SwerveDrive:
 
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-        oneftInMeters = 0.3048
+        oneftInMeters = feetToMeters(1)
 
-        self.modulePositions: list[Translation2d] = [
-            Translation2d(-oneftInMeters, oneftInMeters),
-            Translation2d(oneftInMeters, oneftInMeters),
-            Translation2d(-oneftInMeters, -oneftInMeters),
-            Translation2d(oneftInMeters, -oneftInMeters),
-        ]
-        self.kinematics = SwerveDrive4Kinematics(*self.modulePositions)
+        frontLeftLocation = Translation2d(oneftInMeters, oneftInMeters)
+        frontRightLocation = Translation2d(oneftInMeters, -oneftInMeters)
+        backLeftLocation = Translation2d(-oneftInMeters, oneftInMeters)
+        backRightLocation = Translation2d(-oneftInMeters, -oneftInMeters)
+        self.kinematics = SwerveDrive4Kinematics(
+            frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation
+        )
 
         self.table.putNumber("SD Joystick X offset", 0)
         self.table.putNumber("SD Joystick Y offset", 0)
@@ -65,9 +66,11 @@ class SwerveDrive:
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 3.5
 
-        self.driveX = self.proxyDeadZoneX
-        self.driveY = self.proxyDeadZoneY
-        self.driveRotation = self.proxyDeadZoneR
+        # the controller's x axis the the ChassisSpeeds' y axis and same for the other x and y axies
+        # the signes are flipped for the differences too
+        self.driveY = -self.proxyDeadZoneX
+        self.driveX = -self.proxyDeadZoneY
+        self.driveRotation = -self.proxyDeadZoneR
 
         driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
@@ -75,7 +78,7 @@ class SwerveDrive:
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            -self.driveRotation * 3,
+            self.driveRotation * 3,
         )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
