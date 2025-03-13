@@ -37,9 +37,10 @@ class Robot(wpilib.TimedRobot):
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
         # self.driveCtrlr.getLeftBumperButtonPressed()
-        self.photonCamera1 = photonVision("Camera1", 30, 0.17938, 0.33337, 0)
-        self.photonCamera2 = photonVision("Camera2", -30, 0.11747, 0.33337, 0)
-
+        self.photonCamera1 = photonVision("Camera1", 130, 0.17938, 0.33337, 0.2889)
+        self.photonCamera2 = photonVision("Camera2", 100, 0.33337, 0.11747, 0.2889)
+        # 0.11747
+        # 0.33337
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
