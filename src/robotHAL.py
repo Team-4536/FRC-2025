@@ -297,8 +297,6 @@ class RobotHAL:
         pass
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
-        # prev = self.prev
-        # self.prev = copy.copy(buf)
         self.prev, buf = buf, self.prev
 
         TURN_GEARING = 21.4
@@ -315,12 +313,10 @@ class RobotHAL:
             self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
 
-        profiler.start()
         self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
         self.FRSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
         self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
         self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
-        profiler.end("Hardware-SwerveDrive")
 
         self.table.putNumber(
             "BL Turning Pos Can",
@@ -379,21 +375,17 @@ class RobotHAL:
         )
         self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
-        profiler.start()
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
-        profiler.end("Hardware-ManipulatorSensors")
 
         self.elevServo.setAngle(buf.elevServoAngle)
 
-        profiler.start()
         self.elevatorController.update(
             buf.elevatorSetpoint,
             buf.elevatorArbFF,
             buf.elevatorSlot,
             buf.elevatorControl,
         )
-        profiler.end("Hardware-ElevatorController")
 
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
@@ -491,8 +483,6 @@ class RevMotorController:
         self.config.apply(config)
         self.controlType: SparkMax.ControlType = controlType
         self.debugMode = False
-        self.prevSetpoint = 0.0
-        self.prevControlType: SparkMax.ControlType | None = None
 
         self.motor.configure(
             self.config,
@@ -547,35 +537,28 @@ class RevMotorController:
                     SparkMax.PersistMode.kNoPersistParameters,
                 )
 
-        profiler.start()
-        measuredPercentVoltage = self.motor.getAppliedOutput()
-        measuredSpeed = self.encoder.getVelocity()
-        measuredPosition = -self.encoder.getPosition()
-        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
-        measuredAmps = self.motor.getOutputCurrent()
-        profiler.end(self.name + "SwerveDrive-GetValues")
-        self.table.putNumber("Voltage", measuredVoltage)
-        self.table.putNumber("Velocity (RPM)", measuredSpeed)
-        self.table.putNumber("Position (rot)", measuredPosition)
-        self.table.putNumber("percent voltage", measuredPercentVoltage)
-        self.table.putNumber("current", measuredAmps)
-        self.table.putNumber("setpoint", setpoint)
+        if self.debugMode:
+            measuredPercentVoltage = self.motor.getAppliedOutput()
+            measuredSpeed = self.encoder.getVelocity()
+            measuredPosition = -self.encoder.getPosition()
+            measuredVoltage = (
+                self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
+            )
+            measuredAmps = self.motor.getOutputCurrent()
+            self.table.putNumber("Voltage", measuredVoltage)
+            self.table.putNumber("Velocity (RPM)", measuredSpeed)
+            self.table.putNumber("Position (rot)", measuredPosition)
+            self.table.putNumber("percent voltage", measuredPercentVoltage)
+            self.table.putNumber("current", measuredAmps)
+            self.table.putNumber("setpoint", setpoint)
 
         if controlType == None:
             controlType = self.controlType
 
-        profiler.start()
-        if (
-            abs(setpoint - self.prevSetpoint) > 0.001
-            or self.prevControlType != controlType
-        ):
-            self.controller.setReference(
-                setpoint,
-                controlType,
-                slot,
-                arbFF,
-                SparkClosedLoopController.ArbFFUnits.kVoltage,
-            )
-            self.prevSetpoint = setpoint
-            self.prevControlType = controlType
-        profiler.end(self.name + "SwerveDrive-SetReference")
+        self.controller.setReference(
+            setpoint,
+            controlType,
+            slot,
+            arbFF,
+            SparkClosedLoopController.ArbFFUnits.kVoltage,
+        )

@@ -2,16 +2,16 @@ import wpilib
 from ntcore import NetworkTableInstance
 from wpimath.units import seconds
 
-timeList: list[seconds] = []
 
+class Profiler:
+    profilingNT = NetworkTableInstance.getDefault().getTable("profiling")
 
-def start():
-    global timeList
-    timeList.append(wpilib.getTime())
+    def __init__(self, name: str) -> None:
+        self.entry = self.profilingNT.getEntry(name + " (ms)")
+        self.startTime: seconds = 0
 
+    def start(self) -> None:
+        self.startTime = wpilib.getTime()
 
-def end(title: str):
-    global timeList
-    NetworkTableInstance.getDefault().getTable("profiling").putNumber(
-        title + " ms", (wpilib.getTime() - timeList.pop()) * 1000
-    )
+    def end(self) -> None:
+        self.entry.setFloat((wpilib.getTime() - self.startTime) * 1000)
