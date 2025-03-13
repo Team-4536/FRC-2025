@@ -144,8 +144,8 @@ class RobotHAL:
         chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
             chuteMotorConfig.limitSwitch.Type.kNormallyClosed
         )
-        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
-        chuteMotorConfig.smartCurrentLimit(20)
+        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        chuteMotorConfig.smartCurrentLimit(15)
 
         self.chuteMotor.configure(
             chuteMotorConfig,
