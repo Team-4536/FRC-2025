@@ -72,11 +72,18 @@ class SwerveDrive:
         driveVector = Translation2d(self.driveX, self.driveY)
         driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
 
-        self.chassisSpeeds = ChassisSpeeds(
-            driveVector.X() * 0.5 * 4**RTriggerScalar,
-            driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            -self.driveRotation * 3,
-        )
+        if hal.AutoTargetPipeDirection == 0:
+            self.chassisSpeeds = ChassisSpeeds(
+                driveVector.X() * 0.5 * 4**RTriggerScalar,
+                driveVector.Y() * 0.5 * 4**RTriggerScalar,
+                -self.driveRotation * 3,
+            )
+        else:
+            self.chassisSpeeds = ChassisSpeeds(
+                0.2 * hal.AutoTargetPipeDirection,
+                0,
+                0,
+            )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)

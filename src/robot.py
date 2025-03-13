@@ -13,7 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
-from LimeLightClass import LimeLightClass
+from Limelight import Limelight
 
 
 class Robot(wpilib.TimedRobot):
@@ -39,19 +39,23 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.limeLight = LimeLightClass()
+        self.limeLight = Limelight()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
         self.hal.stopMotors()
-        self.limeLight.update(self.hal)
 
     def teleopInit(self) -> None:
         pass
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+
+        self.limeLight.update(
+            self.hal,
+            self.driveCtrlr.getPOV() == 0,
+        )
 
         self.swerveDrive.update(
             self.hal,

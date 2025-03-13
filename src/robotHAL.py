@@ -62,6 +62,8 @@ class RobotHALBuffer:
 
         self.moveArmDown = False
 
+        self.AutoTargetPipeDirection = 0
+
     def resetEncoders(self) -> None:
         pass
 
