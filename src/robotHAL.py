@@ -9,7 +9,7 @@ from phoenix6.hardware import CANcoder
 from timing import TimeData
 from ntcore import NetworkTableInstance
 from rev import (
-    SparkMax,
+    sparkMax,
     SparkMaxConfig,
     SparkClosedLoopController,
     ClosedLoopConfig,
