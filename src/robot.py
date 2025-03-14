@@ -189,6 +189,8 @@ class Robot(wpilib.TimedRobot):
             False,
         )
 
+        self.manipulatorSubsystem.update(self.hal, False, False)
+
         self.hardware.update(
             self.hal, self.time
         )  # Keep this at the bottom of autonomousPeriodic

@@ -17,6 +17,7 @@ from ntcore import NetworkTableInstance, NetworkTable
 from typing import TYPE_CHECKING, Callable
 from ntcore import Value
 from enum import Enum
+from manipulator import ManipulatorState
 
 if TYPE_CHECKING:
     from robot import Robot
@@ -184,15 +185,15 @@ class ASelvator0(AutoStage):
 class ASShootStored(AutoStage):
     def __init__(self, r: "Robot", startTime):
         self.done = False
-        r.manipulatorSubsystem.state = 2
+        # r.manipulatorSubsystem.state = ManipulatorState.STORED
         self.buf = r.hal
         self.startTime = startTime
 
     def run(self, r: "Robot"):
-        r.manipulatorSubsystem.autoShootStored(r.hal, self.startTime)
+        r.manipulatorSubsystem.update(r.hal, True, False)
 
     def isDone(self, r: "Robot"):
-        if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.IDLE:
+        if r.manipulatorSubsystem.state == ManipulatorState.IDLE:
             self.done = True
             return True
 
@@ -202,15 +203,14 @@ class ASintakeCoraL(AutoStage):
         self.done = False
 
     def run(self, r: "Robot"):
-        r.manipulatorSubsystem.update(r.hal, False, False)
+        # r.manipulatorSubsystem.update(r.hal, False, False)
+        pass
 
     def isDone(self, r):
-        if (
-            r.manipulatorSubsystem.state
-            == r.manipulatorSubsystem.ManipulatorState.STORED
-        ):
+        if r.manipulatorSubsystem.state == ManipulatorState.STORED:
             self.done = True
-            return True
+
+        return self.done
 
 
 # returns a dict with strings as key and AutoStage as value
@@ -253,7 +253,7 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["intake-coral"] = ASintakeCoraL()
     elif stageChooser == RobotAutos.TEST_ROUTINE.value:
         ret["intake-coral"] = ASintakeCoraL()
-        ret["middle-reef1"] = ASfollowPath("middle-reef1", r.onRedSide, r)
+        ret["middle-reef1"] = ASfollowPath("test", r.onRedSide, r)
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
         ret["elevator-level0"] = ASelvator0()
