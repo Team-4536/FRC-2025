@@ -12,7 +12,7 @@ class ManipulatorSubsystem:
         INTAKE = 1
         STORED = 2
         SHOOT = 3
-        MANUAL = -1
+        MANUAL = 100
 
     debug = False
 
