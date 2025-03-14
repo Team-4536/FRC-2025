@@ -41,9 +41,10 @@ class SwerveDrive:
         constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
         xPID = PIDController(0.1, 0, 0)
         yPID = PIDController(0.1, 0, 0)
-        rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
+        rotPID = ProfiledPIDControllerRadians(1.2, 0, 0, constraints)
 
         self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
+        self.yawOffset = 0.0
 
         # ============================================================
 
@@ -61,6 +62,7 @@ class SwerveDrive:
         joystickY: float,
         joystickRotation: float,
         RTriggerScalar: float,
+        resetOffset: bool,
     ):
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)
@@ -88,9 +90,14 @@ class SwerveDrive:
 
         driveVector = Translation2d(self.driveX, self.driveY)
 
+        if resetOffset:
+            self.yawOffset = hal.yaw
+
+        self.table.putNumber("absDriveOffset", self.yawOffset)
+
         # abs drive toggle
         if hal.fieldOriented:
-            driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw))
+            driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw + self.yawOffset))
 
         # disable rotatioanl PID if turn stick is moved
         if self.driveRotation != 0:
@@ -115,7 +122,7 @@ class SwerveDrive:
         if hal.rotPIDToggle:
             rotFinal = rotPIDSpeed * 5
         else:
-            rotFinal = -self.driveRotation  # copied from HCPA code
+            rotFinal = self.driveRotation  # copied from HCPA code
 
         # -------------------------------------------------------------------
 

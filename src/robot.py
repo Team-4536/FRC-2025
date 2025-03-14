@@ -64,6 +64,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
             self.driveCtrlr.getRightTriggerAxis(),
+            self.driveCtrlr.getStartButtonPressed(),
         )
 
         self.elevatorSubsystem.update(
@@ -98,10 +99,6 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getAButton(),
             self.mechCtrlr.getLeftBumperPressed(),
         )
-
-        # reset gyro
-        if self.driveCtrlr.getStartButtonPressed():
-            self.hardware.resetGyroToAngle(0)
 
         # abs drive toggle
         if self.driveCtrlr.getLeftStickButtonPressed():

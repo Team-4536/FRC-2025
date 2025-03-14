@@ -291,6 +291,8 @@ class RobotHAL:
 
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
 
+        self.table.putBoolean("ResetYaw", False)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         self.gyro.reset()
@@ -408,6 +410,9 @@ class RobotHAL:
         )
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
+
+        if self.table.getBoolean("ResetYaw", False):
+            self.resetGyroToAngle(0)
 
 
 class SwerveModuleController:
