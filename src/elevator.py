@@ -23,6 +23,16 @@ class ElevatorSubsystem:
     L2_POS = 11.71
     L3_POS = 24.59
     L4_POS = 45
+    ALGAE_L2_POS = 0
+    ALGAE_L3_POS = 0
+
+    ARM_UP_POS = 5
+    ARM_DEALGAE_POS = 2.5
+    # the threshold at which the arm does not need to wory about hitting the bumpers
+    ARM_CLEAR_BUMPER_POS = 3.5
+
+    # this is an elevator position where it is safe for the arm to move
+    ELEVATOR_CLEARS_BUMPERS_FOR_ARM = 7
 
     def __init__(self):
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
@@ -33,21 +43,33 @@ class ElevatorSubsystem:
         self.posSetpoint = 0
 
         self.mode = ElevatorMode.POSITION_MODE
-        self.debugMode = True
+        self.debugMode = False
 
-        self.armUp = False
+        self.moveArmDown: bool = False
+        self.armReachedTop: bool = False
+        self.algaePosMode: bool = False
 
     def update(
         self,
         hal: RobotHALBuffer,
         up: float,
         down: float,
-        toggleMode: bool,
+        toggleManualMode: bool,
         POVSetpoint: float,
         armToggle: bool,
+        algaePosToggle: bool,
     ):
         if armToggle:
-            self.armUp = not self.armUp
+            self.moveArmDown = not self.moveArmDown
+
+        # dont let the toggle happen uless the arm is high enough or the elevator is above the threshold
+        # this is to avoid the arm bumping into the bumper, this avoid more logic down the line
+        if algaePosToggle and (
+            hal.armPos > self.ARM_CLEAR_BUMPER_POS
+            or hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+        ):
+            self.algaePosMode = not self.algaePosMode
+
         # Dead-Zone
         if up < 0.1:
             up = 0
@@ -56,7 +78,7 @@ class ElevatorSubsystem:
         if self.debugMode:
             self.table.putNumber("Elevator up", up)
             self.table.putNumber("Elevator down", down)
-        if toggleMode:
+        if toggleManualMode:
             if self.mode == ElevatorMode.MANUAL_MODE:
                 self.mode = ElevatorMode.POSITION_MODE
                 self.posSetpoint = hal.elevatorPos
@@ -73,25 +95,46 @@ class ElevatorSubsystem:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
-            if POVSetpoint == 180:
-                self.posSetpoint = self.INTAKE_POS
-            elif POVSetpoint == 90:
-                self.posSetpoint = self.L2_POS
-            elif POVSetpoint == 270:
-                self.posSetpoint = self.L3_POS
-            elif POVSetpoint == 0:
-                self.posSetpoint = self.L4_POS
-            hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-                "Elevator setpoint offset", 0
-            )
+            if not self.algaePosMode:
+                if POVSetpoint == 180:
+                    self.posSetpoint = self.INTAKE_POS
+                elif POVSetpoint == 90:
+                    self.posSetpoint = self.L2_POS
+                elif POVSetpoint == 270:
+                    self.posSetpoint = self.L3_POS
+                elif POVSetpoint == 0:
+                    self.posSetpoint = self.L4_POS
+                hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
+                    "Elevator setpoint offset", 0
+                )
 
-            if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
-                hal.elevatorSetpoint = hal.elevatorPos
-                hal.armVolts = -1
-            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5 and self.armUp:
-                hal.armVolts = 1
-            else:
-                hal.armVolts = -1
+                # always be moving arm up when not in dealgae mode and when bumpers are not in the way
+                if (
+                    hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+                    or hal.armPos > self.ARM_CLEAR_BUMPER_POS
+                ):
+                    hal.armSetpoint = self.ARM_UP_POS
+                # Don't let the elevator move down below bumper threshold unless the arm is all the way up
+                if (
+                    self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+                    and hal.armPos < self.ARM_CLEAR_BUMPER_POS
+                ):
+                    self.posSetpoint = hal.elevatorPos
+
+                # when exiting normal scoring mode make sure the arm stays up
+                self.moveArmDown = False
+
+            else:  # algae pos mode
+                if POVSetpoint == 180:
+                    self.posSetpoint = self.ALGAE_L2_POS
+                elif POVSetpoint == 0:
+                    self.posSetpoint = self.ALGAE_L3_POS
+
+                # it can be assumed that the arm is in an safe position because of the strict toggle logic
+                if self.moveArmDown:
+                    hal.armSetpoint = self.ARM_DEALGAE_POS
+                else:
+                    hal.armSetpoint = self.ARM_UP_POS
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
@@ -113,5 +156,7 @@ class ElevatorSubsystem:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-            self.table.putString("Elevator State", self.mode.name)
+        self.table.putBoolean("Algae Removal Mode", self.algaePosMode)
+        self.table.putBoolean("Move Arm Down", self.moveArmDown)
+        self.table.putString("Elevator State", self.mode.name)
         hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)

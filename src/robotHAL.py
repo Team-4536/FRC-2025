@@ -50,7 +50,8 @@ class RobotHALBuffer:
 
         self.frontArmLimitSwitch: bool = False
         self.backArmLimitSwitch: bool = False
-        self.armVolts: float = 0
+        self.armPos: float = 0
+        self.armSetpoint: float = 0
 
         self.elevServoAngle = 0
 
@@ -65,7 +66,6 @@ class RobotHALBuffer:
 
     def stopMotors(self) -> None:
         self.manipulatorVolts = 0
-        self.armVolts = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putNumber("Elevator Pos(rot)", self.elevatorPos)
@@ -116,11 +116,16 @@ class RobotHAL:
         armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
         armConfig.smartCurrentLimit(20)
+        armConfig.closedLoop.pidf(0, 0, 0, 0)
 
         self.armMotor.configure(
             armConfig,
             SparkMax.ResetMode.kNoResetSafeParameters,
             SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+        self.armController = RevMotorController(
+            "Arm", self.armMotor, armConfig, SparkMax.ControlType.kPosition
         )
 
         self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
@@ -391,10 +396,12 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        self.armMotor.setVoltage(buf.armVolts)
+        self.armController.update(buf.armSetpoint, 0)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
+        buf.armPos = self.armMotorEncoder.getPosition()
+
         buf.chuteMotorVoltage = (
             self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
         )
