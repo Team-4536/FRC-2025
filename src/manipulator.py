@@ -7,18 +7,14 @@ from rev import SparkMax
 
 
 class ManipulatorSubsystem:
-
     class ManipulatorState(Enum):
         IDLE = 0
         INTAKE = 1
         STORED = 2
         SHOOT = 3
         MANUAL = -1
-        GOINGUP = 4
-        UP = 5
-        GOINGDOWN = 6
 
-    debug = True
+    debug = False
 
     def __init__(self):
 

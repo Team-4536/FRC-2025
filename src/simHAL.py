@@ -20,7 +20,6 @@ class RobotSimHAL:
         self.table.putBoolean("second manipulator sensor", False)
         self.table.putNumber("arm voltage", 0)
         self.table.putNumber("manipulator voltage", 0)
-        # self.table.getNumber("Elevator Mode", self.mode)
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
         buf.secondManipulatorSensor = self.table.getBoolean(
@@ -29,15 +28,8 @@ class RobotSimHAL:
         buf.firstManipulatorSensor = self.table.getBoolean(
             "first manipulator sensor", False
         )
-
-        self.table.putNumber("arm voltage", buf.armVolts)
+        buf.armVolts = self.table.getNumber("arm voltage", 0)
         buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
-        # self.table.putNumber("Elevator State", self)
-
-    # elevator state
-    # elevator position
-
-    # limit switches
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass

@@ -13,6 +13,7 @@ from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from led import LEDSignals
 
 
 class Robot(wpilib.TimedRobot):
@@ -38,6 +39,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        self.LEDSignals: LEDSignals = LEDSignals()
 
         self.povPrev = 0
 
@@ -45,6 +47,10 @@ class Robot(wpilib.TimedRobot):
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
         self.hal.stopMotors()
+
+        self.LEDSignals.update(
+            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        )
 
     def teleopInit(self) -> None:
         pass
@@ -55,7 +61,7 @@ class Robot(wpilib.TimedRobot):
         self.swerveDrive.update(
             self.hal,
             self.driveCtrlr.getLeftX(),
-            -self.driveCtrlr.getLeftY(),
+            self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
             self.driveCtrlr.getRightTriggerAxis(),
         )
@@ -121,10 +127,6 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        self.hardware.update(
-            self.hal, self.time
-        )  # Keep this at the bottom of autonomousPeriodic
-
         self.intakeChute.update(
             self.hal,
             False,
@@ -132,6 +134,10 @@ class Robot(wpilib.TimedRobot):
             False,
             False,
         )
+
+        self.hardware.update(
+            self.hal, self.time
+        )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
         self.disabledPeriodic()
