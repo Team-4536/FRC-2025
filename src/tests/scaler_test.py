@@ -1,4 +1,4 @@
-from utils import Scalar
+from utils import Scalar  # type: ignore
 
 
 def test_scaler_default():
