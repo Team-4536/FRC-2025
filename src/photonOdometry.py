@@ -93,7 +93,7 @@ class photonVision:
         self.camera = PhotonCamera(cameraName)
         kRobotToCam = wpimath.geometry.Transform3d(
             wpimath.geometry.Translation3d(intCamX, intCamY, intCamZ),
-            wpimath.geometry.Rotation3d.fromDegrees(0.0, camPitch, 0.0),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, 0.0, camPitch),
         )
         self.camPoseEst = PhotonPoseEstimator(
             AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded),

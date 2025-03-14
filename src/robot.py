@@ -37,8 +37,8 @@ class Robot(wpilib.TimedRobot):
         self.mechCtrlr = wpilib.XboxController(1)
         self.buttonPanel = wpilib.Joystick(4)
         # self.driveCtrlr.getLeftBumperButtonPressed()
-        self.photonCamera1 = photonVision("Camera1", 130, 0.17938, 0.33337, 0.2889)
-        self.photonCamera2 = photonVision("Camera2", 100, 0.33337, 0.11747, 0.2889)
+        self.photonCamera1 = photonVision("Camera1", 30, 0.17938, 0.33337, 0.2889)
+        self.photonCamera2 = photonVision("Camera2", -30, 0.33337, 0.11747, 0.2889)
         # 0.11747
         # 0.33337
         self.swerveDrive: SwerveDrive = SwerveDrive()
@@ -141,11 +141,10 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
-        if self.driveCtrlr.getBackButtonPressed():
-            if self.photonCamera1.fiducialId > -1:
-                self.swerveDrive.savePos(self.photonCamera1.fiducialId, self.hal.yaw)
-            if self.photonCamera2.fiducialId > -1:
-                self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
+        if self.driveCtrlr.getBackButtonPressed:
+            self.swerveDrive.savePos(self.photonCamera1.fiducialId, self.hal.yaw)
+        # if self.photonCamera2.fiducialId > -1:
+        #     self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
         # Keep the lines below at the bottom of teleopPeriodic
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)

@@ -287,7 +287,7 @@ class SwerveDrive:
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
     def savePos(self, fiducialID: int, yaw: float):
-        with open("pyTest.txt", "a") as f:
+        with open("/home/lvuser/photon.txt", "a") as f:
             f.write("tag" + str(fiducialID) + " X = " + f"{self.odomPos[0]}" "\n")
             f.write("tag" + str(fiducialID) + " Y = " + f"{self.odomPos[1]}" "\n")
             f.write("tag" + str(fiducialID) + " Angle = " + f"{yaw}" "\n")
