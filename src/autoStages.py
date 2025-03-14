@@ -32,8 +32,12 @@ class RobotAutos(Enum):
     HIGH4_CENTER = "place highL4"
     TEST = "test"
     REEF4_l4 = "reef:4 L_4"
-    REEF1_2PIECE ='reef:1 2piece'
-  
+    REEF1_2PIECE = "reef:1 2piece"
+    L4_TEST = "l4 test"
+    SHOOT_TEST = "shoot test"
+    AUTO3_TEST = "3 auto test"
+    INTAKE_TEST = "intake test"
+    TEST_ROUTINE = "test routine"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -141,6 +145,7 @@ class ASfollowPath(AutoStage):
             and (rot > end.rotation().radians() + rotError)
         ):
             self.done = True
+            return True
 
 
 class ASelevator4(AutoStage):
@@ -158,6 +163,9 @@ class ASelevator4(AutoStage):
         ):
             self.done = True
 
+            return True
+
+
 class ASelvator0(AutoStage):
     def __init__(self):
         self.done = False
@@ -170,31 +178,39 @@ class ASelvator0(AutoStage):
             r.hal.elevatorPos < r.hal.elevatorSetpoint + 1
         ):
             self.done = True
+            return True
+
 
 class ASShootStored(AutoStage):
-    def __init__(self, r: "Robot"):
+    def __init__(self, r: "Robot", startTime):
         self.done = False
         r.manipulatorSubsystem.state = 2
         self.buf = r.hal
+        self.startTime = startTime
 
     def run(self, r: "Robot"):
-        r.manipulatorSubsystem.autoShootStored(r.hal)
+        r.manipulatorSubsystem.autoShootStored(r.hal, self.startTime)
 
     def isDone(self, r: "Robot"):
         if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.IDLE:
             self.done = True
+            return True
+
 
 class ASintakeCoraL(AutoStage):
     def __init__(self):
         self.done = False
 
     def run(self, r: "Robot"):
-        r.manipulatorSubsystem.autoIntake(r.hal)
+        r.manipulatorSubsystem.update(r.hal, False, False)
 
     def isDone(self, r):
-        if r.manipulatorSubsystem.state == r.manipulatorSubsystem.ManipulatorState.STORED:
+        if (
+            r.manipulatorSubsystem.state
+            == r.manipulatorSubsystem.ManipulatorState.STORED
+        ):
             self.done = True
-
+            return True
 
 
 # returns a dict with strings as key and AutoStage as value
@@ -213,18 +229,35 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
         ret["leftDiag-reef4"] = ASfollowPath("leftDiag-reef4", r.onRedSide, r)
         ret["elevator-level4"] = ASelevator4()
-        ret["shoot-piece"] = ASShootStored(r)
+        ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
     elif stageChooser == RobotAutos.REEF1_2PIECE.value:
-        ret['middle-reef1'] = ASfollowPath('middle-reef1', r.onRedSide, r)
-        ret['elevator-level4'] = ASelevator4()
-        ret['shoot-piece'] = ASShootStored(r)
-        ret['elevator-level0'] = ASelvator0()
-        ret['reef1-intake'] = ASfollowPath('reef1-intake', r.onRedSide, r)
-        ret['intake-coral'] = ASintakeCoraL()
-        ret['intake-reef6'] = ASfollowPath('intake-reef6', r.onRedSide, r)
-        ret['elevator-level4'] = ASelevator4()
-        ret['shoot-piece'] = ASShootStored(r)
-  
+        ret["middle-reef1"] = ASfollowPath("middle-reef1", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+        ret["reef1-intake"] = ASfollowPath("reef1-intake", r.onRedSide, r)
+        ret["intake-coral"] = ASintakeCoraL()
+        ret["intake-reef6"] = ASfollowPath("intake-reef6", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
+    elif stageChooser == RobotAutos.SHOOT_TEST.value:
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+    elif stageChooser == RobotAutos.L4_TEST.value:
+        ret["elevator-level4"] = ASelevator4()
+    elif stageChooser == RobotAutos.AUTO3_TEST.value:
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.INTAKE_TEST.value:
+        ret["intake-coral"] = ASintakeCoraL()
+    elif stageChooser == RobotAutos.TEST_ROUTINE.value:
+        ret["intake-coral"] = ASintakeCoraL()
+        ret["middle-reef1"] = ASfollowPath("middle-reef1", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)
     #     ret

@@ -80,25 +80,27 @@ class ManipulatorSubsystem:
             self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
 
-    def autoShootStored(self, buf: RobotHALBuffer):
+    def autoShootStored(self, buf: RobotHALBuffer, startTime):
+
         buf.manipulatorVolts = 8
 
-        if (
-            wpilib.getTime() - self.startTime > 0.5 and not buf.secondManipulatorSensor
+        if (wpilib.getTime() - startTime > 1) and (
+            buf.secondManipulatorSensor == False
         ):  # how long the shooting goes for in sec
             self.state = self.ManipulatorState.IDLE
 
-    def autoIntake(self, buf: RobotHALBuffer):
-        buf.manipulatorVolts = 0
-        buf.moveArmDown = True
-        if buf.firstManipulatorSensor:
-            self.state = self.ManipulatorState.INTAKE
+    # def autoIntake(self, buf: RobotHALBuffer):
+    #     self.state = self.ManipulatorState.IDLE
+    #     buf.manipulatorVolts = 0
+    #     buf.moveArmDown = True
+    #     if buf.firstManipulatorSensor:
+    #         self.state = self.ManipulatorState.INTAKE
 
-        elif self.state == self.ManipulatorState.INTAKE:
-            buf.manipulatorVolts = 4
+    #     elif self.state == self.ManipulatorState.INTAKE:
+    #         buf.manipulatorVolts = 4
 
-            if not buf.secondManipulatorSensor and not buf.firstManipulatorSensor:
-                self.state = self.ManipulatorState.IDLE
+    #         if not buf.secondManipulatorSensor and not buf.firstManipulatorSensor:
+    #             self.state = self.ManipulatorState.IDLE
 
-            if buf.secondManipulatorSensor and not buf.firstManipulatorSensor:
-                self.state = self.ManipulatorState.STORED
+    #         if buf.secondManipulatorSensor and not buf.firstManipulatorSensor:
+    #             self.state = self.ManipulatorState.STORED

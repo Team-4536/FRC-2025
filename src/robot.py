@@ -170,6 +170,9 @@ class Robot(wpilib.TimedRobot):
 
         if self.currentAuto >= len(self.autoKeys):
             self.autoFinished = True
+        else:
+            self.table.putString("Current Stage", self.autoKeys[self.currentAuto])
+            self.table.putNumber("Current Stage Number", self.currentAuto)
 
         self.table.putBoolean("Auto finished", self.autoFinished)
 
@@ -177,7 +180,6 @@ class Robot(wpilib.TimedRobot):
             self.auto[self.autoKeys[self.currentAuto]].run(self)
             if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
                 self.currentAuto += 1
-            self.table.putString("Current Stage", self.autoKeys[self.currentAuto])
 
         self.intakeChute.update(
             self.hal,
