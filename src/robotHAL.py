@@ -48,6 +48,12 @@ class RobotHALBuffer:
         self.firstManipulatorSensor: bool = False
         self.manipulatorVolts: float = 0
 
+        self.totalspeed = (
+            self.driveFLSetpoint
+            + self.driveFRSetpoint
+            + self.driveBLSetpoint
+            + self.driveBRSetpoint
+        )
         self.frontArmLimitSwitch: bool = False
         self.backArmLimitSwitch: bool = False
         self.armPos: float = 0
@@ -291,13 +297,8 @@ class RobotHAL:
         )
 
         elevatorMotorPIDConfig.closedLoop.pidf(
-            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot2
-        )
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            2500, ClosedLoopSlot.kSlot2
-        ).maxAcceleration(5000, ClosedLoopSlot.kSlot2).allowedClosedLoopError(
-            0.05, ClosedLoopSlot.kSlot2
-        )
+            0.0001, 0.0, 0.0, 0.0, ClosedLoopSlot.kSlot2
+        ).outputRange(-0.7, 0.7, ClosedLoopSlot.kSlot2)
 
         self.elevatorController = RevMotorController(
             "Elevator",
@@ -418,6 +419,14 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
+        buf.totalspeed = int(
+            (
+                self.BLSwerveModule.driveMotor.encoder.getVelocity()
+                + self.BRSwerveModule.driveMotor.encoder.getVelocity()
+                + self.FLSwerveModule.driveMotor.encoder.getVelocity()
+                + self.FRSwerveModule.driveMotor.encoder.getVelocity()
+            )
+        )
         self.armController.update(buf.armSetpoint, 0)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
