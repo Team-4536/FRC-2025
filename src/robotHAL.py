@@ -403,7 +403,7 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
-        buf.yaw = degreesToRadians(-self.gyro.getAngle())
+        # buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
@@ -471,7 +471,7 @@ class RobotHAL:
 
         buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
 
-        buf.yaw = math.radians(-self.gyro.getAngle())
+        # buf.yaw = angleWrap(degreesToRadians(-self.gyro.getAngle()))
 
         # self.armMotor.setVoltage(buf.armVolts)
 

@@ -134,6 +134,10 @@ class ASfollowPath(AutoStage):
         self.r.hardware.resetGyroToAngle(
             self.traj.getInitialPose().rotation().radians()
         )
+        table = NetworkTableInstance.getDefault().getTable("autos")
+        table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
+        table.putNumber("djoInitPoseY", self.traj.getInitialPose().y)
+        table.putNumber("djoInitPoseR", self.traj.getInitialPose().rotation().radians())
 
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()

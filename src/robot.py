@@ -99,8 +99,12 @@ class Robot(wpilib.TimedRobot):
 
         self.hal.stopMotors()
 
+        # self.swerveDrive.odometry.getPose().rotation()
+
     def teleopInit(self) -> None:
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.swerveDrive.resetOdometry(
+            Pose2d(), self.hal
+        )  ## TODO: probably cut this line
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -161,6 +165,10 @@ class Robot(wpilib.TimedRobot):
         self.autoFinished = False
 
         self.table.putString("Chosen Auto is", "temp")
+
+        if not self.currentAuto == len(self.autoKeys):  ## TDOO Fix
+
+            self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
