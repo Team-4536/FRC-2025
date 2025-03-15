@@ -180,6 +180,7 @@ class Robot(wpilib.TimedRobot):
             self.auto[self.autoKeys[self.currentAuto]].run(self)
             if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
                 self.currentAuto += 1
+                self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
 
         self.intakeChute.update(
             self.hal,

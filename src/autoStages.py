@@ -39,6 +39,9 @@ class RobotAutos(Enum):
     AUTO3_TEST = "3 auto test"
     INTAKE_TEST = "intake test"
     TEST_ROUTINE = "test routine"
+    DRIVE_FORWARD = "drive forward"
+    MIDDLE_PIECE = "middle 1 piece"
+    PIECE2_AUTO = "2 piece auto"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -85,6 +88,9 @@ class AutoStage:
     def isDone(self, r: "Robot") -> bool:
         return True
 
+    def autoInit(self, r: "Robot"):
+        pass
+
 
 class ASfollowPath(AutoStage):
 
@@ -92,11 +98,6 @@ class ASfollowPath(AutoStage):
         self.r = r
         self.done = False
         self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
-        self.startTime = wpilib.getTime()
-        self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
-        self.r.hardware.resetGyroToAngle(
-            self.traj.getInitialPose().rotation().radians()
-        )
 
         # self.traj = PathPlannerTrajectory()
 
@@ -126,6 +127,13 @@ class ASfollowPath(AutoStage):
         table.putNumber("gyro", self.r.hal.yaw)
 
         self.r.swerveDrive.updateForAutos(self.r.hal, adjustedSpeeds)
+
+    def autoInit(self, r):
+        self.startTime = wpilib.getTime()
+        self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
+        self.r.hardware.resetGyroToAngle(
+            self.traj.getInitialPose().rotation().radians()
+        )
 
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
@@ -187,7 +195,6 @@ class ASShootStored(AutoStage):
         self.done = False
         # r.manipulatorSubsystem.state = ManipulatorState.STORED
         self.buf = r.hal
-        self.startTime = startTime
 
     def run(self, r: "Robot"):
         r.manipulatorSubsystem.update(r.hal, True, False)
@@ -196,6 +203,9 @@ class ASShootStored(AutoStage):
         if r.manipulatorSubsystem.state == ManipulatorState.IDLE:
             self.done = True
             return True
+
+    def autoInit(self, r):
+        self.startTime = wpilib.getTime
 
 
 class ASintakeCoraL(AutoStage):
@@ -256,6 +266,24 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["middle-reef1"] = ASfollowPath("test", r.onRedSide, r)
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-piece"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.DRIVE_FORWARD.value:
+        ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+    elif stageChooser == RobotAutos.MIDDLE_PIECE.value:
+        ret["middle-reef1"] = ASfollowPath("middle-reef1", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.PIECE2_AUTO.value:
+        ret["algae1"] = ASfollowPath("Algae1", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+        ret["Algae1Dropoff"] = ASfollowPath("Algae1Dropoff", r.onRedSide, r)
+        ret["intake"] = ASintakeCoraL()
+        ret["Algae2"] = ASfollowPath("Algae2", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
         ret["elevator-level0"] = ASelvator0()
 
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
