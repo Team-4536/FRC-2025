@@ -41,6 +41,9 @@ class SwerveDrive:
         self.setpointsTable.putNumber("des Rot: ", 0)
         self.setpointsTable.putNumber("adjSpe vx: ", 0)
         self.setpointsTable.putNumber("adjSpe vy: ", 0)
+        self.setpointsTable.putNumber("cur x (setpoint): ", 0)
+        self.setpointsTable.putNumber("cur y (setpoint): ", 0)
+        self.setpointsTable.putNumber("cur rot (setpoint): ", 0)
 
         self.angle = Rotation2d(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
@@ -61,8 +64,8 @@ class SwerveDrive:
             wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
         )
         self.controller = HolonomicDriveController(
-            PIDController(0.3, 0, 0),
-            PIDController(0.3, 0, 0),
+            PIDController(5, 0, 0),
+            PIDController(0.15, 0, 0),
             ProfiledPIDControllerRadians(
                 1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
             ),
@@ -180,16 +183,16 @@ class SwerveDrive:
 
         modulePosList = (
             SwerveModulePosition(
-                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
+                hal.drivePositionsList[0], Rotation2d(hal.steerPositionList[0])
             ),
             SwerveModulePosition(
-                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
+                hal.drivePositionsList[1], Rotation2d(hal.steerPositionList[1])
             ),
             SwerveModulePosition(
-                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
+                hal.drivePositionsList[2], Rotation2d(hal.steerPositionList[2])
             ),
             SwerveModulePosition(
-                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
+                hal.drivePositionsList[3], Rotation2d(hal.steerPositionList[3])
             ),
         )
         self.odometry.update(Rotation2d(hal.yaw), modulePosList)
@@ -225,6 +228,11 @@ class SwerveDrive:
     def setpointChooser(self, yaw, fiducialID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
+        self.setpointsTable.putNumber("cur x (setpoint): ", self.currentPose.X())
+        self.setpointsTable.putNumber("cur y (setpoint): ", self.currentPose.Y())
+        self.setpointsTable.putNumber(
+            "cur rot (setpoint): ", self.currentPose.rotation().degrees()
+        )
         if side == "left":
             self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
             self.desiredPose = Pose2d(
@@ -235,6 +243,7 @@ class SwerveDrive:
 
         elif side == "right":
             self.rot = Rotation2d(setpoints.tagRight[fiducialID][2])
+
             self.desiredPose = Pose2d(
                 setpoints.tagRight[fiducialID][0],
                 setpoints.tagRight[fiducialID][1],
@@ -248,7 +257,7 @@ class SwerveDrive:
             "des Rot: ", self.desiredPose.rotation().degrees()
         )
         self.adjustedSpeeds = self.controller.calculate(
-            self.currentPose, self.desiredPose, 0.25, self.rot
+            self.currentPose, self.desiredPose, 0, self.rot
         )
 
         self.setpointsTable.putNumber("adjSpe vx: ", self.adjustedSpeeds.vx)
@@ -307,10 +316,14 @@ class SwerveDrive:
                 "tag"
                 + str(fiducialID)
                 + ": "
+                + " X: "
                 + f"{self.odomPos[0]}"
+                + " Y: "
                 + f"{self.odomPos[1]}"
+                + " Rot: "
                 + f"{yaw}"
                 + "   -->   "
+                + " Time: "
                 + f"{wpilib.getTime()}"
                 "\n"
             )

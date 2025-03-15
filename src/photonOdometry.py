@@ -91,6 +91,7 @@ class photonVision:
 
     def __init__(self, cameraName, camPitch, intCamX, intCamY, intCamZ):
         self.cameraNameReal = cameraName
+
         self.camera = PhotonCamera(cameraName)
         kRobotToCam = wpimath.geometry.Transform3d(
             wpimath.geometry.Translation3d(intCamX, intCamY, intCamZ),
@@ -112,6 +113,11 @@ class photonVision:
         self.robotAngle = False
         self.TFID = 0
 
+        self.photonTable.putNumber(self.cameraNameReal + "Rot :", 0)
+        self.photonTable.putNumber(self.cameraNameReal + "X :", 0)
+        self.photonTable.putNumber(self.cameraNameReal + "Y :", 0)
+        self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", 1)
+
     def update(self):
         self.result = self.camera.getLatestResult()
         self.hasTargets = self.result.hasTargets()
@@ -120,21 +126,26 @@ class photonVision:
             self.fiducialId = self.target[0].getFiducialId()
             self.ambiguity = self.target[0].getPoseAmbiguity()
             self.photonTable.putNumber("ambiguity", self.ambiguity)
-            if self.ambiguity < 0.6:
+            if self.ambiguity < 0.1:
                 self.camEstPose = self.camPoseEst.update()
                 self.TFID = self.fiducialId
                 self.photonTable.putNumber("FiducialID", self.fiducialId)
                 if self.camEstPose != None:
-                    self.robotX = self.camEstPose.estimatedPose.x
-                    self.robotY = self.camEstPose.estimatedPose.y
-                    self.robotAngle = self.camEstPose.estimatedPose.rotation().z
-                    self.photonTable.putNumber(self.cameraNameReal + "x", self.robotX)
+                    self.robotX = self.camEstPose.estimatedPose.X()
+                    self.photonTable.putNumber(self.cameraNameReal + "X :", self.robotX)
+                    self.robotY = self.camEstPose.estimatedPose.Y()
+                    self.photonTable.putNumber(self.cameraNameReal + "Y :", self.robotY)
+                    self.robotAngle = self.camEstPose.estimatedPose.rotation().Z()
+                    self.photonTable.putNumber(
+                        self.cameraNameReal + "Rot :", self.robotAngle
+                    )
             else:
                 self.TFID = -1
         else:
             self.ambiguity = 1
             self.fiducialId = 0
         self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
+        self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", self.ambiguity)
 
     # def savePos(self):
     #     with open("pyTest.txt", "a") as f:

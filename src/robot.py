@@ -58,14 +58,14 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
         self.photonCamera1.update()
         self.photonCamera2.update()
-        if self.photonCamera1.ambiguity < 0.03:
+        if self.photonCamera1.ambiguity == 0.0:
             self.photonPose2d = Pose2d(
                 self.photonCamera1.robotX,
                 self.photonCamera1.robotY,
                 self.photonCamera1.robotAngle,
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
-        if self.photonCamera2.ambiguity < 0.03:
+        if self.photonCamera2.ambiguity < 0.2:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
@@ -92,40 +92,54 @@ class Robot(wpilib.TimedRobot):
                 self.driveCtrlr.getRightX(),
                 self.driveCtrlr.getRightTriggerAxis(),
             )
-        if self.driveCtrlr.getLeftBumperButtonPressed():
+        if self.driveCtrlr.getLeftBumperButton():
             self.setpointActiveLeft = True
+            self.setpointActiveRight = False
             self.tempFidId = self.photonCamera1.fiducialId
             if self.photonCamera2.TFID > -1:
                 self.tempFidId = self.photonCamera2.TFID
             elif self.photonCamera1.TFID > -1:
                 self.tempFidId = self.photonCamera1.TFID
             else:
-                self.setpointActiveRight = False
-        if self.driveCtrlr.getRightBumperButtonPressed():
+                self.setpointActiveLeft = False
+        else:
+            self.setpointActiveLeft = False
+        if self.driveCtrlr.getRightBumperButton():
             self.setpointActiveRight = True
+            self.setpointActiveLeft = False
             if self.photonCamera1.TFID > -1:
                 self.tempFidId = self.photonCamera1.TFID
             elif self.photonCamera2.TFID > -1:
                 self.tempFidId = self.photonCamera2.TFID
             else:
                 self.setpointActiveRight = False
+        else:
+            self.setpointActiveRight = False
         if self.setpointActiveLeft:
 
-            self.swerveDrive.setpointChooser(self.hal.yaw, self.tempFidId, "left")
+            self.swerveDrive.setpointChooser(
+                self.swerveDrive.odometry.getPose().rotation().radians(),
+                self.tempFidId,
+                "left",
+            )
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
         if self.setpointActiveRight:
 
-            self.swerveDrive.setpointChooser(self.hal.yaw, self.tempFidId, "right")
+            self.swerveDrive.setpointChooser(
+                self.swerveDrive.odometry.getPose().rotation().radians(),
+                self.tempFidId,
+                "right",
+            )
             self.swerveDrive.updateWithoutSticks(
                 self.hal, self.swerveDrive.adjustedSpeeds
             )
         if (
-            self.driveCtrlr.getLeftX() > 0.07
-            or self.driveCtrlr.getLeftY() > 0.07
-            or self.driveCtrlr.getRightX() > 0.07
-            or self.driveCtrlr.getRightY() > 0.07
+            abs(self.driveCtrlr.getLeftX()) > 0.07
+            or abs(self.driveCtrlr.getLeftY()) > 0.07
+            or abs(self.driveCtrlr.getRightX()) > 0.07
+            or abs(self.driveCtrlr.getRightY()) > 0.07
         ):
             self.setpointActiveLeft = False
             self.setpointActiveRight = False
@@ -160,11 +174,19 @@ class Robot(wpilib.TimedRobot):
         self.swerveDrive.updateOdometry(self.hal)
         if self.driveCtrlr.getBackButtonPressed():
             if self.photonCamera1.fiducialId > 0:
-                self.swerveDrive.savePos(self.photonCamera1.fiducialId, self.hal.yaw)
+                self.swerveDrive.savePos(
+                    self.photonCamera1.fiducialId,
+                    self.swerveDrive.odometry.getPose().rotation().radians(),
+                )
             elif self.photonCamera2.fiducialId > 0:
-                self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
+                self.swerveDrive.savePos(
+                    self.photonCamera2.fiducialId,
+                    self.swerveDrive.odometry.getPose().rotation().radians(),
+                )
             else:
-                self.swerveDrive.savePos(0, self.hal.yaw)
+                self.swerveDrive.savePos(
+                    0, self.swerveDrive.odometry.getPose().rotation().radians()
+                )
         # if self.photonCamera2.fiducialId > -1:
         #     self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
         # Keep the lines below at the bottom of teleopPeriodic
