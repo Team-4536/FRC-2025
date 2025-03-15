@@ -16,6 +16,7 @@ from swerveDrive import SwerveDrive
 from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
+from led import LEDSignals
 
 
 class Robot(wpilib.TimedRobot):
@@ -48,6 +49,7 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
         self.tempFidId = -1
+        self.LEDSignals: LEDSignals = LEDSignals()
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -70,6 +72,10 @@ class Robot(wpilib.TimedRobot):
                 self.photonCamera2.robotAngle,
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
+
+        self.LEDSignals.update(
+            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        )
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
@@ -130,14 +136,14 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
-            self.mechCtrlr.getXButton(),
-            self.mechCtrlr.getBButton(),
+            self.mechCtrlr.getXButtonPressed(),
+            self.mechCtrlr.getBButtonPressed(),
         )
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getLeftBumper(),
-            self.driveCtrlr.getRightBumper(),
+            self.driveCtrlr.getPOV() == 180,
+            self.driveCtrlr.getPOV() == 0,
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
