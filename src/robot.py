@@ -70,8 +70,8 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
-            self.mechCtrlr.getXButton(),
-            self.mechCtrlr.getBButton(),
+            self.mechCtrlr.getXButtonPressed(),
+            self.mechCtrlr.getBButtonPressed(),
         )
 
         self.intakeChute.update(
