@@ -76,8 +76,8 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getLeftBumper(),
-            self.driveCtrlr.getRightBumper(),
+            self.driveCtrlr.getPOV() == 180,
+            self.driveCtrlr.getPOV() == 0,
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )

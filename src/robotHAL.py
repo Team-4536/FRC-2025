@@ -63,6 +63,9 @@ class RobotHALBuffer:
         self.chuteLimitSwitch = 0
         self.chuteMotorVoltage = 0.0
 
+        self.chutePosition: float = 0.0
+        self.resetChuteEncoder: bool = False
+
     def resetEncoders(self) -> None:
         pass
 
@@ -153,7 +156,7 @@ class RobotHAL:
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
-        self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
+        self.chuteMotor = rev.SparkMax(13, rev.SparkMax.MotorType.kBrushless)
 
         chuteMotorConfig = SparkMaxConfig()
         chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake.value)
@@ -161,9 +164,8 @@ class RobotHAL:
         chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
             chuteMotorConfig.limitSwitch.Type.kNormallyClosed
         )
-        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
-
-        chuteMotorConfig.smartCurrentLimit(20)
+        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(True)
+        chuteMotorConfig.smartCurrentLimit(15)
 
         self.chuteMotor.configure(
             chuteMotorConfig,
@@ -182,6 +184,8 @@ class RobotHAL:
         self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
         self.turnMotorBLEncoder = self.turnMotorBL.getEncoder()
         self.turnMotorBREncoder = self.turnMotorBR.getEncoder()
+
+        self.chuteMotorEncoder = self.chuteMotor.getEncoder()
 
         self.turnMotorFLCANcoder = CANcoder(21)
         self.turnMotorFRCANcoder = CANcoder(22)
@@ -431,6 +435,11 @@ class RobotHAL:
         )
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
+        buf.chutePosition = self.chuteMotorEncoder.getPosition()
+
+        if buf.resetChuteEncoder:
+            self.chuteMotorEncoder.setPosition(0)
+            buf.resetChuteEncoder = False
 
 
 class SwerveModuleController:
