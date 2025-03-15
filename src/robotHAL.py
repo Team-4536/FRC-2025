@@ -55,7 +55,7 @@ class RobotHALBuffer:
         self.armTopLimitSwitch: bool = False
         self.armBottomLimitSwitch: bool = False
 
-        self.elevServoAngle = 0
+        self.elevServoAngle: float = 0.0
 
         self.yaw: float = 0
 
