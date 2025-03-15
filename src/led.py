@@ -26,6 +26,10 @@ class LEDSignals:
             currentSetPoint = 2
         elif abs(ElevatorSubsystem.L4_POS - elevatorPos) <= 1:
             currentSetPoint = 3
+        elif abs(ElevatorSubsystem.ALGAE_L2_POS - elevatorPos) <= 1:
+            currentSetPoint = 4
+        elif abs(ElevatorSubsystem.ALGAE_L3_POS - elevatorPos) <= 1:
+            currentSetPoint = 5
         else:
             currentSetPoint = 99
 
@@ -37,6 +41,10 @@ class LEDSignals:
             simplifiedSetPoint = 2
         elif elevatorSetPoint == ElevatorSubsystem.L4_POS:
             simplifiedSetPoint = 3
+        elif elevatorSetPoint == ElevatorSubsystem.ALGAE_L2_POS:
+            simplifiedSetPoint = 4
+        elif elevatorSetPoint == ElevatorSubsystem.ALGAE_L3_POS:
+            simplifiedSetPoint = 5
         else:
             simplifiedSetPoint = 99
 
