@@ -62,6 +62,9 @@ class RobotHALBuffer:
 
         self.moveArmDown = False
 
+        self.chutePosition: float = 0.0
+        self.resetChuteEncoder: bool = False
+
     def resetEncoders(self) -> None:
         pass
 
@@ -168,6 +171,8 @@ class RobotHAL:
         self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
         self.turnMotorBLEncoder = self.turnMotorBL.getEncoder()
         self.turnMotorBREncoder = self.turnMotorBR.getEncoder()
+
+        self.chuteMotorEncoder = self.chuteMotor.getEncoder()
 
         self.turnMotorFLCANcoder = CANcoder(21)
         self.turnMotorFRCANcoder = CANcoder(22)
@@ -403,6 +408,11 @@ class RobotHAL:
         )
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
+        buf.chutePosition = self.chuteMotorEncoder.getPosition()
+
+        if buf.resetChuteEncoder:
+            self.chuteMotorEncoder.setPosition(0)
+            buf.resetChuteEncoder = False
 
 
 class SwerveModuleController:
