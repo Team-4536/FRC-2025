@@ -74,7 +74,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
             self.mechCtrlr.getXButtonPressed(),
-            self.mechCtrlr.getBButtonPressed(),
+            self.mechCtrlr.getBButton(),
         )
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
