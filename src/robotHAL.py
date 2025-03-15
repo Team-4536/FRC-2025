@@ -413,12 +413,12 @@ class RobotHAL:
 
         buf.yaw = math.radians(-self.gyro.getAngle())
 
-        buf.totalspeed = (
+        buf.totalspeed = int((
             self.BLSwerveModule.driveMotor.encoder.getVelocity()
             + self.BRSwerveModule.driveMotor.encoder.getVelocity()
             + self.FLSwerveModule.driveMotor.encoder.getVelocity()
             + self.FRSwerveModule.driveMotor.encoder.getVelocity()
-        )
+        ))
         self.armController.update(buf.armSetpoint, 0)
 
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
