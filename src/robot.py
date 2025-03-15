@@ -122,10 +122,6 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            False,
-            False,
-            False,
-            False,
         )
 
         self.hardware.update(
