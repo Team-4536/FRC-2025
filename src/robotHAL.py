@@ -52,6 +52,8 @@ class RobotHALBuffer:
         self.backArmLimitSwitch: bool = False
         self.armPos: float = 0
         self.armSetpoint: float = 0
+        self.armTopLimitSwitch: bool = False
+        self.armBottomLimitSwitch: bool = False
 
         self.elevServoAngle = 0
 
@@ -115,8 +117,18 @@ class RobotHAL:
         armConfig = SparkMaxConfig()
         armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
         armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
-        armConfig.smartCurrentLimit(20)
-        armConfig.closedLoop.pidf(0, 0, 0, 0)
+        armConfig.limitSwitch.forwardLimitSwitchType(
+            armConfig.limitSwitch.Type.kNormallyOpen
+        )
+        armConfig.limitSwitch.reverseLimitSwitchType(
+            armConfig.limitSwitch.Type.kNormallyOpen
+        )
+        armConfig.smartCurrentLimit(20, 20)
+        armConfig.closedLoop.pidf(0.08, 0, 0, 0)
+        armConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+
+        self.armTopLimitSwitch = self.armMotor.getForwardLimitSwitch()
+        self.armBottomLimitSwitch = self.armMotor.getReverseLimitSwitch()
 
         self.armMotor.configure(
             armConfig,
@@ -401,6 +413,18 @@ class RobotHAL:
         buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
         buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
         buf.armPos = self.armMotorEncoder.getPosition()
+
+        buf.armTopLimitSwitch = self.armTopLimitSwitch.get()
+        buf.armBottomLimitSwitch = self.armBottomLimitSwitch.get()
+
+        self.table.putBoolean("Arm Top Limit Switch", buf.armTopLimitSwitch)
+        self.table.putBoolean("Arm Bottom Limit Switch", buf.armBottomLimitSwitch)
+        self.table.putNumber(
+            "Arm Voltage",
+            self.armMotor.getAppliedOutput() * self.armMotor.getBusVoltage(),
+        )
+        self.table.putNumber("Arm Pos", self.armMotorEncoder.getPosition())
+        self.table.putNumber("Arm Setpoint", buf.armSetpoint)
 
         buf.chuteMotorVoltage = (
             self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()

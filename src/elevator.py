@@ -23,13 +23,12 @@ class ElevatorSubsystem:
     L2_POS = 11.71
     L3_POS = 24.59
     L4_POS = 45
-    ALGAE_L2_POS = 0
-    ALGAE_L3_POS = 0
+    ALGAE_L2_POS = 13.78
+    ALGAE_L3_POS = 24.52
 
-    ARM_UP_POS = 5
-    ARM_DEALGAE_POS = 2.5
-    # the threshold at which the arm does not need to wory about hitting the bumpers
-    # ARM_CLEAR_BUMPER_POS = 3.5
+    ARM_UP_POS = 28
+    ARM_DEALGAE_POS = 12
+    ARM_BOTTOM_POS = 0
 
     # this is an elevator position where it is safe for the arm to move
     ELEVATOR_CLEARS_BUMPERS_FOR_ARM = 7
@@ -82,9 +81,6 @@ class ElevatorSubsystem:
                 self.mode = ElevatorMode.MANUAL_MODE
                 self.velSetpoint = 0
                 self.posSetpoint = 0
-        hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-            "Elevator setpoint offset", 0
-        )
 
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
@@ -99,9 +95,6 @@ class ElevatorSubsystem:
                     self.posSetpoint = self.L3_POS
                 elif POVSetpoint == 0:
                     self.posSetpoint = self.L4_POS
-                hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-                    "Elevator setpoint offset", 0
-                )
 
             else:  # algae pos mode
                 if POVSetpoint == 180:
@@ -109,24 +102,31 @@ class ElevatorSubsystem:
                 elif POVSetpoint == 0:
                     self.posSetpoint = self.ALGAE_L3_POS
 
-            if self.posSetpoint <= self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
-                hal.armSetpoint = 0
-                self.posSetpoint = hal.elevatorPos
-            elif hal.elevatorPos < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
-                hal.armSetpoint = 0
-            elif (
-                hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
-                and self.moveArmDown
+            hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
+                "Elevator setpoint offset", 0
+            )
+
+            if (
+                self.posSetpoint > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+                and hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
             ):
-                hal.armSetpoint = self.ARM_DEALGAE_POS
-            elif hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_UP_POS
+                if self.moveArmDown:
+                    hal.armSetpoint = self.ARM_DEALGAE_POS
+
+            if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
+                hal.armSetpoint = self.ARM_BOTTOM_POS
+                if not hal.armBottomLimitSwitch:
+                    hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
+            hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
+                "Elevator setpoint offset", 0
+            )
 
         if (
             not hal.elevatorPos <= 0.8
