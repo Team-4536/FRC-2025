@@ -20,6 +20,7 @@ from IntakeChute import IntakeChute
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants
 import autoStages
 from autoStages import ASfollowPath
+from led import LEDSignals
 
 
 class Robot(wpilib.TimedRobot):
@@ -72,6 +73,9 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
+        self.LEDSignals: LEDSignals = LEDSignals()
+
+        self.povPrev = 0
 
     def robotPeriodic(self) -> None:
 
@@ -99,6 +103,10 @@ class Robot(wpilib.TimedRobot):
 
         self.hal.stopMotors()
 
+        self.LEDSignals.update(
+            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        )
+
         # self.swerveDrive.odometry.getPose().rotation()
 
     def teleopInit(self) -> None:
@@ -115,6 +123,7 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
             self.driveCtrlr.getRightTriggerAxis(),
+            self.driveCtrlr.getStartButtonPressed(),
         )
 
         self.elevatorSubsystem.update(
@@ -123,16 +132,25 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
-            self.mechCtrlr.getXButton(),
+            self.mechCtrlr.getXButtonPressed(),
             self.mechCtrlr.getBButton(),
         )
 
+        # convert POV buttons to bool values (sorry michael this code may be hard to look at)
+        self.povLeftPressed = False
+        self.povRightPressed = False
+        if self.driveCtrlr.getPOV() == 270 and self.povPrev != 270:
+            self.povLeftPressed = True
+        if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
+            self.povRightPressed = True
+        self.povPrev = self.driveCtrlr.getPOV()
+
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getLeftBumper(),
-            self.driveCtrlr.getRightBumper(),
-            self.driveCtrlr.getBButtonPressed(),
-            self.driveCtrlr.getYButtonPressed(),
+            self.driveCtrlr.getPOV() == 180,
+            self.driveCtrlr.getPOV() == 0,
+            self.povRightPressed,
+            self.povLeftPressed,
         )
 
         self.manipulatorSubsystem.update(
