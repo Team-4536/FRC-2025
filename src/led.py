@@ -19,15 +19,15 @@ class LEDSignals:
         chuteState: int,
     ):
         if abs(ElevatorSubsystem.INTAKE_POS - elevatorPos) <= 1:
-            self.currentSetPoint = 0
+            currentSetPoint = 0
         elif abs(ElevatorSubsystem.L2_POS - elevatorPos) <= 1:
-            self.currentSetPoint = 1
+            currentSetPoint = 1
         elif abs(ElevatorSubsystem.L3_POS - elevatorPos) <= 1:
-            self.currentSetPoint = 2
+            currentSetPoint = 2
         elif abs(ElevatorSubsystem.L4_POS - elevatorPos) <= 1:
-            self.currentSetPoint = 3
+            currentSetPoint = 3
         else:
-            self.currentSetPoint = 99
+            currentSetPoint = 99
 
         if elevatorSetPoint == ElevatorSubsystem.INTAKE_POS:
             simplifiedSetPoint = 0
@@ -42,12 +42,13 @@ class LEDSignals:
 
         if self.counter <= 0:
             try:
-                byte_array = bytearray(5)
+                byte_array = bytearray(6)
                 byte_array[0] = manipulatorState
                 byte_array[1] = max(math.floor(elevatorPos * (20 / 9)), 0)
                 byte_array[2] = elevatorMode
                 byte_array[3] = simplifiedSetPoint
-                byte_array[4] = chuteState
+                byte_array[4] = currentSetPoint
+                byte_array[5] = chuteState
                 self.can.writePacket(byte_array, 0)
 
             except Exception as e:
