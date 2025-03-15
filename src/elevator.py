@@ -7,7 +7,6 @@ from rev import (
     SparkMax,
     ClosedLoopSlot,
 )
-import wpilib
 
 from enum import Enum
 
