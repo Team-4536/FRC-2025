@@ -42,9 +42,9 @@ class LEDSignals:
 
         if self.counter <= 0:
             try:
-                byte_array = bytearray(4)
+                byte_array = bytearray(5)
                 byte_array[0] = manipulatorState
-                byte_array[1] = max(elevatorPos * 20 // 9, 0)
+                byte_array[1] = max(math.floor(elevatorPos * (20 / 9)), 0)
                 byte_array[2] = elevatorMode
                 byte_array[3] = simplifiedSetPoint
                 byte_array[4] = chuteState
@@ -55,4 +55,4 @@ class LEDSignals:
 
             self.counter = self.period
         else:
-            self.counter = self.counter - 1
+            self.counter -= 1
