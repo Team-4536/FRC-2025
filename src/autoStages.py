@@ -42,6 +42,7 @@ class RobotAutos(Enum):
     DRIVE_FORWARD = "drive forward"
     MIDDLE_PIECE = "middle 1 piece"
     PIECE2_AUTO = "2 piece auto"
+    ROTATION_TEST = "rotation test"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -119,6 +120,7 @@ class ASfollowPath(AutoStage):
         adjustedSpeeds = self.r.holonomicDriveController.calculateRobotRelativeSpeeds(
             self.r.swerveDrive.odometry.getPose(), goal
         )
+
         adjustedSpeeds.omega = adjustedSpeeds.omega
         table.putNumber("pathVelX", adjustedSpeeds.vx)
         table.putNumber("pathVelY", adjustedSpeeds.vy)
@@ -134,6 +136,7 @@ class ASfollowPath(AutoStage):
         self.r.hardware.resetGyroToAngle(
             self.traj.getInitialPose().rotation().radians()
         )
+
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
         table.putNumber("djoInitPoseY", self.traj.getInitialPose().y)
@@ -289,6 +292,8 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
         ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.ROTATION_TEST.value:
+        ret["rotation-test"] = ASfollowPath("rotation-test", r.onRedSide, r)
 
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)
