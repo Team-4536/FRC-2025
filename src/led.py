@@ -54,8 +54,8 @@ class LEDSignals:
 
         try:
             byte_array = bytearray(6)
-            byte_array[0] = manipulatorState
-            byte_array[1] = max(math.floor(elevatorPos * (20 / 9)), 0)
+            byte_array[0] = max(int(elevatorPos * 20 // 9), 0)
+            byte_array[1] = manipulatorState
             byte_array[2] = elevatorMode
             byte_array[3] = simplifiedSetPoint
             byte_array[4] = currentSetPoint
