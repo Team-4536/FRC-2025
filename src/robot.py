@@ -53,7 +53,7 @@ class Robot(wpilib.TimedRobot):
             self.hal.elevatorPos,
             self.elevatorSubsystem.mode.value,
             self.elevatorSubsystem.posSetpoint,
-            IntakeChute.setChuteControlMode,
+            self.intakeChute.state.value,
         )
 
     def teleopInit(self) -> None:
