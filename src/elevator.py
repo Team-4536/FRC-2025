@@ -118,6 +118,7 @@ class ElevatorSubsystem:
 
             if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_BOTTOM_POS
+                self.moveArmDown = False
                 if not hal.armBottomLimitSwitch:
                     hal.elevatorSetpoint = hal.elevatorPos
 
@@ -130,9 +131,7 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-        if not hal.elevatorPos <= 0.8 or (
-            hal.firstManipulatorSensor or hal.secondManipulatorSensor
-        ):
+        if not hal.elevatorPos <= 0.8 or hal.secondManipulatorSensor:
             hal.elevServoAngle = 60
         else:
             hal.elevServoAngle = 0
