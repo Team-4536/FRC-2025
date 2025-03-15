@@ -121,6 +121,10 @@ class ASfollowPath(AutoStage):
             self.r.swerveDrive.odometry.getPose(), goal
         )
 
+        b = self.r.holonomicDriveController.getPositionalError()
+
+        table.putNumber("pathError", b)
+
         adjustedSpeeds.omega = adjustedSpeeds.omega
         table.putNumber("pathVelX", adjustedSpeeds.vx)
         table.putNumber("pathVelY", adjustedSpeeds.vy)
@@ -133,9 +137,9 @@ class ASfollowPath(AutoStage):
     def autoInit(self, r):
         self.startTime = wpilib.getTime()
         self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
-        self.r.hardware.resetGyroToAngle(
-            self.traj.getInitialPose().rotation().radians()
-        )
+        # self.r.hardware.resetGyroToAngle(
+        #     self.traj.getInitialPose().rotation().radians()
+        # )
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
@@ -151,6 +155,13 @@ class ASfollowPath(AutoStage):
 
         error = 0.2
         rotError = math.pi / 20
+
+        table = NetworkTableInstance.getDefault().getTable("autos")
+        table.putNumber("djoDonePoseX", r.swerveDrive.odometry.getPose().x)
+        table.putNumber("djoDonePoseY", r.swerveDrive.odometry.getPose().y)
+        table.putNumber(
+            "djoDonePoseR", r.swerveDrive.odometry.getPose().rotation().radians()
+        )
 
         if (
             (end.X() - error > x)

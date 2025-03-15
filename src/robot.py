@@ -200,6 +200,8 @@ class Robot(wpilib.TimedRobot):
 
         self.manipulatorSubsystem.update(self.hal, False, False)
 
+        # self.swerveDrive.updateOdometry(self.hal)
+
         self.hardware.update(
             self.hal, self.time
         )  # Keep this at the bottom of autonomousPeriodic
