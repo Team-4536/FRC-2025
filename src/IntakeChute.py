@@ -1,12 +1,10 @@
-import wpilib
 from robotHAL import RobotHALBuffer
 from ntcore import NetworkTableInstance
 from enum import Enum
-import math
 
 
 class ChuteStates(Enum):
-    MANUAL = 1
+    STOP = 1
     UP = 3
     DOWN = 2
 
@@ -29,13 +27,9 @@ class IntakeChute:
     def update(
         self,
         hal: RobotHALBuffer,
-        chuteDown: bool,
-        chuteUp: bool,
-        switchAutoState: bool,
-        switchManualState: bool,
     ):
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
-        self.table.putBoolean("Chute Limit Switch", hal.chuteLimitSwitch)
+        self.table.putBoolean("Chute Limit Switch Pressed", hal.chuteLimitSwitch)
         self.table.putNumber("Chute Motor Encoder Position", hal.chutePosition)
         self.table.putString("Chute Control Mode", self.state.name)
 
@@ -44,22 +38,22 @@ class IntakeChute:
             self.toggle = self.table.getBoolean("Toggle Chute Mode", self.toggle)
 
             if self.state == ChuteStates.UP:
-                self.state = ChuteStates.MANUAL
-            elif self.state == ChuteStates.MANUAL:
+                self.state = ChuteStates.STOP
+            elif self.state == ChuteStates.STOP:
                 self.state = ChuteStates.DOWN
             else:
                 self.state = ChuteStates.UP
 
-        if self.state == ChuteStates.MANUAL:
-            hal.setChuteVoltage = (
-                self.chuteDirection * self.chuteSpeed
-            )  # POSITIVE Pulls down Negative lets up
+        if self.state == ChuteStates.STOP:
+            hal.setChuteVoltage = 0
 
         elif self.state == ChuteStates.DOWN:
             if (
                 not hal.chuteLimitSwitch
             ):  # returns true if the hal.chuteLimitSwitch is pressed
-                hal.setChuteVoltage = self.chuteSpeed
+                hal.setChuteVoltage = (
+                    self.chuteSpeed
+                )  # POSITIVE Pulls down Negative lets up
 
             elif not self.hasReset:
                 self.state = ChuteStates.UP
@@ -77,4 +71,4 @@ class IntakeChute:
 
             else:
                 hal.setChuteVoltage = 0
-                self.state = ChuteStates.MANUAL
+                self.state = ChuteStates.STOP

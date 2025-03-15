@@ -88,10 +88,6 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getPOV() == 180,
-            self.driveCtrlr.getPOV() == 0,
-            self.povRightPressed,
-            self.povLeftPressed,
         )
 
         self.manipulatorSubsystem.update(
@@ -126,10 +122,6 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            False,
-            False,
-            False,
-            False,
         )
 
         self.hardware.update(
