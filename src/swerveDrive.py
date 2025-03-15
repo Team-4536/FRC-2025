@@ -27,6 +27,7 @@ from wpimath.geometry import Rotation2d
 from wpimath.geometry import Pose2d
 import setpoints
 from wpimath.units import feetToMeters
+from ntcore import NetworkTableInstance
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -34,6 +35,13 @@ class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
     def __init__(self) -> None:
+        self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
+        self.setpointsTable.putNumber("des X: ", 0)
+        self.setpointsTable.putNumber("des Y: ", 0)
+        self.setpointsTable.putNumber("des Rot: ", 0)
+        self.setpointsTable.putNumber("adjSpe vx: ", 0)
+        self.setpointsTable.putNumber("adjSpe vy: ", 0)
+
         self.angle = Rotation2d(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         oneftInMeters = feetToMeters(1)
@@ -215,29 +223,34 @@ class SwerveDrive:
     def setpointChooser(self, yaw, fiducialID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-        if (side == "left") and (
-            setpoints.tagRight[fiducialID][0] > self.odomPos[0]
-            and setpoints.tagRight[fiducialID][1] > self.odomPos[1]
-        ):
+        if side == "left":
+            self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
             self.desiredPose = Pose2d(
                 setpoints.tagLeft[fiducialID][0],
                 setpoints.tagLeft[fiducialID][1],
-                setpoints.tagLeft[fiducialID][2],
+                self.rot,
             )
-        elif (side == "right") and (
-            setpoints.tagRight[fiducialID][0] > self.odomPos[0]
-            and setpoints.tagRight[fiducialID][1] > self.odomPos[1]
-        ):
+
+        elif side == "right":
+            self.rot = Rotation2d(setpoints.tagRight[fiducialID][2])
             self.desiredPose = Pose2d(
                 setpoints.tagRight[fiducialID][0],
                 setpoints.tagRight[fiducialID][1],
-                setpoints.tagRight[fiducialID][2],
+                self.rot,
             )
         else:
             self.desiredPose = Pose2d(0, 0, 0)
-        self.adjustedSpeeds = self.controller.calculate(
-            self.currentPose, self.desiredPose, 0, Rotation2d.fromDegrees(0.0)
+        self.setpointsTable.putNumber("des X: ", self.desiredPose.X())
+        self.setpointsTable.putNumber("des Y: ", self.desiredPose.Y())
+        self.setpointsTable.putNumber(
+            "des Rot: ", self.desiredPose.rotation().degrees()
         )
+        self.adjustedSpeeds = self.controller.calculate(
+            self.currentPose, self.desiredPose, 0.25, self.rot
+        )
+
+        self.setpointsTable.putNumber("adjSpe vx: ", self.adjustedSpeeds.vx)
+        self.setpointsTable.putNumber("adjSpe vy: ", self.adjustedSpeeds.vy)
 
     def updateWithoutSticks(
         self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
@@ -288,7 +301,17 @@ class SwerveDrive:
 
     def savePos(self, fiducialID: int, yaw: float):
         with open("/home/lvuser/photon.txt", "a") as f:
-            f.write("tag" + str(fiducialID) + " X = " + f"{self.odomPos[0]}" "\n")
-            f.write("tag" + str(fiducialID) + " Y = " + f"{self.odomPos[1]}" "\n")
-            f.write("tag" + str(fiducialID) + " Angle = " + f"{yaw}" "\n")
+            f.write(
+                "tag"
+                + str(fiducialID)
+                + ": "
+                + f"{self.odomPos[0]}"
+                + f"{self.odomPos[1]}"
+                + f"{yaw}"
+                + "   -->   "
+                + f"{wpilib.getTime()}"
+                "\n"
+            )
+            # f.write("tag" + str(fiducialID) + " Y = " + f"{self.odomPos[1]}" "\n")
+            # f.write("tag" + str(fiducialID) + " Angle = " + f"{yaw}" "\n")
         # Test.close()

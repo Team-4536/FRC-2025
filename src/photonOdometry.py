@@ -86,6 +86,7 @@ aprilTagDegrees = [
 
 
 class photonVision:
+
     photonTable = NetworkTableInstance.getDefault()
 
     def __init__(self, cameraName, camPitch, intCamX, intCamY, intCamZ):
@@ -109,6 +110,7 @@ class photonVision:
         self.robotX = 0
         self.robotY = 0
         self.robotAngle = False
+        self.TFID = 0
 
     def update(self):
         self.result = self.camera.getLatestResult()
@@ -118,21 +120,25 @@ class photonVision:
             self.fiducialId = self.target[0].getFiducialId()
             self.ambiguity = self.target[0].getPoseAmbiguity()
             self.photonTable.putNumber("ambiguity", self.ambiguity)
-            if self.ambiguity < 0.16:
+            if self.ambiguity < 0.6:
                 self.camEstPose = self.camPoseEst.update()
+                self.TFID = self.fiducialId
                 self.photonTable.putNumber("FiducialID", self.fiducialId)
                 if self.camEstPose != None:
                     self.robotX = self.camEstPose.estimatedPose.x
                     self.robotY = self.camEstPose.estimatedPose.y
                     self.robotAngle = self.camEstPose.estimatedPose.rotation().z
                     self.photonTable.putNumber(self.cameraNameReal + "x", self.robotX)
+            else:
+                self.TFID = -1
         else:
             self.ambiguity = 1
             self.fiducialId = 0
+        self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
 
-    def savePos(self):
-        with open("pyTest.txt", "a") as f:
-            f.write(self.cameraNameReal + " X = " + f"{self.robotX}" "\n")
-            f.write(self.cameraNameReal + " Y = " + f"{self.robotY}" "\n")
-            f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}" "\n")
-        # Test.close()
+    # def savePos(self):
+    #     with open("pyTest.txt", "a") as f:
+    #         f.write(self.cameraNameReal + " X = " + f"{self.robotX}" "\n")
+    #         f.write(self.cameraNameReal + " Y = " + f"{self.robotY}" "\n")
+    #         f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}" "\n")
+    #     # Test.close()
