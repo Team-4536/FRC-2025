@@ -70,14 +70,14 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
-            self.mechCtrlr.getXButton(),
-            self.mechCtrlr.getBButton(),
+            self.mechCtrlr.getXButtonPressed(),
+            self.mechCtrlr.getBButtonPressed(),
         )
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getLeftBumper(),
-            self.driveCtrlr.getRightBumper(),
+            self.driveCtrlr.getPOV() == 180,
+            self.driveCtrlr.getPOV() == 0,
             self.driveCtrlr.getBButtonPressed(),
             self.driveCtrlr.getYButtonPressed(),
         )
