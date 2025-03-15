@@ -112,7 +112,7 @@ class ElevatorSubsystem:
 
             if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_BOTTOM_POS
-                if abs(hal.armPos - self.ARM_BOTTOM_POS) < 0.25:
+                if abs(hal.armPos - self.ARM_BOTTOM_POS) > 0.25:
                     hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
