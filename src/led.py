@@ -18,7 +18,8 @@ class LEDSignals:
                 self.can.writePacket(byte_array, 0)
                 self.LEDcounter = 0
             except Exception as e:
-                print(e)
+                # print(e)
+                pass
 
             self.counter = self.period
         else:
