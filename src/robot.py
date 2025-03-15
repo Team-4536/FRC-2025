@@ -12,7 +12,7 @@ from elevator import ElevatorSubsystem
 from robotHAL import RobotHAL
 from swerveDrive import SwerveDrive
 from manipulator import ManipulatorSubsystem
-from IntakeChute import IntakeChute
+from intakeChute import IntakeChute
 from led import LEDSignals
 
 
