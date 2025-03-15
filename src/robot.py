@@ -73,25 +73,25 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftTriggerAxis(),
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
-            self.mechCtrlr.getXButton(),
-            self.mechCtrlr.getBButton(),
+            self.mechCtrlr.getXButtonPressed(),
+            self.mechCtrlr.getBButtonPressed(),
         )
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
-        self.povUpPressed = False
+        self.povLeftPressed = False
         self.povRightPressed = False
-        if self.driveCtrlr.getPOV() == 0 and self.povPrev != 0:
-            self.povUpPressed = True
+        if self.driveCtrlr.getPOV() == 270 and self.povPrev != 270:
+            self.povLeftPressed = True
         if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
             self.povRightPressed = True
         self.povPrev = self.driveCtrlr.getPOV()
 
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getRightBumperPressed(),
-            self.driveCtrlr.getLeftBumperPressed(),
+            self.driveCtrlr.getPOV() == 180,
+            self.driveCtrlr.getPOV() == 0,
             self.povRightPressed,
-            self.povUpPressed,
+            self.povLeftPressed,
         )
 
         self.manipulatorSubsystem.update(
