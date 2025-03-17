@@ -46,7 +46,6 @@ class ElevatorSubsystem:
 
         self.moveArmDown: bool = False
         self.armReachedTop: bool = False
-        self.algaePosMode: bool = False
 
     def update(
         self,
@@ -56,13 +55,10 @@ class ElevatorSubsystem:
         toggleManualMode: bool,
         POVSetpoint: float,
         armToggle: bool,
-        algaePosToggle: bool,
+        algaePosMode: bool,
     ):
         if armToggle:
             self.moveArmDown = not self.moveArmDown
-
-        if algaePosToggle:
-            self.algaePosMode = not self.algaePosMode
 
         # Dead-Zone
         if up < 0.1:
@@ -86,7 +82,7 @@ class ElevatorSubsystem:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
-            if not self.algaePosMode:
+            if not algaePosMode:
                 if POVSetpoint == 180:
                     self.posSetpoint = self.INTAKE_POS
                 elif POVSetpoint == 90:
@@ -116,7 +112,7 @@ class ElevatorSubsystem:
 
             if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_BOTTOM_POS
-                if not hal.armBottomLimitSwitch:
+                if abs(hal.armPos - self.ARM_BOTTOM_POS) > 0.25:
                     hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
@@ -128,12 +124,7 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-        if (
-            not hal.elevatorPos <= 0.8
-            or hal.secondManipulatorSensor
-            or hal.firstManipulatorSensor
-            and hal.secondManipulatorSensor
-        ):
+        if not hal.elevatorPos <= 0.8 or hal.secondManipulatorSensor:
             hal.elevServoAngle = 60
         else:
             hal.elevServoAngle = 0
@@ -142,7 +133,7 @@ class ElevatorSubsystem:
             self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-        self.table.putBoolean("Algae Removal Mode", self.algaePosMode)
+        self.table.putBoolean("Algae Pos Mode", algaePosMode)
         self.table.putBoolean("Move Arm Down", self.moveArmDown)
         self.table.putString("Elevator State", self.mode.name)
         hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)

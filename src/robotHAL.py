@@ -72,9 +72,13 @@ class RobotHALBuffer:
         self.armTopLimitSwitch: bool = False
         self.armBottomLimitSwitch: bool = False
 
-        self.elevServoAngle = 0
+        self.elevServoAngle: float = 0.0
 
         self.yaw: float = 0
+
+        self.fieldOriented: bool = True
+        self.rotPIDsetpoint: int = 0
+        self.rotPIDToggle: bool = False
 
         self.setChuteVoltage = 0
         self.chuteLimitSwitch = 0
@@ -323,6 +327,8 @@ class RobotHAL:
 
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
 
+        self.table.putBoolean("ResetYaw", False)
+
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         self.gyro.reset()
@@ -516,6 +522,9 @@ class RobotHAL:
             self.chuteMotorEncoder.setPosition(0)
             buf.resetChuteEncoder = False
 
+        if self.table.getBoolean("ResetYaw", False):
+            self.resetGyroToAngle(0)
+
 
 class SwerveModuleController:
     WHEEL_RADIUS = 0.05  # in meters
@@ -646,7 +655,7 @@ class RevMotorController:
         measuredPercentVoltage = self.motor.getAppliedOutput()
         measuredSpeed = self.encoder.getVelocity()
         measuredPosition = -self.encoder.getPosition()
-        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
+        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getBusVoltage()
         measuredAmps = self.motor.getOutputCurrent()
         self.table.putNumber(self.name + " Voltage", measuredVoltage)
         self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
