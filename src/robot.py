@@ -39,7 +39,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.LEDSignals: LEDSignals = LEDSignals()
+        self.ledSignals: LEDSignals = LEDSignals()
 
         self.povPrev = 0
 
@@ -48,7 +48,7 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.hal.stopMotors()
 
-        self.LEDSignals.update(
+        self.ledSignals.update(
             self.manipulatorSubsystem.state.value,
             self.hal.elevatorPos,
             self.elevatorSubsystem.mode.value,
@@ -78,7 +78,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
             self.mechCtrlr.getXButtonPressed(),
-            self.mechCtrlr.getBButtonPressed(),
+            self.mechCtrlr.getBButton(),
         )
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)

@@ -1,24 +1,25 @@
 from wpilib import CAN, CANData
 from manipulator import ManipulatorSubsystem
-from elevator import ElevatorSubsystem
+from elevator import ElevatorSubsystem, ElevatorMode
+from IntakeChute import ChuteStates
 import math
 
 
 class LEDSignals:
-    def __init__(self, deviceId: int = 0):
+    def __init__(self, deviceId: int = 0, period: int = 5):
         self.can = CAN(deviceId)
-        self.period = 5
+        self.period = min(period, 0)
         self.counter = 0
 
     def update(
         self,
-        manipulatorState: int,
+        manipulatorState: ManipulatorSubsystem.ManipulatorState,
         elevatorPos: float,
-        elevatorMode: int,
+        elevatorMode: ElevatorMode,
         elevatorSetPoint: float,
-        chuteState: int,
+        chuteState: ChuteStates,
     ):
-        if self.counter >= 0:
+        if self.counter > 0:
             self.counter = self.counter - 1
             return
 
@@ -55,14 +56,15 @@ class LEDSignals:
         try:
             byte_array = bytearray(6)
             byte_array[0] = max(int(elevatorPos * 20 // 9), 0)
-            byte_array[1] = manipulatorState
-            byte_array[2] = elevatorMode
+            byte_array[1] = manipulatorState.value
+            byte_array[2] = elevatorMode.value
             byte_array[3] = simplifiedSetPoint
             byte_array[4] = currentSetPoint
-            byte_array[5] = chuteState
-            self.can.writePacket(byte_array, 0)
+            byte_array[5] = chuteState.value
+
+            self.can.writePacketNoError(byte_array, 0)
 
         except Exception as e:
-            print(e)
+            pass
 
         self.counter = self.period
