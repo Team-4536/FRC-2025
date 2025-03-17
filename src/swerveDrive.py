@@ -65,9 +65,9 @@ class SwerveDrive:
         )
         self.controller = HolonomicDriveController(
             PIDController(5, 0, 0),
-            PIDController(0.15, 0, 0),
+            PIDController(5, 0, 0),
             ProfiledPIDControllerRadians(
-                1, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
+                1.2, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
             ),
         )
         ModulePos = SwerveModulePosition(0, Rotation2d(0))
