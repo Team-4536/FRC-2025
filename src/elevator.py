@@ -33,7 +33,7 @@ class ElevatorSubsystem:
     # this is an elevator position where it is safe for the arm to move
     ELEVATOR_CLEARS_BUMPERS_FOR_ARM = 7
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
@@ -78,12 +78,6 @@ class ElevatorSubsystem:
                 self.velSetpoint = 0
                 self.posSetpoint = 0
 
-        if self.debugMode:
-            self.table.putNumber("Elevator State", self.mode.value)
-
-        if self.debugMode:
-            self.table.putNumber("Elevator State", self.mode.value)
-
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
             hal.elevatorSlot = ClosedLoopSlot.kSlot0
@@ -102,7 +96,7 @@ class ElevatorSubsystem:
                 if POVSetpoint == 180:
                     self.posSetpoint = self.ALGAE_L2_POS
                 elif POVSetpoint == 0:
-                    self.posSetpoint = self.ALGAE_L3_PO
+                    self.posSetpoint = int(self.ALGAE_L3_POS)
 
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
@@ -118,7 +112,7 @@ class ElevatorSubsystem:
 
             if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_BOTTOM_POS
-                if not hal.armBottomLimitSwitch:
+                if abs(hal.armPos - self.ARM_BOTTOM_POS) > 0.25:
                     hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
@@ -130,9 +124,7 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-        if not hal.elevatorPos <= 0.8 or (
-            hal.firstManipulatorSensor or hal.secondManipulatorSensor
-        ):
+        if not hal.elevatorPos <= 0.8 or hal.secondManipulatorSensor:
             hal.elevServoAngle = 60
         else:
             hal.elevServoAngle = 0

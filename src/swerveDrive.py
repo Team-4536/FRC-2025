@@ -179,12 +179,6 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-        if (abs(hal.totalspeed) <= 1) and ():
-            hal.driveFLSetpoint = 0
-            hal.driveFRSetpoint = 0
-            hal.driveBLSetpoint = 0
-            hal.driveBRSetpoint = 0
-
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
         pass
 
