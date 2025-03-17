@@ -71,7 +71,7 @@ class ElevatorSubsystem:
         if toggleManualMode:
             if self.mode == ElevatorMode.MANUAL_MODE:
                 self.mode = ElevatorMode.POSITION_MODE
-                self.posSetpoint = int(hal.elevatorPos)
+                self.posSetpoint = hal.elevatorPos
                 self.velSetpoint = 0
             elif self.mode == ElevatorMode.POSITION_MODE:
                 self.mode = ElevatorMode.MANUAL_MODE
@@ -92,17 +92,17 @@ class ElevatorSubsystem:
                 if POVSetpoint == 180:
                     self.posSetpoint = self.INTAKE_POS
                 elif POVSetpoint == 90:
-                    self.posSetpoint = int(self.L2_POS)
+                    self.posSetpoint = self.L2_POS
                 elif POVSetpoint == 270:
-                    self.posSetpoint = int(self.L3_POS)
+                    self.posSetpoint = self.L3_POS
                 elif POVSetpoint == 0:
                     self.posSetpoint = self.L4_POS
 
             else:  # algae pos mode
                 if POVSetpoint == 180:
-                    self.posSetpoint = int(self.ALGAE_L2_POS)
+                    self.posSetpoint = self.ALGAE_L2_POS
                 elif POVSetpoint == 0:
-                    self.posSetpoint = int(self.ALGAE_L3_POS)
+                    self.posSetpoint = self.ALGAE_L3_PO
 
             hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
@@ -125,7 +125,7 @@ class ElevatorSubsystem:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
-            self.velSetpoint = int(90 * up + (-90 * down))  # moves the elevator
+            self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
             hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
                 "Elevator setpoint offset", 0
             )
