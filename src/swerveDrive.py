@@ -228,11 +228,11 @@ class SwerveDrive:
     def setpointChooser(self, yaw, fiducialID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-        self.setpointsTable.putNumber("cur x (setpoint): ", self.currentPose.X())
-        self.setpointsTable.putNumber("cur y (setpoint): ", self.currentPose.Y())
-        self.setpointsTable.putNumber(
-            "cur rot (setpoint): ", self.currentPose.rotation().degrees()
-        )
+        # self.setpointsTable.putNumber("cur x (setpoint): ", self.currentPose.X())
+        # self.setpointsTable.putNumber("cur y (setpoint): ", self.currentPose.Y())
+        # self.setpointsTable.putNumber(
+        #     "cur rot (setpoint): ", self.currentPose.rotation().degrees()
+        # )
         if side == "left":
             self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
             self.desiredPose = Pose2d(
@@ -251,17 +251,18 @@ class SwerveDrive:
             )
         else:
             self.desiredPose = Pose2d(0, 0, 0)
-        self.setpointsTable.putNumber("des X: ", self.desiredPose.X())
-        self.setpointsTable.putNumber("des Y: ", self.desiredPose.Y())
-        self.setpointsTable.putNumber(
-            "des Rot: ", self.desiredPose.rotation().degrees()
-        )
-        self.adjustedSpeeds = self.controller.calculate(
-            self.currentPose, self.desiredPose, 0, self.rot
-        )
+        # self.setpointsTable.putNumber("des X: ", self.desiredPose.X())
+        # self.setpointsTable.putNumber("des Y: ", self.desiredPose.Y())
+        # self.setpointsTable.putNumber(
+        #     "des Rot: ", self.desiredPose.rotation().degrees()
+        # )
+        if not (self.desiredPose.X() == 0 and self.desiredPose.Y() == 0):
+            self.adjustedSpeeds = self.controller.calculate(
+                self.currentPose, self.desiredPose, 0, self.rot
+            )
 
-        self.setpointsTable.putNumber("adjSpe vx: ", self.adjustedSpeeds.vx)
-        self.setpointsTable.putNumber("adjSpe vy: ", self.adjustedSpeeds.vy)
+        # self.setpointsTable.putNumber("adjSpe vx: ", self.adjustedSpeeds.vx)
+        # self.setpointsTable.putNumber("adjSpe vy: ", self.adjustedSpeeds.vy)
 
     def updateWithoutSticks(
         self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds

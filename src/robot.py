@@ -172,7 +172,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         self.swerveDrive.updateOdometry(self.hal)
-        if self.driveCtrlr.getBackButtonPressed():
+        if self.mechCtrlr.getAButtonPressed():
             if self.photonCamera1.fiducialId > 0:
                 self.swerveDrive.savePos(
                     self.photonCamera1.fiducialId,
@@ -187,9 +187,7 @@ class Robot(wpilib.TimedRobot):
                 self.swerveDrive.savePos(
                     0, self.swerveDrive.odometry.getPose().rotation().radians()
                 )
-        # if self.photonCamera2.fiducialId > -1:
-        #     self.swerveDrive.savePos(self.photonCamera2.fiducialId, self.hal.yaw)
-        # Keep the lines below at the bottom of teleopPeriodic
+
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
 
