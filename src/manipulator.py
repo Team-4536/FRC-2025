@@ -79,6 +79,7 @@ class ManipulatorSubsystem:
         if self.debug == True:
             self.table.putNumber("maniState", self.state.value)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
+        self.table.putString("maniState", self.state.name)
 
     def autoShootStored(self, buf: RobotHALBuffer, startTime):
 

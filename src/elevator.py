@@ -82,31 +82,29 @@ class ElevatorSubsystem:
                 "Elevator setpoint offset", 0
             )
 
-            if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
-                hal.elevatorSetpoint = hal.elevatorPos
-                hal.armVolts = -1
-            elif hal.elevatorSetpoint >= 5 and hal.elevatorPos >= 5:
-                hal.armVolts = 1
-            if hal.moveArmDown:
-                hal.armVolts = -1
+            if (
+                self.posSetpoint > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+                and hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+            ):
+                hal.armSetpoint = self.ARM_UP_POS
+                if self.moveArmDown:
+                    hal.armSetpoint = self.ARM_DEALGAE_POS
+
+            if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
+                hal.armSetpoint = self.ARM_BOTTOM_POS
+                if abs(hal.armPos - self.ARM_BOTTOM_POS) > 0.25:
+                    hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
             hal.elevatorControl = SparkMax.ControlType.kMAXMotionVelocityControl
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
+            hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
+                "Elevator setpoint offset", 0
+            )
 
-            if armUp:
-                hal.armVolts = 1
-            elif armDown:
-                hal.armVolts = -1
-
-        if (
-            not hal.elevatorPos <= 0.8
-            or hal.secondManipulatorSensor
-            or hal.firstManipulatorSensor
-            and hal.secondManipulatorSensor
-        ):
+        if not hal.elevatorPos <= 0.8 or hal.secondManipulatorSensor:
             hal.elevServoAngle = 60
         else:
             hal.elevServoAngle = 0

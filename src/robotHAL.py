@@ -615,7 +615,7 @@ class RevMotorController:
         measuredPercentVoltage = self.motor.getAppliedOutput()
         measuredSpeed = self.encoder.getVelocity()
         measuredPosition = -self.encoder.getPosition()
-        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
+        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getBusVoltage()
         measuredAmps = self.motor.getOutputCurrent()
         self.table.putNumber(self.name + " Voltage", measuredVoltage)
         self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
