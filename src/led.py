@@ -1,7 +1,7 @@
 from wpilib import CAN, CANData
 from manipulator import ManipulatorSubsystem
-from elevator import ElevatorSubsystem, ElevatorMode
-from IntakeChute import ChuteStates
+from elevator import ElevatorSubsystem
+from IntakeChute import IntakeChute
 
 
 class LEDSignals:
@@ -12,11 +12,10 @@ class LEDSignals:
 
     def update(
         self,
-        manipulatorState: ManipulatorSubsystem.ManipulatorState,
+        manipulator: ManipulatorSubsystem,
+        elevator: ElevatorSubsystem,
+        chute: IntakeChute,
         elevatorPos: float,
-        elevatorMode: ElevatorMode,
-        elevatorSetPoint: float,
-        chuteState: ChuteStates,
     ):
         if self.counter > 0:
             self.counter = self.counter - 1
@@ -37,6 +36,7 @@ class LEDSignals:
         else:
             currentSetPoint = 99
 
+        elevatorSetPoint: int = elevator.posSetpoint
         if elevatorSetPoint == ElevatorSubsystem.INTAKE_POS:
             simplifiedSetPoint = 0
         elif elevatorSetPoint == ElevatorSubsystem.L2_POS:
@@ -55,11 +55,11 @@ class LEDSignals:
         try:
             byte_array = bytearray(6)
             byte_array[0] = max(int(elevatorPos * 20 // 9), 0)
-            byte_array[1] = manipulatorState.value
-            byte_array[2] = elevatorMode.value
+            byte_array[1] = manipulator.state.value
+            byte_array[2] = elevator.mode.value
             byte_array[3] = simplifiedSetPoint
             byte_array[4] = currentSetPoint
-            byte_array[5] = chuteState.value
+            byte_array[5] = chute.state.value
 
             self.can.writePacketNoError(byte_array, 0)
 

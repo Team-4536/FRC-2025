@@ -49,11 +49,10 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
 
         self.ledSignals.update(
-            self.manipulatorSubsystem.state.value,
+            self.manipulatorSubsystem,
+            self.elevatorSubsystem,
+            self.intakeChute,
             self.hal.elevatorPos,
-            self.elevatorSubsystem.mode.value,
-            self.elevatorSubsystem.posSetpoint,
-            self.intakeChute.state.value,
         )
 
     def teleopInit(self) -> None:
