@@ -2,7 +2,6 @@ from wpilib import CAN, CANData
 from manipulator import ManipulatorSubsystem
 from elevator import ElevatorSubsystem, ElevatorMode
 from IntakeChute import ChuteStates
-import math
 
 
 class LEDSignals:
