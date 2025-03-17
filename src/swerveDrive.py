@@ -36,17 +36,11 @@ class SwerveDrive:
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
-        self.setpointsTable.putNumber("des X: ", 0)
-        self.setpointsTable.putNumber("des Y: ", 0)
-        self.setpointsTable.putNumber("des Rot: ", 0)
-        self.setpointsTable.putNumber("adjSpe vx: ", 0)
-        self.setpointsTable.putNumber("adjSpe vy: ", 0)
-        self.setpointsTable.putNumber("cur x (setpoint): ", 0)
-        self.setpointsTable.putNumber("cur y (setpoint): ", 0)
-        self.setpointsTable.putNumber("cur rot (setpoint): ", 0)
 
         self.angle = Rotation2d(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.FMSData = NetworkTableInstance.getDefault().getTable("FMSInfo")
+
         oneftInMeters = feetToMeters(1)
 
         frontLeftLocation = Translation2d(oneftInMeters, oneftInMeters)
@@ -228,11 +222,7 @@ class SwerveDrive:
     def setpointChooser(self, yaw, fiducialID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-        # self.setpointsTable.putNumber("cur x (setpoint): ", self.currentPose.X())
-        # self.setpointsTable.putNumber("cur y (setpoint): ", self.currentPose.Y())
-        # self.setpointsTable.putNumber(
-        #     "cur rot (setpoint): ", self.currentPose.rotation().degrees()
-        # )
+
         if side == "left":
             self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
             self.desiredPose = Pose2d(
@@ -251,18 +241,11 @@ class SwerveDrive:
             )
         else:
             self.desiredPose = Pose2d(0, 0, 0)
-        # self.setpointsTable.putNumber("des X: ", self.desiredPose.X())
-        # self.setpointsTable.putNumber("des Y: ", self.desiredPose.Y())
-        # self.setpointsTable.putNumber(
-        #     "des Rot: ", self.desiredPose.rotation().degrees()
-        # )
+
         if not (self.desiredPose.X() == 0 and self.desiredPose.Y() == 0):
             self.adjustedSpeeds = self.controller.calculate(
                 self.currentPose, self.desiredPose, 0, self.rot
             )
-
-        # self.setpointsTable.putNumber("adjSpe vx: ", self.adjustedSpeeds.vx)
-        # self.setpointsTable.putNumber("adjSpe vy: ", self.adjustedSpeeds.vy)
 
     def updateWithoutSticks(
         self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
@@ -313,10 +296,16 @@ class SwerveDrive:
 
     def savePos(self, fiducialID: int, yaw: float):
         with open("/home/lvuser/photon.txt", "a") as f:
+            f.write("match: " + str(self.FMSData.getNumber("MatchNumber", 0)) + " ")
+            if self.FMSData.getBoolean("IsRedAlliance", True):
+                f.write("Red")
+            else:
+                f.write("Blue")
             f.write(
-                "tag"
+                " "
+                + str(self.FMSData.getNumber("StationNumber", 0))
+                + " tag: "
                 + str(fiducialID)
-                + ": "
                 + " X: "
                 + f"{self.odomPos[0]}"
                 + " Y: "
@@ -328,6 +317,3 @@ class SwerveDrive:
                 + f"{wpilib.getTime()}"
                 "\n"
             )
-            # f.write("tag" + str(fiducialID) + " Y = " + f"{self.odomPos[1]}" "\n")
-            # f.write("tag" + str(fiducialID) + " Angle = " + f"{yaw}" "\n")
-        # Test.close()
