@@ -1,14 +1,6 @@
 import wpilib
 from robotHAL import RobotHALBuffer
 from ntcore import NetworkTableInstance
-from enum import Enum
-import math
-
-
-class ChuteStates(Enum):
-    MANUAL = 1
-    UP = 3
-    DOWN = 2
 
 
 class IntakeChute:
@@ -16,65 +8,76 @@ class IntakeChute:
     def __init__(self):
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-        self.chuteSpeed = 1
-        self.state = ChuteStates.DOWN
-        self.table.putString("Chute Control Mode", self.state.name)
-        self.chuteDirection = 0
-        self.hasReset = False
-        self.table.putBoolean("Chute HasReset", self.hasReset)
-        self.setPoint = -115.1674728
-        self.toggle = False
-        self.table.putBoolean("Toggle Chute Mode", self.toggle)
+        self.chuteSpeed = 5
+        self.setChuteControlMode = 3
+        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
+        self.ctrlrBumber = 0
+        self.resetMode3 = True
+        self.yToggle = False
+        self.bToggle = True
 
-    def update(
-        self,
-        hal: RobotHALBuffer,
-        chuteDown: bool,
-        chuteUp: bool,
-        switchAutoState: bool,
-        switchManualState: bool,
-    ):
+    def update(self, hal: RobotHALBuffer, rightTrigger, leftTrigger, BButton, YButton):
+
+        self.table.putNumber("time", wpilib.getTime())
         self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
-        self.table.putBoolean("Chute Limit Switch", hal.chuteLimitSwitch)
-        self.table.putNumber("Chute Motor Encoder Position", hal.chutePosition)
-        self.table.putString("Chute Control Mode", self.state.name)
+        self.currentTime = wpilib.getTime()
+        self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
+        self.table.putBoolean("right trigger", rightTrigger)
+        self.table.putBoolean("left trigger", leftTrigger)
 
-        if self.table.getBoolean("Toggle Chute Mode", self.toggle) is not self.toggle:
+        self.table.putBoolean("pressed", self.yToggle)
 
-            self.toggle = self.table.getBoolean("Toggle Chute Mode", self.toggle)
+        if YButton:
+            self.yToggle = not (self.yToggle)
 
-            if self.state == ChuteStates.UP:
-                self.state = ChuteStates.MANUAL
-            elif self.state == ChuteStates.MANUAL:
-                self.state = ChuteStates.DOWN
+        if BButton:
+            self.bToggle = not (self.bToggle)
+
+        if self.yToggle:
+            self.setChuteControlMode = 1
+        else:
+            if self.bToggle:
+                self.setChuteControlMode = 3
             else:
-                self.state = ChuteStates.UP
+                self.setChuteControlMode = 2
+        self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
+        if leftTrigger:
+            self.ctrlrBumber = -1
 
-        if self.state == ChuteStates.MANUAL:
+        elif rightTrigger:
+            self.ctrlrBumber = 1
+
+        else:
+            self.ctrlrBumber = 0
+
+        self.table.putBoolean("mode 3 reset", self.resetMode3)
+
+        if self.setChuteControlMode == 1:
             hal.setChuteVoltage = (
-                self.chuteDirection * self.chuteSpeed
+                self.ctrlrBumber * self.chuteSpeed
             )  # POSITIVE Pulls down Negative lets up
 
-        elif self.state == ChuteStates.DOWN:
+        elif self.setChuteControlMode == 2:
             if (
-                not hal.chuteLimitSwitch
+                hal.chuteLimitSwitch == False
             ):  # returns true if the hal.chuteLimitSwitch is pressed
                 hal.setChuteVoltage = self.chuteSpeed
 
-            elif not self.hasReset:
-                self.state = ChuteStates.UP
-                self.hasReset = True
-                self.table.putBoolean("Chute HasReset", self.hasReset)
-                hal.resetChuteEncoder = True
-
             else:
                 hal.setChuteVoltage = 0
+                self.setChuteControlMode = 1
+                self.table.putNumber("Chute Control Mode", self.setChuteControlMode)
 
-        elif self.state == ChuteStates.UP:
+        elif self.setChuteControlMode == 3:
+            if self.resetMode3:
+                self.startTime = wpilib.getTime()
+                self.resetMode3 = False
 
-            if hal.chutePosition > self.setPoint:
+            self.currentTime = wpilib.getTime()
+
+            if self.currentTime - self.startTime < 10:
                 hal.setChuteVoltage = -self.chuteSpeed
 
             else:
                 hal.setChuteVoltage = 0
-                self.state = ChuteStates.MANUAL
+                self.setChuteControlMode = 1

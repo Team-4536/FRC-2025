@@ -22,13 +22,13 @@ add folowing extensions to vscode enviroment: https://marketplace.visualstudio.c
 
 install git at https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe
 - Go to downloads folder and launch
-- Information
+- Information 
     - next
 
-- Select destination
+- Select destination 
     - set path to C:\Program Files\Git
 
-- Select Components
+- Select Components 
     check flowing boxes
     - Windows explorer integration
         - open git bash here
@@ -40,19 +40,19 @@ install git at https://github.com/git-for-windows/git/releases/download/v2.47.1.
 - Select Start Menue Folder
     - Set folder name to "Git"
 
-- Choosing the default editor used by git
+- Choosing the default editor used by git 
     - Set drop down to Use Visual Studio Code as Gits default editor
 
 - Adjusting the name of the initial branch in new repositories
     - Select Let Git decide
 
-- Adjusting your PATH enviroment
+- Adjusting your PATH enviroment 
     - Select Git from the command line and also from 3-rd party software
 
 - Choosing the SSH executable
     - Select Use bundled openSSH
 
-- Choosing HTTPS transport backend
+- Choosing HTTPS transport backend 
     - Select Use the OpenSSH library
 
 - Configuring the line ending conversions
@@ -89,7 +89,7 @@ install python version 3.12 at https://www.python.org/ftp/python/3.12.8/python-3
 - Click close
 
 
-To setup the git repository go to c:\ and make a new folder named "repos"
+To setup the git repository go to c:\ and make a new folder named "repos" 
 open a cmd in the directory "c:\repos" and run the command "git clone https://github.com/Team-4536/FRC-2025.git"
 
 
@@ -134,4 +134,4 @@ Just simply accept license and continue with install
 Getting black to work with auto save:
 Go to settings and change Auto Save option and change to 'onFocusChange'
 This will cause file to auto save when you navigate to any other part of vs code (eg. terminal, another file)
-This allows for auto saving while also letting auto formatting to work
+This allows for auto saving while also letting auto formatting to work 
