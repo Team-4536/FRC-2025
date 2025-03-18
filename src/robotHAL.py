@@ -70,7 +70,7 @@ class RobotHALBuffer:
         self.backArmLimitSwitch: bool = False
         self.armVolts: float = 0
 
-        self.elevServoAngle = 0
+        self.elevServoAngle: float = 0.0
 
         self.yaw: float = 0
 
@@ -403,7 +403,7 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
-        # buf.yaw = degreesToRadians(-self.gyro.getAngle())
+        buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
