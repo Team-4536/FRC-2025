@@ -48,8 +48,9 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.tempFidId = -1
-        self.LEDSignals: LEDSignals = LEDSignals()
+        self.ledSignals: LEDSignals = LEDSignals()
+
+        self.povPrev = 0
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -73,8 +74,11 @@ class Robot(wpilib.TimedRobot):
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
 
-        self.LEDSignals.update(
-            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        self.ledSignals.update(
+            self.manipulatorSubsystem,
+            self.elevatorSubsystem,
+            self.intakeChute,
+            self.hal.elevatorPos,
         )
 
     def teleopInit(self) -> None:
@@ -91,7 +95,9 @@ class Robot(wpilib.TimedRobot):
                 self.driveCtrlr.getLeftY(),
                 self.driveCtrlr.getRightX(),
                 self.driveCtrlr.getRightTriggerAxis(),
+                self.driveCtrlr.getStartButtonPressed(),
             )
+
         if self.driveCtrlr.getLeftBumperButton():
             self.setpointActiveLeft = True
             self.setpointActiveRight = False
@@ -151,15 +157,24 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getYButtonPressed(),
             self.mechCtrlr.getPOV(),
             self.mechCtrlr.getXButtonPressed(),
-            self.mechCtrlr.getBButtonPressed(),
+            self.mechCtrlr.getBButton(),
         )
+
+        # convert POV buttons to bool values (sorry michael this code may be hard to look at)
+        self.povLeftPressed = False
+        self.povRightPressed = False
+        if self.driveCtrlr.getPOV() == 270 and self.povPrev != 270:
+            self.povLeftPressed = True
+        if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
+            self.povRightPressed = True
+        self.povPrev = self.driveCtrlr.getPOV()
 
         self.intakeChute.update(
             self.hal,
             self.driveCtrlr.getPOV() == 180,
             self.driveCtrlr.getPOV() == 0,
-            self.driveCtrlr.getBButtonPressed(),
-            self.driveCtrlr.getYButtonPressed(),
+            self.povRightPressed,
+            self.povLeftPressed,
         )
 
         self.manipulatorSubsystem.update(
@@ -168,8 +183,22 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getLeftBumperPressed(),
         )
 
-        if self.driveCtrlr.getStartButton():
-            self.hardware.resetGyroToAngle(0)
+        # abs drive toggle
+        if self.driveCtrlr.getLeftStickButtonPressed():
+            self.hal.fieldOriented = not self.hal.fieldOriented
+
+        if self.driveCtrlr.getYButtonPressed():
+            self.hal.rotPIDsetpoint = 240
+            self.hal.rotPIDToggle = True
+        elif self.driveCtrlr.getXButtonPressed():
+            self.hal.rotPIDsetpoint = 300
+            self.hal.rotPIDToggle = True
+        elif self.driveCtrlr.getAButtonPressed():
+            self.hal.rotPIDsetpoint = 60
+            self.hal.rotPIDToggle = True
+        elif self.driveCtrlr.getBButtonPressed():
+            self.hal.rotPIDsetpoint = 120
+            self.hal.rotPIDToggle = True
 
         self.swerveDrive.updateOdometry(self.hal)
         if self.mechCtrlr.getAButtonPressed():

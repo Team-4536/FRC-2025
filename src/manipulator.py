@@ -12,7 +12,7 @@ class ManipulatorSubsystem:
         INTAKE = 1
         STORED = 2
         SHOOT = 3
-        MANUAL = -1
+        MANUAL = 99
 
     debug = False
 
@@ -71,5 +71,5 @@ class ManipulatorSubsystem:
                 self.state = self.ManipulatorState.IDLE
 
         if self.debug == True:
-            self.table.putString("maniState", self.state.name)
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
+        self.table.putString("maniState", self.state.name)
