@@ -22,7 +22,7 @@ from wpimath.controller import (
     ProfiledPIDControllerRadians,
 )
 from wpimath.trajectory import TrapezoidProfileRadians
-from wpimath.units import feetToMeters
+from wpimath.units import feetToMeters, radians
 from ntcore import NetworkTableInstance
 
 
