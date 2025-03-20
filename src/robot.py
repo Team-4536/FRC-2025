@@ -224,7 +224,23 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+
+        if self.currentAuto >= len(self.autoKeys):
+            self.autoFinished = True
+        else:
+            self.table.putString("Current Stage", self.autoKeys[self.currentAuto])
+            self.table.putNumber("Current Stage Number", self.currentAuto)
+
+        self.table.putBoolean("Auto finished", self.autoFinished)
+
+        if not self.autoFinished:
+            self.auto[self.autoKeys[self.currentAuto]].run(self)
+            if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
+                self.currentAuto += 1
+                if not self.currentAuto >= len(self.autoKeys):
+                    self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
+
         self.intakeChute.update(
             self.hal,
             False,
