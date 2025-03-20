@@ -155,7 +155,7 @@ class ASfollowPath(AutoStage):
         end = self.traj.getEndState().pose
 
         error = meters(0.5)
-        rotError = radians(float(math.pi / 20))
+        rotError = radians(0.1)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoDonePoseX", r.swerveDrive.odometry.getPose().x)
@@ -170,7 +170,7 @@ class ASfollowPath(AutoStage):
             and (end.Y() - error < y)
             and (y < end.Y() + error)
             and (end.rotation().radians() - rotError < rot)
-            and (rot > end.rotation().radians() + rotError)
+            and (rot < end.rotation().radians() + rotError)
         ):
             self.done = True
             return True
