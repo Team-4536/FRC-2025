@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable
 from ntcore import Value
 from enum import Enum
 from manipulator import ManipulatorState
+from wpimath.units import meters, radians
 
 if TYPE_CHECKING:
     from robot import Robot
@@ -153,8 +154,8 @@ class ASfollowPath(AutoStage):
 
         end = self.traj.getEndState().pose
 
-        error = 0.2
-        rotError = math.pi / 20
+        error = meters(0.5)
+        rotError = radians(float(math.pi / 20))
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoDonePoseX", r.swerveDrive.odometry.getPose().x)
@@ -164,11 +165,11 @@ class ASfollowPath(AutoStage):
         )
 
         if (
-            (end.X() - error > x)
-            and (x > end.X() + error)
-            and (end.Y() - error > y)
-            and (y > end.Y() + error)
-            and (end.rotation().radians() - rotError > rot)
+            (end.X() - error < x)
+            and (x < end.X() + error)
+            and (end.Y() - error < y)
+            and (y < end.Y() + error)
+            and (end.rotation().radians() - rotError < rot)
             and (rot > end.rotation().radians() + rotError)
         ):
             self.done = True
