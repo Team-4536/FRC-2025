@@ -49,7 +49,7 @@ class Robot(wpilib.TimedRobot):
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
         self.tempFidId = -1
-        self.LEDSignals: LEDSignals = LEDSignals()
+        self.ledSignals: LEDSignals = LEDSignals()
 
         self.povPrev = 0
 
@@ -58,6 +58,13 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.swerveDrive.updateOdometry(self.hal)
         self.hal.stopMotors()
+
+        self.ledSignals.update(
+            self.manipulatorSubsystem,
+            self.elevatorSubsystem,
+            self.intakeChute,
+            self.hal.elevatorPos,
+        )
         self.photonCamera1.update()
         self.photonCamera2.update()
         if self.photonCamera1.ambiguity == 0.0:
@@ -74,10 +81,6 @@ class Robot(wpilib.TimedRobot):
                 self.photonCamera2.robotAngle,
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
-
-        self.LEDSignals.update(
-            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
-        )
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
