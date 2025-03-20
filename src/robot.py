@@ -39,7 +39,7 @@ class Robot(wpilib.TimedRobot):
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
         self.intakeChute = IntakeChute()
-        self.LEDSignals: LEDSignals = LEDSignals()
+        self.ledSignals: LEDSignals = LEDSignals()
 
         self.povPrev = 0
 
@@ -48,8 +48,11 @@ class Robot(wpilib.TimedRobot):
         self.hal.publish(self.table)
         self.hal.stopMotors()
 
-        self.LEDSignals.update(
-            self.manipulatorSubsystem.state.value, self.hal.elevatorPos
+        self.ledSignals.update(
+            self.manipulatorSubsystem,
+            self.elevatorSubsystem,
+            self.intakeChute,
+            self.hal.elevatorPos,
         )
 
     def teleopInit(self) -> None:
