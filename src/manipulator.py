@@ -18,7 +18,7 @@ class ManipulatorSubsystem:
 
     def __init__(self):
 
-        self.state: ManipulatorState = ManipulatorState.IDLE
+        self.state: ManipulatorState = self.ManipulatorState.IDLE
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
     def update(
