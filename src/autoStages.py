@@ -235,7 +235,7 @@ class ASintakeCoraL(AutoStage):
         pass
 
     def isDone(self, r):
-        if r.manipulatorSubsystem.state == ManipulatorState.STORED:
+        if r.manipulatorSubsystem.state == 2:
             self.done = True
 
         return self.done
