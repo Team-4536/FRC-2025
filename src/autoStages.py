@@ -150,12 +150,12 @@ class ASfollowPath(AutoStage):
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
         y = self.r.swerveDrive.odometry.getPose().Y()
-        rot = self.r.swerveDrive.odometry.getPose().rotation()
+        rot = self.r.swerveDrive.odometry.getPose().rotation().radians()
 
         end = self.traj.getEndState().pose
 
-        error = meters(0.5)
-        rotError = radians(0.1)
+        error = meters(0.2)
+        rotError = radians(0.2)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoDonePoseX", r.swerveDrive.odometry.getPose().x)
@@ -225,6 +225,7 @@ class ASShootStored(AutoStage):
 
     def autoInit(self, r):
         self.startTime = wpilib.getTime
+        r.manipulatorSubsystem.state = ManipulatorState.STORED
 
 
 class ASintakeCoraL(AutoStage):
@@ -236,7 +237,7 @@ class ASintakeCoraL(AutoStage):
         pass
 
     def isDone(self, r):
-        if r.manipulatorSubsystem.state == 2:
+        if r.manipulatorSubsystem.state == ManipulatorState.STORED:
             self.done = True
 
         return self.done

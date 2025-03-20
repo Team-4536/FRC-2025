@@ -162,7 +162,7 @@ class RobotHAL:
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
-        self.chuteMotor = rev.SparkMax(40, rev.SparkMax.MotorType.kBrushed)
+        self.chuteMotor = rev.SparkMax(13, rev.SparkMax.MotorType.kBrushed)
 
         chuteMotorConfig = SparkMaxConfig()
         chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake.value)
