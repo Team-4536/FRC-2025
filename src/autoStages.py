@@ -239,7 +239,7 @@ class ASintakeCoraL(AutoStage):
         self.done = False
 
     def run(self, r: "Robot"):
-        # r.manipulatorSubsystem.update(r.hal, False, False)
+        r.manipulatorSubsystem.update(r.hal, False, False)
         pass
 
     def isDone(self, r):
