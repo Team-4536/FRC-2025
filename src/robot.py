@@ -67,6 +67,8 @@ class Robot(wpilib.TimedRobot):
         for stage in autoStages.RobotAutos:
             self.autoRoutineChooser.addOption(stage.value, stage.value)
 
+        wpilib.SmartDashboard.putData("auto routine chooser", self.autoRoutineChooser)
+
         self.autoSideChooser = wpilib.SendableChooser()
         # self.autoSideChooser.setDefaultOption(AUTO_SIDE_FMS, AUTO_SIDE_FMS)
         self.autoSideChooser.setDefaultOption(AUTO_SIDE_RED, AUTO_SIDE_RED)
