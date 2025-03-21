@@ -17,7 +17,7 @@ from ntcore import NetworkTableInstance, NetworkTable
 from typing import TYPE_CHECKING, Callable
 from ntcore import Value
 from enum import Enum
-from manipulator import ManipulatorState
+from manipulator import ManipulatorSubsystem
 from wpimath.units import meters, radians
 
 if TYPE_CHECKING:
@@ -212,20 +212,20 @@ class ASelvator0(AutoStage):
 class ASShootStored(AutoStage):
     def __init__(self, r: "Robot", startTime):
         self.done = False
-        # r.manipulatorSubsystem.state = ManipulatorState.STORED
+        # r.manipulatorSubsystem.state = ManipulatorSubsystem.ManipulatorState.STORED
         self.buf = r.hal
 
     def run(self, r: "Robot"):
         r.manipulatorSubsystem.update(r.hal, True, False)
 
     def isDone(self, r: "Robot"):
-        if r.manipulatorSubsystem.state == ManipulatorState.IDLE:
+        if r.manipulatorSubsystem.state == ManipulatorSubsystem.ManipulatorState.IDLE:
             self.done = True
             return True
 
     def autoInit(self, r):
         self.startTime = wpilib.getTime
-        r.manipulatorSubsystem.state = ManipulatorState.STORED
+        r.manipulatorSubsystem.state = ManipulatorSubsystem.ManipulatorState.STORED
 
 
 class ASintakeCoraL(AutoStage):
