@@ -159,6 +159,11 @@ class ASfollowPath(AutoStage):
         rotError = radians(0.2)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
+        table.putNumber("endstateX", self.traj.getEndState().pose.X())
+        table.putNumber("endstateY", self.traj.getEndState().pose.Y())
+        table.putNumber(
+            "endstateRot", self.traj.getEndState().pose.rotation().radians()
+        )
         table.putNumber("djoDonePoseX", r.swerveDrive.odometry.getPose().x)
         table.putNumber("djoDonePoseY", r.swerveDrive.odometry.getPose().y)
         table.putNumber(

@@ -303,11 +303,8 @@ class Robot(wpilib.TimedRobot):
         )
 
     def autonomousInit(self) -> None:
-        self.autoStartTime = wpilib.getTime()
-
-    def autonomousInit(self) -> None:
         self.hal.stopMotors()
-
+        self.autoStartTime = wpilib.getTime()
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(5, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
         )
