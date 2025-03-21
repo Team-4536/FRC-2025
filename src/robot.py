@@ -155,7 +155,7 @@ class Robot(wpilib.TimedRobot):
         ):
             self.setpointActiveLeft = False
             self.setpointActiveRight = False
-            self.tempFidId = -1
+            # self.tempFidId = -1
         startCameraUpdate = wpilib.getTime()
         self.elevatorSubsystem.update(
             self.hal,
