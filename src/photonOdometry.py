@@ -6,6 +6,7 @@ from ntcore import NetworkTableInstance
 import wpimath.geometry
 import numpy
 import robotpy
+import wpilib
 
 photonTable = NetworkTableInstance.getDefault()
 aprilTagX = [
@@ -113,39 +114,49 @@ class photonVision:
         self.robotAngle = False
         self.TFID = 0
 
-        self.photonTable.putNumber(self.cameraNameReal + "Rot :", 0)
-        self.photonTable.putNumber(self.cameraNameReal + "X :", 0)
-        self.photonTable.putNumber(self.cameraNameReal + "Y :", 0)
-        self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", 1)
+        # self.photonTable.putNumber(self.cameraNameReal + "Rot :", 0)
+        # self.photonTable.putNumber(self.cameraNameReal + "X :", 0)
+        # self.photonTable.putNumber(self.cameraNameReal + "Y :", 0)
+        # self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", 1)
 
     def update(self):
+        # startCameraUpdate = wpilib.getTime()
         self.result = self.camera.getLatestResult()
+        # self.photonTable.putNumber(
+        #    "result update time", wpilib.getTime() - startCameraUpdate
+        # )
+        # startCameraUpdate = wpilib.getTime()
         self.hasTargets = self.result.hasTargets()
+        # self.photonTable.putNumber(
+        #     "hasTargests update time", wpilib.getTime() - startCameraUpdate
+        # )
+        # startCameraUpdate = wpilib.getTime()
         self.target = self.result.getTargets()
+        # self.photonTable.putNumber("getTargets", wpilib.getTime() - startCameraUpdate)
         if self.hasTargets:
             self.fiducialId = self.target[0].getFiducialId()
             self.ambiguity = self.target[0].getPoseAmbiguity()
-            self.photonTable.putNumber("ambiguity", self.ambiguity)
-            if self.ambiguity < 0.1:
+            # self.photonTable.putNumber("ambiguity", self.ambiguity)
+            if self.ambiguity < 0.04:
                 self.camEstPose = self.camPoseEst.update()
                 self.TFID = self.fiducialId
-                self.photonTable.putNumber("FiducialID", self.fiducialId)
+                # self.photonTable.putNumber("FiducialID", self.fiducialId)
                 if self.camEstPose != None:
                     self.robotX = self.camEstPose.estimatedPose.X()
-                    self.photonTable.putNumber(self.cameraNameReal + "X :", self.robotX)
+                    # self.photonTable.putNumber(self.cameraNameReal + "X :", self.robotX)
                     self.robotY = self.camEstPose.estimatedPose.Y()
-                    self.photonTable.putNumber(self.cameraNameReal + "Y :", self.robotY)
+                    # self.photonTable.putNumber(self.cameraNameReal + "Y :", self.robotY)
                     self.robotAngle = self.camEstPose.estimatedPose.rotation().Z()
-                    self.photonTable.putNumber(
-                        self.cameraNameReal + "Rot :", self.robotAngle
-                    )
+                    # self.photonTable.putNumber(
+                    #     self.cameraNameReal + "Rot :", self.robotAngle
+                    # )
             else:
                 self.TFID = -1
         else:
             self.ambiguity = 1
-            self.fiducialId = 0
-        self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
-        self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", self.ambiguity)
+            self.fiducialId = -1
+        # self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
+        # self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", self.ambiguity)
 
     # def savePos(self):
     #     with open("pyTest.txt", "a") as f:

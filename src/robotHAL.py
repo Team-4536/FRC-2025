@@ -338,6 +338,7 @@ class RobotHAL:
         pass
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
+        startCameraUpdate = wpilib.getTime()
         prev = self.prev
         self.prev = copy.copy(buf)
 
@@ -357,12 +358,16 @@ class RobotHAL:
         buf.turnCCWBR = angleWrap(
             self.turnMotorBREncoder.getPosition() * 2 * math.pi / TURN_GEARING
         )
-
+        self.table.putNumber(
+            "encoder update Time", wpilib.getTime() - startCameraUpdate
+        )
         self.FLSwerveModule.update(buf.driveFLSetpoint, buf.turnFLSetpoint)
         self.FRSwerveModule.update(buf.driveFRSetpoint, buf.turnFRSetpoint)
         self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
         self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
-
+        self.table.putNumber(
+            "swerve module update Time", wpilib.getTime() - startCameraUpdate
+        )
         self.table.putNumber(
             "BL Turning Pos Can",
             self.turnMotorBLCANcoder.get_absolute_position().value_as_double,
@@ -419,7 +424,10 @@ class RobotHAL:
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
         self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
-
+        self.table.putNumber(
+            "putting to network tables update Time",
+            wpilib.getTime() - startCameraUpdate,
+        )
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
@@ -457,7 +465,9 @@ class RobotHAL:
             )
             * self.wheelRadius
         )
-
+        self.table.putNumber(
+            "drive pos update Time", wpilib.getTime() - startCameraUpdate
+        )
         buf.drivePositionsList = [drivePosFL, drivePosFR, drivePosBL, drivePosBR]
 
         steerPosFL = (2 * math.pi) * (
@@ -474,7 +484,9 @@ class RobotHAL:
         )
 
         buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
-
+        self.table.putNumber(
+            "steer pos update Time", wpilib.getTime() - startCameraUpdate
+        )
         buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))
         buf.moduleFR = SwerveModulePosition(drivePosFR, Rotation2d(radians(steerPosFR)))
         buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
@@ -486,6 +498,9 @@ class RobotHAL:
             buf.elevatorArbFF,
             buf.elevatorSlot,
             buf.elevatorControl,
+        )
+        self.table.putNumber(
+            "elavator update Time", wpilib.getTime() - startCameraUpdate
         )
         self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
 
@@ -501,7 +516,7 @@ class RobotHAL:
 
         buf.armTopLimitSwitch = self.armTopLimitSwitch.get()
         buf.armBottomLimitSwitch = self.armBottomLimitSwitch.get()
-
+        self.table.putNumber("buf update Time", wpilib.getTime() - startCameraUpdate)
         self.table.putBoolean("Arm Top Limit Switch", buf.armTopLimitSwitch)
         self.table.putBoolean("Arm Bottom Limit Switch", buf.armBottomLimitSwitch)
         self.table.putNumber(
@@ -517,7 +532,9 @@ class RobotHAL:
         buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
         self.chuteMotor.setVoltage(buf.setChuteVoltage)
         buf.chutePosition = self.chuteMotorEncoder.getPosition()
-
+        self.table.putNumber(
+            "chute stuff update Time", wpilib.getTime() - startCameraUpdate
+        )
         if buf.resetChuteEncoder:
             self.chuteMotorEncoder.setPosition(0)
             buf.resetChuteEncoder = False
@@ -652,18 +669,19 @@ class RevMotorController:
                     SparkMax.PersistMode.kNoPersistParameters,
                 )
 
-        measuredPercentVoltage = self.motor.getAppliedOutput()
-        measuredSpeed = self.encoder.getVelocity()
-        measuredPosition = -self.encoder.getPosition()
-        measuredVoltage = self.motor.getAppliedOutput() * self.motor.getBusVoltage()
-        measuredAmps = self.motor.getOutputCurrent()
-        self.table.putNumber(self.name + " Voltage", measuredVoltage)
-        self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
-        self.table.putNumber(self.name + " Position (rot)", measuredPosition)
-        self.table.putNumber(self.name + " percent voltage", measuredPercentVoltage)
-        self.table.putNumber(self.name + " current", measuredAmps)
-        self.setpoint = setpoint
-        self.table.putNumber(self.name + " setpoint", self.setpoint)
+        if debugMode:
+            measuredPercentVoltage = self.motor.getAppliedOutput()
+            measuredSpeed = self.encoder.getVelocity()
+            measuredPosition = -self.encoder.getPosition()
+            measuredVoltage = self.motor.getAppliedOutput() * self.motor.getBusVoltage()
+            measuredAmps = self.motor.getOutputCurrent()
+            self.table.putNumber(self.name + " Voltage", measuredVoltage)
+            self.table.putNumber(self.name + " Velocity (RPM)", measuredSpeed)
+            self.table.putNumber(self.name + " Position (rot)", measuredPosition)
+            self.table.putNumber(self.name + " percent voltage", measuredPercentVoltage)
+            self.table.putNumber(self.name + " current", measuredAmps)
+            self.setpoint = setpoint
+            self.table.putNumber(self.name + " setpoint", self.setpoint)
 
         if controlType == None:
             controlType = self.controlType

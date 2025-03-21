@@ -298,7 +298,9 @@ class SwerveDrive:
         else:
             self.desiredPose = Pose2d(0, 0, 0)
 
-        if not (self.desiredPose.X() == 0 and self.desiredPose.Y() == 0):
+        if not (setpoints.tagRight[fiducialID][0] == 0) and not (
+            setpoints.tagRight[fiducialID][1] == 0
+        ):
             self.adjustedSpeeds = self.controller.calculate(
                 self.currentPose, self.desiredPose, 0, self.rot
             )
