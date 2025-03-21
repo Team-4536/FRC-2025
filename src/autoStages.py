@@ -155,7 +155,7 @@ class ASfollowPath(AutoStage):
 
         end = self.traj.getEndState().pose
 
-        error = meters(0.2)
+        error = meters(0.05)
         rotError = radians(0.2)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
@@ -296,7 +296,7 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     elif stageChooser == RobotAutos.DRIVE_FORWARD.value:
         ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
     elif stageChooser == RobotAutos.MIDDLE_PIECE.value:
-        # ret["intake-coral"] = ASintakeCoraL()
+        ret["intake-coral"] = ASintakeCoraL()
         ret["middle-reef1"] = ASfollowPath("middle-reef1", r.onRedSide, r)
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
