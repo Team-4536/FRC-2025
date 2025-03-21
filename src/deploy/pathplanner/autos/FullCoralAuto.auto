@@ -1,0 +1,85 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae1Dropoff"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae2Dropoff"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae3Dropoff"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae4Dropoff"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae5"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae5Dropoff"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae6"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Algae6Dropoff"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
