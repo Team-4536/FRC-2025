@@ -21,13 +21,13 @@ class ElevatorSubsystem:
     INTAKE_POS = 0
     L2_POS = 11.71
     L3_POS = 24.59
-    L4_POS = 45
+    L4_POS = 46  # changed from 45
     ALGAE_L2_POS = 13.78
     ALGAE_L3_POS = 24.52
 
     ARM_UP_POS = 28
     ARM_DEALGAE_POS = 12
-    ARM_BOTTOM_POS = 0
+    ARM_BOTTOM_POS = -1  # changed from 0
 
     # this is an elevator position where it is safe for the arm to move
     ELEVATOR_CLEARS_BUMPERS_FOR_ARM = 7
@@ -112,7 +112,7 @@ class ElevatorSubsystem:
 
             if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
                 hal.armSetpoint = self.ARM_BOTTOM_POS
-                if abs(hal.armPos - self.ARM_BOTTOM_POS) > 0.25:
+                if not hal.armBottomLimitSwitch:
                     hal.elevatorSetpoint = hal.elevatorPos
 
         elif self.mode == ElevatorMode.MANUAL_MODE:
