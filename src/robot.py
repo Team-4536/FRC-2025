@@ -17,10 +17,17 @@ from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
 from led import LEDSignals
+import pathplannerlib  # type: ignore
+from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
+import autoStages
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
+
+        AUTO_SIDE_RED = "red"
+        AUTO_SIDE_BLUE = "blue"
+        AUTO_SIDE_FMS = "FMS side"
 
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
@@ -51,6 +58,22 @@ class Robot(wpilib.TimedRobot):
         self.ledSignals: LEDSignals = LEDSignals()
 
         self.povPrev = 0
+
+        self.autoRoutineChooser = wpilib.SendableChooser()
+        self.autoRoutineChooser.setDefaultOption(
+            autoStages.RobotAutos.DO_NOTHING.value,
+            autoStages.RobotAutos.DO_NOTHING.value,
+        )
+        for stage in autoStages.RobotAutos:
+            self.autoRoutineChooser.addOption(stage.value, stage.value)
+
+        self.autoSideChooser = wpilib.SendableChooser()
+        # self.autoSideChooser.setDefaultOption(AUTO_SIDE_FMS, AUTO_SIDE_FMS)
+        self.autoSideChooser.setDefaultOption(AUTO_SIDE_RED, AUTO_SIDE_RED)
+        self.autoSideChooser.addOption(AUTO_SIDE_BLUE, AUTO_SIDE_BLUE)
+        wpilib.SmartDashboard.putData("auto side chooser", self.autoSideChooser)
+
+        self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -219,6 +242,27 @@ class Robot(wpilib.TimedRobot):
 
         self.hal.publish(self.table)
         self.hardware.update(self.hal, self.time)
+
+    def autonomousInit(self) -> None:
+        self.hal.stopMotors()
+
+        self.holonomicDriveController = PPHolonomicDriveController(
+            PIDConstants(5, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+        )
+
+        self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
+            self.autoRoutineChooser.getSelected(), self
+        )
+
+        self.autoKeys = list(self.auto.keys())
+        self.currentAuto = 0
+        self.autoFinished = False
+
+        self.table.putString("Chosen Auto is", "temp")
+
+        if not self.currentAuto == len(self.autoKeys):  ## TDOO Fix
+
+            self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic

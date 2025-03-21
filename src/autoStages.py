@@ -19,6 +19,7 @@ from ntcore import Value
 from enum import Enum
 from manipulator import ManipulatorSubsystem
 from wpimath.units import meters, radians
+from manipulator import ManipulatorState
 
 if TYPE_CHECKING:
     from robot import Robot
@@ -219,13 +220,13 @@ class ASShootStored(AutoStage):
         r.manipulatorSubsystem.update(r.hal, True, False)
 
     def isDone(self, r: "Robot"):
-        if r.manipulatorSubsystem.state == ManipulatorSubsystem.ManipulatorState.IDLE:
+        if r.manipulatorSubsystem.state == ManipulatorState.IDLE:
             self.done = True
             return True
 
     def autoInit(self, r):
         self.startTime = wpilib.getTime
-        r.manipulatorSubsystem.state = ManipulatorSubsystem.ManipulatorState.STORED
+        r.manipulatorSubsystem.state = ManipulatorState.STORED
 
 
 class ASintakeCoraL(AutoStage):
