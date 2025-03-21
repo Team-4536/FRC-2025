@@ -352,10 +352,10 @@ class Robot(wpilib.TimedRobot):
             False,
         )
 
-        if (wpilib.getTime() - self.autoStartTime) < 5:
-            self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.25, 0, 0))
-        else:
-            self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(0, 0, 0))
+        # if (wpilib.getTime() - self.autoStartTime) < 5:
+        #     self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.25, 0, 0))
+        # else:
+        #     self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(0, 0, 0))
 
         self.hardware.update(
             self.hal, self.time
