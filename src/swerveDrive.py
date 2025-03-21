@@ -24,7 +24,6 @@ from wpimath.controller import (
 from wpimath.trajectory import TrapezoidProfileRadians
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
-import setpoints
 from math import radians
 
 
@@ -274,34 +273,6 @@ class SwerveDrive:
         output = SwerveModuleState(outputSpeed, outputAngleRot2d)
 
         return output
-
-    def setpointChooser(self, yaw, fiducialID, side):
-
-        self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
-
-        if side == "left":
-            self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
-            self.desiredPose = Pose2d(
-                setpoints.tagLeft[fiducialID][0],
-                setpoints.tagLeft[fiducialID][1],
-                self.rot,
-            )
-
-        elif side == "right":
-            self.rot = Rotation2d(setpoints.tagRight[fiducialID][2])
-
-            self.desiredPose = Pose2d(
-                setpoints.tagRight[fiducialID][0],
-                setpoints.tagRight[fiducialID][1],
-                self.rot,
-            )
-        else:
-            self.desiredPose = Pose2d(0, 0, 0)
-
-        if not (self.desiredPose.X() == 0 and self.desiredPose.Y() == 0):
-            self.adjustedSpeeds = self.controller.calculate(
-                self.currentPose, self.desiredPose, 0, self.rot
-            )
 
     def updateWithoutSticks(
         self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds

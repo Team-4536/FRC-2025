@@ -115,59 +115,8 @@ debugMode = False
 class RobotHAL:
     def __init__(self) -> None:
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-        self.prev = RobotHALBuffer()
-
-        global debugMode
-        self.table.putBoolean("Debug Mode", debugMode)
 
         self.wheelRadius = 0.05  # meters
-
-        manipulatorConfig = SparkMaxConfig()
-        manipulatorConfig.limitSwitch.forwardLimitSwitchEnabled(False)
-        manipulatorConfig.limitSwitch.reverseLimitSwitchEnabled(False)
-        self.manipulatorMotor = SparkMax(9, SparkMax.MotorType.kBrushless)
-        self.manipulatorMotor.configure(
-            manipulatorConfig,
-            SparkMax.ResetMode.kResetSafeParameters,
-            SparkMax.PersistMode.kNoPersistParameters,
-        )
-        self.secondManipulatorSensor = self.manipulatorMotor.getForwardLimitSwitch()
-        self.firstManipulatorSensor = self.manipulatorMotor.getReverseLimitSwitch()
-
-        self.elevServo = wpilib.Servo(0)
-
-        self.armMotor = SparkMax(11, rev.SparkMax.MotorType.kBrushless)
-        self.armMotorEncoder = self.armMotor.getEncoder()
-        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
-        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
-        armConfig = SparkMaxConfig()
-        armConfig.limitSwitch.forwardLimitSwitchEnabled(True)
-        armConfig.limitSwitch.reverseLimitSwitchEnabled(True)
-        armConfig.limitSwitch.forwardLimitSwitchType(
-            armConfig.limitSwitch.Type.kNormallyOpen
-        )
-        armConfig.limitSwitch.reverseLimitSwitchType(
-            armConfig.limitSwitch.Type.kNormallyOpen
-        )
-        armConfig.smartCurrentLimit(20, 20)
-        armConfig.closedLoop.pidf(0.08, 0, 0, 0)
-        armConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-
-        self.armTopLimitSwitch = self.armMotor.getForwardLimitSwitch()
-        self.armBottomLimitSwitch = self.armMotor.getReverseLimitSwitch()
-
-        self.armMotor.configure(
-            armConfig,
-            SparkMax.ResetMode.kNoResetSafeParameters,
-            SparkMax.PersistMode.kNoPersistParameters,
-        )
-
-        self.armController = RevMotorController(
-            "Arm", self.armMotor, armConfig, SparkMax.ControlType.kPosition
-        )
-
-        self.frontArmLimitSwitch = self.armMotor.getForwardLimitSwitch()
-        self.backArmLimitSwitch = self.armMotor.getReverseLimitSwitch()
 
         self.turnMotorFL = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
         self.turnMotorFR = rev.SparkMax(3, rev.SparkMax.MotorType.kBrushless)
@@ -179,25 +128,6 @@ class RobotHAL:
         self.driveMotorBL = rev.SparkMax(6, rev.SparkLowLevel.MotorType.kBrushless)
         self.driveMotorBR = rev.SparkMax(8, rev.SparkLowLevel.MotorType.kBrushless)
 
-        self.chuteMotor = rev.SparkMax(13, rev.SparkMax.MotorType.kBrushless)
-
-        chuteMotorConfig = SparkMaxConfig()
-        chuteMotorConfig.IdleMode(chuteMotorConfig.IdleMode.kBrake.value)
-        chuteMotorConfig.limitSwitch.forwardLimitSwitchEnabled(True)
-        chuteMotorConfig.limitSwitch.forwardLimitSwitchType(
-            chuteMotorConfig.limitSwitch.Type.kNormallyClosed
-        )
-        chuteMotorConfig.limitSwitch.reverseLimitSwitchEnabled(True)
-        chuteMotorConfig.smartCurrentLimit(15)
-
-        self.chuteMotor.configure(
-            chuteMotorConfig,
-            SparkMax.ResetMode.kResetSafeParameters,
-            SparkMax.PersistMode.kNoPersistParameters,
-        )
-
-        self.chuteMotorLimitswitch = self.chuteMotor.getForwardLimitSwitch()
-
         self.driveMotorFLEncoder = self.driveMotorFL.getEncoder()
         self.driveMotorFREncoder = self.driveMotorFR.getEncoder()
         self.driveMotorBLEncoder = self.driveMotorBL.getEncoder()
@@ -207,8 +137,6 @@ class RobotHAL:
         self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
         self.turnMotorBLEncoder = self.turnMotorBL.getEncoder()
         self.turnMotorBREncoder = self.turnMotorBR.getEncoder()
-
-        self.chuteMotorEncoder = self.chuteMotor.getEncoder()
 
         self.turnMotorFLCANcoder = CANcoder(21)
         self.turnMotorFRCANcoder = CANcoder(22)
@@ -272,7 +200,7 @@ class RobotHAL:
         )
 
         self.turnMotorFLEncoder.setPosition(
-            (self.turnMotorFLCANcoder.get_absolute_position().value_as_double) * 21.4
+            (self.turnMotorFLCANcoder.get_absolute_position().value_as_double) * 21.4  # Lincoln: 21.4 is the gearing ratios
         )
         self.turnMotorFREncoder.setPosition(
             (self.turnMotorFRCANcoder.get_absolute_position().value_as_double) * 21.4
@@ -284,63 +212,16 @@ class RobotHAL:
             (self.turnMotorBRCANcoder.get_absolute_position().value_as_double) * 21.4
         )
 
-        self.elevatorMotor = SparkMax(10, SparkMax.MotorType.kBrushless)
-        self.elevatorMotorEncoder = self.elevatorMotor.getEncoder()
-        elevatorMotorPIDConfig = SparkMaxConfig()
-        elevatorMotorPIDConfig.smartCurrentLimit(35)  # 20 in comp
-        elevatorMotorPIDConfig.closedLoop.pidf(0.1, 0, 0, 0).setFeedbackSensor(
-            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-0.7, 0.7)
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)  #Lincoln: swap with your pidgeon
 
-        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchEnabled(True)
-        elevatorMotorPIDConfig.limitSwitch.forwardLimitSwitchType(
-            LimitSwitchConfig.Type.kNormallyOpen
-        )
-        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchEnabled(True)
-        elevatorMotorPIDConfig.limitSwitch.reverseLimitSwitchType(
-            LimitSwitchConfig.Type.kNormallyClosed
-        )
-        elevatorMotorPIDConfig.closedLoop.pidf(
-            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot1
-        )
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            5000, ClosedLoopSlot.kSlot1
-        ).maxAcceleration(10000, ClosedLoopSlot.kSlot1).allowedClosedLoopError(
-            0.05, ClosedLoopSlot.kSlot1
-        )
-
-        elevatorMotorPIDConfig.closedLoop.pidf(
-            0.0001, 0, 0.001, 0.00211, ClosedLoopSlot.kSlot2
-        )
-        elevatorMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            2500, ClosedLoopSlot.kSlot2
-        ).maxAcceleration(5000, ClosedLoopSlot.kSlot2).allowedClosedLoopError(
-            0.05, ClosedLoopSlot.kSlot2
-        )
-
-        self.elevatorController = RevMotorController(
-            "Elevator",
-            self.elevatorMotor,
-            elevatorMotorPIDConfig,
-            SparkMax.ControlType.kPosition,
-        )
-
-        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
-
-        self.table.putBoolean("ResetYaw", False)
+        self.table.putBoolean("ResetYaw", False)  # Lincoln: not sure if we need this.
 
     # angle expected in CCW rads
     def resetGyroToAngle(self, ang: float) -> None:
         self.gyro.reset()
         self.gyro.setAngleAdjustment(-math.degrees(ang))
 
-    def resetCamEncoderPos(self, nPos: float) -> None:
-        pass
-
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
-        prev = self.prev
-        self.prev = copy.copy(buf)
-
         global debugMode
         debugMode = self.table.getBoolean("Debug Mode", debugMode)
 
@@ -418,12 +299,6 @@ class RobotHAL:
         self.table.putNumber(
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
-        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
-
-        buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
-        buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
-
-        buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
@@ -475,55 +350,17 @@ class RobotHAL:
 
         buf.steerPositionList = [steerPosFL, steerPosFR, steerPosBL, steerPosBR]
 
-        buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))
+        buf.moduleFL = SwerveModulePosition(drivePosFL, Rotation2d(radians(steerPosFL)))  # Lincoln: needs to be removed from HAL
         buf.moduleFR = SwerveModulePosition(drivePosFR, Rotation2d(radians(steerPosFR)))
         buf.moduleBL = SwerveModulePosition(drivePosBL, Rotation2d(radians(steerPosBL)))
         buf.moduleBR = SwerveModulePosition(drivePosBR, Rotation2d(radians(steerPosBR)))
-        self.elevServo.setAngle(buf.elevServoAngle)
 
-        self.elevatorController.update(
-            buf.elevatorSetpoint,
-            buf.elevatorArbFF,
-            buf.elevatorSlot,
-            buf.elevatorControl,
-        )
-        self.manipulatorMotor.setVoltage(buf.manipulatorVolts)
-
-        buf.elevatorPos = self.elevatorMotorEncoder.getPosition()
-
-        buf.yaw = math.radians(-self.gyro.getAngle())
-
-        self.armController.update(buf.armSetpoint, 0)
-
-        buf.backArmLimitSwitch = self.backArmLimitSwitch.get()
-        buf.frontArmLimitSwitch = self.frontArmLimitSwitch.get()
-        buf.armPos = self.armMotorEncoder.getPosition()
-
-        buf.armTopLimitSwitch = self.armTopLimitSwitch.get()
-        buf.armBottomLimitSwitch = self.armBottomLimitSwitch.get()
-
-        self.table.putBoolean("Arm Top Limit Switch", buf.armTopLimitSwitch)
-        self.table.putBoolean("Arm Bottom Limit Switch", buf.armBottomLimitSwitch)
-        self.table.putNumber(
-            "Arm Voltage",
-            self.armMotor.getAppliedOutput() * self.armMotor.getBusVoltage(),
-        )
-        self.table.putNumber("Arm Pos", self.armMotorEncoder.getPosition())
-        self.table.putNumber("Arm Setpoint", buf.armSetpoint)
-
-        buf.chuteMotorVoltage = (
-            self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
-        )
-        buf.chuteLimitSwitch = self.chuteMotorLimitswitch.get()
-        self.chuteMotor.setVoltage(buf.setChuteVoltage)
-        buf.chutePosition = self.chuteMotorEncoder.getPosition()
-
-        if buf.resetChuteEncoder:
-            self.chuteMotorEncoder.setPosition(0)
-            buf.resetChuteEncoder = False
+        buf.yaw = math.radians(-self.gyro.getAngle()) # Lincoln: this is the gyro part...I hope its right.  #MICHAEL
 
         if self.table.getBoolean("ResetYaw", False):
             self.resetGyroToAngle(0)
+            self.table.putBoolean("ResetYaw", False)
+            # Lincoln I changed this to reset the "ResetYaw" table value to false again.  ##MICHAEL
 
 
 class SwerveModuleController:
