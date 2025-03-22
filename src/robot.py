@@ -91,6 +91,13 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
+        if self.photonCamera1.TFID < -1:
+            self.tempFidId = self.photonCamera1.fiducialId
+        elif self.photonCamera2.TFID < -1:
+            self.tempFidId = self.photonCamera1.fiducialId
+
+        self.table.putNumber("tempFidID", self.tempFidId)
+
         if not self.setpointActiveLeft and not self.setpointActiveRight:
             startCameraUpdate = wpilib.getTime()
             self.swerveDrive.update(
@@ -251,7 +258,7 @@ class Robot(wpilib.TimedRobot):
         )
 
         if (wpilib.getTime() - self.autoStartTime) < 5:
-            self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.25, 0, 0))
+            self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.50, 0, 0))
         else:
             self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(0, 0, 0))
 

@@ -21,7 +21,7 @@ class ElevatorSubsystem:
     INTAKE_POS = 0
     L2_POS = 11.71
     L3_POS = 24.59
-    L4_POS = 46  # changed from 45
+    L4_POS = 45.5  # changed from 45
     ALGAE_L2_POS = 13.78
     ALGAE_L3_POS = 24.52
 

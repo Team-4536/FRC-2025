@@ -136,7 +136,7 @@ class photonVision:
         if self.hasTargets:
             self.fiducialId = self.target[0].getFiducialId()
             self.ambiguity = self.target[0].getPoseAmbiguity()
-            # self.photonTable.putNumber("ambiguity", self.ambiguity)
+            self.photonTable.putNumber("ambiguity", self.ambiguity)
             if self.ambiguity < 0.04:
                 self.camEstPose = self.camPoseEst.update()
                 self.TFID = self.fiducialId
