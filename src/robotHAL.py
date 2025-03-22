@@ -68,6 +68,7 @@ class RobotHALBuffer:
         self.frontArmLimitSwitch: bool = False
         self.backArmLimitSwitch: bool = False
         self.armPos: float = 0
+        self.armVolts: float = 0
         self.armSetpoint: float = 0
         self.armTopLimitSwitch: bool = False
         self.armBottomLimitSwitch: bool = False
@@ -84,6 +85,8 @@ class RobotHALBuffer:
         self.chuteLimitSwitch = 0
         self.chuteMotorVoltage = 0.0
 
+        self.moveArmDown = False
+
         self.chutePosition: float = 0.0
         self.resetChuteEncoder: bool = False
 
@@ -92,6 +95,7 @@ class RobotHALBuffer:
 
     def stopMotors(self) -> None:
         self.manipulatorVolts = 0
+        self.armVolts = 0
 
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putNumber("Elevator Pos(rot)", self.elevatorPos)
@@ -105,6 +109,8 @@ class RobotHALBuffer:
 
         table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
         table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
+
+        table.putBoolean("Move arm down", self.moveArmDown)
 
         table.putNumber("yaw", self.yaw)
 

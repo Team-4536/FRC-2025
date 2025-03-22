@@ -22,10 +22,13 @@ from wpimath.controller import (
     ProfiledPIDControllerRadians,
 )
 from wpimath.trajectory import TrapezoidProfileRadians
+from wpimath.units import feetToMeters, radians
+from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
 import setpoints
-from math import radians
+
+# from math import radians
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
@@ -48,6 +51,7 @@ class SwerveDrive:
         self.kinematics = SwerveDrive4Kinematics(
             frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation
         )
+        self.OdomField = Field2d()
 
         # =======NEW, NOT TUNED=======================================
         constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
@@ -375,3 +379,51 @@ class SwerveDrive:
                 + f"{wpilib.getTime()}"
                 "\n"
             )
+
+    def updateForAutos(self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds):
+
+        self.chassisSpeeds = chassisSpeed
+
+        # temp = chassisSpeed.vx
+        # chassisSpeed.vx = chassisSpeed.vy
+        # chassisSpeed.vy = temp
+
+        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
+            self.unleashedModules,
+            self.MAX_METERS_PER_SEC,
+        )
+
+        self.table.putNumber(
+            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+        )
+
+        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+
+        FLModuleState = self.optimizeTarget(
+            swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
+        )
+        hal.driveFLSetpoint = FLModuleState.speed
+        hal.turnFLSetpoint = FLModuleState.angle.radians()
+        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
+
+        FRModuleState = self.optimizeTarget(
+            swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
+        )
+        hal.driveFRSetpoint = FRModuleState.speed
+        hal.turnFRSetpoint = FRModuleState.angle.radians()
+
+        BLModuleState = self.optimizeTarget(
+            swerveModuleStates[2], Rotation2d(hal.turnCCWBL)
+        )
+        hal.driveBLSetpoint = BLModuleState.speed
+        hal.turnBLSetpoint = BLModuleState.angle.radians()
+
+        BRModuleState = self.optimizeTarget(
+            swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
+        )
+        hal.driveBRSetpoint = BRModuleState.speed
