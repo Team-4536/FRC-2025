@@ -30,7 +30,7 @@ StageFunc = Callable[["Robot"], bool | None]
 
 class RobotAutos(Enum):
     NO_AUTO = "NO Auto"
-    MOVE_FORWARD_A = "Move Forward A"
+    # MOVE_FORWARD_A = "Move Forward A"
     DO_NOTHING = "DO Nothing"
     HIGH4_CENTER = "place highL4"
     TEST = "test"
@@ -45,6 +45,7 @@ class RobotAutos(Enum):
     MIDDLE_PIECE = "middle 1 piece"
     PIECE2_AUTO = "2 piece auto"
     ROTATION_TEST = "rotation test"
+    FROMLEFT_PLACE = "place from left"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -257,8 +258,8 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         pass
     elif stageChooser == RobotAutos.DO_NOTHING.value:
         pass
-    elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
-        ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
+    # elif stageChooser == RobotAutos.MOVE_FORWARD_A.value:
+    #     ret["leftCorner-leftDiag"] = ASfollowPath("leftCorner-leftDiag", r.onRedSide, r)
     elif stageChooser == RobotAutos.TEST.value:
         ret["test"] = ASfollowPath("test", r.onRedSide, r)
     elif stageChooser == RobotAutos.REEF4_l4.value:
@@ -314,6 +315,12 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["elevator-level0"] = ASelvator0()
     elif stageChooser == RobotAutos.ROTATION_TEST.value:
         ret["rotation-test"] = ASfollowPath("rotation-test", r.onRedSide, r)
+    elif stageChooser == RobotAutos.FROMLEFT_PLACE.value:
+        ret["intake-coral"] = ASintakeCoraL()
+        ret["leftCorner-reef6"] = ASfollowPath("leftCorner-reef6", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
 
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)
