@@ -76,7 +76,7 @@ class Robot(wpilib.TimedRobot):
         self.autoSideChooser.addOption(AUTO_SIDE_BLUE, AUTO_SIDE_BLUE)
         wpilib.SmartDashboard.putData("auto side chooser", self.autoSideChooser)
 
-        self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        # self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -132,10 +132,10 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
-        if self.photonCamera1.TFID < -1:
-            self.tempFidId = self.photonCamera1.fiducialId
-        elif self.photonCamera2.TFID < -1:
-            self.tempFidId = self.photonCamera1.fiducialId
+        if self.photonCamera1.TFID > -1:
+            self.tempFidId = self.photonCamera1.TFID
+        elif self.photonCamera2.TFID > -1:
+            self.tempFidId = self.photonCamera2.TFID
 
         self.table.putNumber("tempFidID", self.tempFidId)
 
@@ -311,6 +311,9 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousInit(self) -> None:
         self.hal.stopMotors()
+        AUTO_SIDE_RED = "red"
+        AUTO_SIDE_BLUE = "blue"
+        self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
         self.autoStartTime = wpilib.getTime()
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(5, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
