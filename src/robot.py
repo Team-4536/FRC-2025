@@ -130,6 +130,8 @@ class Robot(wpilib.TimedRobot):
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
 
+        self.hal.rotPIDToggle = False
+
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
         if self.photonCamera1.TFID > -1:

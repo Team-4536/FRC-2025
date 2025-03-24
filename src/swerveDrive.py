@@ -55,9 +55,9 @@ class SwerveDrive:
 
         # =======NEW, NOT TUNED=======================================
         constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
-        xPID = PIDController(0.1, 0, 0)
-        yPID = PIDController(0.1, 0, 0)
-        rotPID = ProfiledPIDControllerRadians(1.2, 0, 0, constraints)
+        xPID = PIDController(0, 0, 0)
+        yPID = PIDController(0, 0, 0)
+        rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
 
         self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
         self.yawOffset = 0.0

@@ -231,7 +231,7 @@ class RobotHAL:
 
         driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
             2000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(10000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
+        ).maxAcceleration(50000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
         driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
         turnMotorPIDConfig = SparkMaxConfig()
@@ -434,6 +434,11 @@ class RobotHAL:
             "putting to network tables update Time",
             wpilib.getTime() - startCameraUpdate,
         )
+
+        self.table.putNumber(
+            "z_FLDRIVESPEEDEDDEDD", self.driveMotorFL.getAppliedOutput()
+        )
+
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
