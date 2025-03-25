@@ -1,16 +1,16 @@
 from ntcore import NetworkTableInstance
 from wpimath.controller import (
-    HolonomicDriveController,
     PIDController,
-    ProfiledPIDControllerRadians,
 )
-from wpimath.trajectory import TrapezoidProfileRadians
-
+from wpimath.kinematics import ChassisSpeeds
 from robotHAL import RobotHALBuffer
 from swerveDrive import SwerveDrive
 
 
 class Limelight:
+
+    DESIRED_TX: float = 0
+
     def __init__(self):
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
@@ -20,35 +20,20 @@ class Limelight:
         self.strafeDirection: float = 0.0
         self.validTarget: bool = False
         self.targetRequested: bool = False
-        self.holonomicController = HolonomicDriveController(
-            PIDController(0, 0, 0),
-            PIDController(0, 0, 0),
-            ProfiledPIDControllerRadians(
-                0, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
-            ),
-        )
+        self.reefPIDController = PIDController(0.1, 0, 0)
 
-    def update(self, hal: RobotHALBuffer, autoTarget: bool):
+    def update(self, hal: RobotHALBuffer, swerve: SwerveDrive):
 
-        if autoTarget:
-            self.targetRequested = True
+        self.tx = self.llTable.getNumber("tx", 0.0)
+        # Assume targetRequested is valid if tx is within measurable range
+        self.validTarget = self.llTable.getNumber("tv", 0) == 1
 
-        if self.targetRequested:
-            self.tx = self.llTable.getNumber("tx", 0.0)
-            # Assume targetRequested is valid if tx is within measurable range
-            self.validTarget = self.llTable.getNumber("tv", 0) == 1
+        if not self.validTarget:
+            swerve.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            return
 
-            if self.validTarget:
-                if self.tx > self.allowedError:
-                    self.strafeDirection = 1
-                elif self.tx < -self.allowedError:
-                    self.strafeDirection = -1
-                else:
-                    self.targetRequested = False
-                    self.strafeDirection = 0
-
-                # Uncomment below to activate swerve drive behavior
-                hal.AutoTargetPipeDirection = self.strafeDirection
-                SwerveDrive.update(self, hal, self.strafeDirection, 0, 0, 0)
-
-        self.table.putNumber("strafe direction", self.strafeDirection)
+        hal.AutoTargetPipeDirection = self.strafeDirection
+        chassisY = self.reefPIDController.calculate(self.tx, self.DESIRED_TX)
+        chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
+        swerve.updateWithoutSticks(hal, chassisSpeeds)
+        self.table.putNumber("Strafe Speed", chassisY)

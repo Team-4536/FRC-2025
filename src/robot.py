@@ -108,19 +108,24 @@ class Robot(wpilib.TimedRobot):
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
-
+        self.limeLight = Limelight()
         self.hal.rotPIDToggle = False
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
-
-        self.swerveDrive.update(
-            self.hal,
-            self.driveCtrlr.getLeftX(),
-            -self.driveCtrlr.getLeftY(),
-            self.driveCtrlr.getRightX(),
-            self.driveCtrlr.getRightTriggerAxis(),
-        )
+        if not self.driveCtrlr.getPOV() == 0:
+            self.swerveDrive.update(
+                self.hal,
+                self.driveCtrlr.getLeftX(),
+                -self.driveCtrlr.getLeftY(),
+                self.driveCtrlr.getRightX(),
+                self.driveCtrlr.getRightTriggerAxis(),
+            )
+        else:
+            self.limeLight.update(
+                self.hal,
+                self.swerveDrive,
+            )
 
         self.elevatorSubsystem.update(
             self.hal,
@@ -131,6 +136,7 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getXButtonPressed(),
             self.mechCtrlr.getBButton(),
         )
+        self.swerveDrive
         self.table.putNumber(
             "Elavator update Time", wpilib.getTime() - startCameraUpdate
         )
