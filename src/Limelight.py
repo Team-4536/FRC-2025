@@ -1,6 +1,11 @@
 from ntcore import NetworkTableInstance
+from wpimath.controller import (
+    HolonomicDriveController,
+    PIDController,
+    ProfiledPIDControllerRadians,
+)
+from wpimath.trajectory import TrapezoidProfileRadians
 
-# from networktables import NetworkTable
 from robotHAL import RobotHALBuffer
 from swerveDrive import SwerveDrive
 
@@ -15,6 +20,13 @@ class Limelight:
         self.strafeDirection: float = 0.0
         self.validTarget: bool = False
         self.targetRequested: bool = False
+        self.holonomicController = HolonomicDriveController(
+            PIDController(0, 0, 0),
+            PIDController(0, 0, 0),
+            ProfiledPIDControllerRadians(
+                0, 0, 0, TrapezoidProfileRadians.Constraints(6.28, 3.14)
+            ),
+        )
 
     def update(self, hal: RobotHALBuffer, autoTarget: bool):
 
