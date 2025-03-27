@@ -25,7 +25,7 @@ class Limelight:
     def update(self, hal: RobotHALBuffer, swerve: SwerveDrive):
 
         self.tx = self.llTable.getNumber("tx", 0.0)
-        # Assume targetRequested is valid if tx is within measurable range
+        rawTargets = self.llTable.getNumberArray("raw_targets", [])
         self.validTarget = self.llTable.getNumber("tv", 0) == 1
 
         if not self.validTarget:
