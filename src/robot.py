@@ -17,6 +17,7 @@ from wpimath.units import radians
 from manipulator import ManipulatorSubsystem
 from IntakeChute import IntakeChute
 from led import LEDSignals
+from limelight import Limelight
 import pathplannerlib  # type: ignore
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
 import autoStages
@@ -57,6 +58,7 @@ class Robot(wpilib.TimedRobot):
         self.intakeChute = IntakeChute()
         self.tempFidId = -1
         self.ledSignals: LEDSignals = LEDSignals()
+        self.limelight = Limelight()
 
         self.povPrev = 0
 
@@ -141,7 +143,11 @@ class Robot(wpilib.TimedRobot):
 
         self.table.putNumber("tempFidID", self.tempFidId)
 
-        if not self.setpointActiveLeft and not self.setpointActiveRight:
+        if (
+            not self.setpointActiveLeft
+            and not self.setpointActiveRight
+            and not self.driveCtrlr.getPOV == 0
+        ):
             startCameraUpdate = wpilib.getTime()
             self.swerveDrive.update(
                 self.hal,
@@ -154,6 +160,9 @@ class Robot(wpilib.TimedRobot):
             self.table.putNumber(
                 "Swerve drive update Time", wpilib.getTime() - startCameraUpdate
             )
+        elif self.driveCtrlr.getPOV() == 0:
+            self.limelight.update(self.hal, self.swerveDrive)
+
         if self.driveCtrlr.getLeftBumperButton():
             self.setpointActiveLeft = True
             self.setpointActiveRight = False
