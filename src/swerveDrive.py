@@ -105,7 +105,9 @@ class SwerveDrive:
             ),
         )
         # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
-        self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
+        self.odometry.resetPosition(
+            Rotation2d(hal.yaw), modulePosList, pose
+        )  ##TODO: Rotation2d(hal.yaw) should go the other way.  Get value from pose and load into hal/NavX
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
@@ -168,7 +170,7 @@ class SwerveDrive:
         # returns chassis speeds
         adjustedSpeeds = self.holonomicController.calculate(
             fakeBotPos, fakeBotPos, 0, rotTarget
-        )
+        )  # TODO: running the holonomic controller more than once is kinda scary
         # take only rotational speed
         rotPIDSpeed = adjustedSpeeds.omega
 

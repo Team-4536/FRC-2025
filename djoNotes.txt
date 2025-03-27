@@ -1,0 +1,4 @@
+confirm that we can actually reset the gyro with a new angle
+
+Replace all self.odometry.resetPosition() with SwerveDrive.resetOdometry()
+Fix SwerveDrive.resetOdometry() such that it overwrites the gyro yaw with the pose yaw

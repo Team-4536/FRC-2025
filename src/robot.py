@@ -126,7 +126,9 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
 
     def teleopInit(self) -> None:
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.swerveDrive.resetOdometry(
+            Pose2d(), self.hal
+        )  # TODO: shouldnt reset pose to 0 0 0
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
 
@@ -258,8 +260,8 @@ class Robot(wpilib.TimedRobot):
         self.table.putNumber(
             "manipulator update Time", wpilib.getTime() - startCameraUpdate
         )
-        if self.driveCtrlr.getStartButton():
-            self.hardware.resetGyroToAngle(0)
+        # if self.driveCtrlr.getStartButton():
+        #     self.hardware.resetGyroToAngle(0)
 
         # abs drive toggle
         if self.driveCtrlr.getLeftStickButtonPressed():
@@ -278,7 +280,7 @@ class Robot(wpilib.TimedRobot):
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
         startCameraUpdate = wpilib.getTime()
-        self.swerveDrive.updateOdometry(self.hal)
+        self.swerveDrive.updateOdometry(self.hal)  ##TODO: Remove - in RobotPeriodic
         self.table.putNumber(
             "odometry update Time", wpilib.getTime() - startCameraUpdate
         )
@@ -287,7 +289,7 @@ class Robot(wpilib.TimedRobot):
                 self.tempFidId, self.swerveDrive.odometry.getPose().rotation().radians()
             )
 
-        self.swerveDrive.updateOdometry(self.hal)
+        self.swerveDrive.updateOdometry(self.hal)  ##TODO: Remove
         if self.mechCtrlr.getAButtonPressed():
             if self.photonCamera1.fiducialId > 0:
                 self.swerveDrive.savePos(
