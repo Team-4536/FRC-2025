@@ -116,14 +116,14 @@ class Robot(wpilib.TimedRobot):
                 self.photonCamera1.robotY,
                 self.photonCamera1.robotAngle,
             )
-            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+            self.swerveDrive.resetOdometry(self.photonPose2d)
         if self.photonCamera2.ambiguity < 0.2:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
                 self.photonCamera2.robotAngle,
             )
-            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+            self.swerveDrive.resetOdometry(self.photonPose2d)
 
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
