@@ -146,7 +146,7 @@ class Robot(wpilib.TimedRobot):
         if (
             not self.setpointActiveLeft
             and not self.setpointActiveRight
-            and not self.driveCtrlr.getPOV == 0
+            and not self.driveCtrlr.getPOV() == 0
         ):
             startCameraUpdate = wpilib.getTime()
             self.swerveDrive.update(

@@ -21,16 +21,27 @@ class Limelight:
         self.validTarget: bool = False
         self.targetRequested: bool = False
         self.reefPIDController = PIDController(0.1, 0, 0)
+        self.txForMultipleTargets = []
 
     def update(self, hal: RobotHALBuffer, swerve: SwerveDrive):
-
-        self.tx = self.llTable.getNumber("tx", 0.0)
-        rawTargets = self.llTable.getNumberArray("raw_targets", [])
-        self.validTarget = self.llTable.getNumber("tv", 0) == 1
 
         if not self.validTarget:
             swerve.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
             return
+        rawTargets = self.llTable.getNumberArray("raw_targets", [])
+        self.txForMultipleTargets = []
+        for i in range(0, len(rawTargets), 3):
+            self.txForMultipleTargets.append(rawTargets[i])
+
+        self.validTarget = self.llTable.getNumber("tv", 0) == 1
+        if self.txForMultipleTargets[1]:
+            smallest = self.txForMultipleTargets[0]
+            for i in (1, len(self.txForMultipleTargets)):
+                if smallest > self.txForMultipleTargets[i]:
+                    smallest = self.txForMultipleTargets[i]
+            self.tx = smallest
+        else:
+            self.tx = self.llTable.getNumber("tx", 0.0)
 
         chassisY = self.reefPIDController.calculate(self.tx, self.DESIRED_TX)
         chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
