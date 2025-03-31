@@ -5,6 +5,7 @@ import math
 import wpilib
 from wpilib import SmartDashboard, Field2d
 import numpy as np
+import photonOdometry
 from ntcore import NetworkTableInstance
 from real import angleWrap
 import wpimath.units
@@ -119,11 +120,16 @@ class SwerveDrive:
         joystickRotation: float,
         RTriggerScalar: float,
         resetOffset: bool,
+        setPointLeft: bool,
+        setPointRight: bool,
+        camera1TFID: int,
+        camera2TFID: int,
+        savePos: bool,
     ):
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
-
+        # startCameraUpdate = wpilib.getTime()
         if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
             joystickY = 0
@@ -137,9 +143,13 @@ class SwerveDrive:
         self.proxyDeadZoneX = (joystickX - self.offsetX) * 3.5
         self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
         self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 10
-
+        # self.table.putNumber(
+        #     "setting up dead zones stuff update Time",
+        #     wpilib.getTime() - startCameraUpdate,
+        # )
         # the controller's x axis the the ChassisSpeeds' y axis and same for the other x and y axies
         # the signes are flipped for the differences too
+
         self.driveY = -self.proxyDeadZoneX
         self.driveX = -self.proxyDeadZoneY
         self.driveRotation = -self.proxyDeadZoneR
@@ -161,7 +171,9 @@ class SwerveDrive:
 
         self.table.putNumber("z_PID Setpoint", hal.rotPIDsetpoint)
         self.table.putBoolean("z_Absolute Drive", hal.fieldOriented)
-
+        # self.table.putNumber(
+        #     "unsure what this does update Time", wpilib.getTime() - startCameraUpdate
+        # )
         # --------------EMMETT'S SCARY NEW STUFF-----------------------------------
         rotPos = Rotation2d(hal.yaw)
         fakeBotPos = Pose2d(0, 0, rotPos)
@@ -179,7 +191,9 @@ class SwerveDrive:
             rotFinal = rotPIDSpeed * 5
         else:
             rotFinal = self.driveRotation  # copied from HCPA code
-
+        # self.table.putNumber(
+        #     " Emmetts scary stuff update Time", wpilib.getTime() - startCameraUpdate
+        # )
         # -------------------------------------------------------------------
 
         self.chassisSpeeds = ChassisSpeeds(
@@ -210,7 +224,10 @@ class SwerveDrive:
         self.table.putNumber(
             "SD Module Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
-
+        # self.table.putNumber(
+        #     "setting up chassis speeds stuff update Time",
+        #     wpilib.getTime() - startCameraUpdate,
+        # )
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
@@ -234,6 +251,68 @@ class SwerveDrive:
         )
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
+        # self.table.putNumber(
+        #     "setting module states update time update Time",
+        #     wpilib.getTime() - startCameraUpdate,
+        # )
+        if setPointLeft:
+            self.setpointActiveLeft = True
+            self.setpointActiveRight = False
+            # self.tempFidId = camera1.fiducialId
+            if camera2TFID > -1:
+                self.tempFidId = camera2TFID
+            elif camera1TFID > -1:
+                self.tempFidId = camera1TFID
+            else:
+                self.setpointActiveLeft = False
+        else:
+            self.setpointActiveLeft = False
+        if setPointRight:
+            self.setpointActiveRight = True
+            self.setpointActiveLeft = False
+            if camera1TFID > -1:
+                self.tempFidId = camera1TFID
+            elif camera2TFID > -1:
+                self.tempFidId = camera2TFID
+            else:
+                self.setpointActiveRight = False
+        else:
+            self.setpointActiveRight = False
+        if self.setpointActiveLeft:
+
+            self.setpointChooser(
+                self.odometry.getPose().rotation().radians(),
+                self.tempFidId,
+                "left",
+            )
+            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        if self.setpointActiveRight:
+
+            self.setpointChooser(
+                self.odometry.getPose().rotation().radians(),
+                self.tempFidId,
+                "left",
+            )
+            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        if self.setpointActiveRight:
+
+            self.setpointChooser(
+                self.odometry.getPose().rotation().radians(),
+                self.tempFidId,
+                "right",
+            )
+            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        if savePos:
+            if self.tempFidId > 0:
+                self.savePos(
+                    self.tempFidId,
+                    self.odometry.getPose().rotation().radians(),
+                )
+            else:
+                self.savePos(0, self.odometry.getPose().rotation().radians())
+        # self.table.putNumber(
+        #     "setpoint update Time", wpilib.getTime() - startCameraUpdate
+        # )
 
     def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
 
