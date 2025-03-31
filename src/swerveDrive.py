@@ -88,7 +88,7 @@ class SwerveDrive:
             self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
 
-    def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
+    def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer, ambiguity):
 
         modulePosList = (
             SwerveModulePosition(
@@ -105,8 +105,8 @@ class SwerveDrive:
             ),
         )
         # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
-
-        hal.newYaw = pose.rotation().radians()
+        if ambiguity == 0:
+            hal.newYaw = -pose.rotation().degrees()
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")

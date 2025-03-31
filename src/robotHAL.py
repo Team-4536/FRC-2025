@@ -76,7 +76,7 @@ class RobotHALBuffer:
         self.elevServoAngle: float = 0.0
 
         self.yaw: float = 0
-        self.newYaw: float = None
+        self.newYaw: float | None = None
 
         self.fieldOriented: bool = True
         self.rotPIDsetpoint: int = 0
