@@ -1,4 +1,10 @@
 confirm that we can actually reset the gyro with a new angle
 
-Replace all self.odometry.resetPosition() with SwerveDrive.resetOdometry()
+Remove excess *.yaw set line in HAL
 Fix SwerveDrive.resetOdometry() such that it overwrites the gyro yaw with the pose yaw
+Replace all self.odometry.resetPosition() with SwerveDrive.resetOdometry()
+Skim for other yaw / resetPosition statements and align them with above.
+
+
+Good practices:
+  Stick to one "domain" for units CCW +pi to -pi radians - Only the HAL_hardware should have any other units (e.g., when interfacing with NavX)
