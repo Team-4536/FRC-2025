@@ -27,6 +27,9 @@ from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
 import setpoints
+import json
+import requests
+import limelightresults  # type:ignore
 
 # from math import radians
 
@@ -34,6 +37,8 @@ import setpoints
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
+    DESIRED_TX: float = 160  # for limelights
+    URL = "http://10.45.36.11:5807/results"
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
@@ -87,6 +92,11 @@ class SwerveDrive:
         self.odometry = SwerveDrive4Odometry(
             self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
+        # ==============================================================
+        self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
+        self.txValues = self.llTable.getNumberArray("llpython", [])
+        self.allowedError: float = 1  # in degrees
+        self.reefPIDController = PIDController(0.1, 0, 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
 
@@ -117,7 +127,12 @@ class SwerveDrive:
         joystickRotation: float,
         RTriggerScalar: float,
         resetOffset: bool,
+        targetReef: bool,
     ):
+        if targetReef:
+            self.updateLimelight(hal)
+            return
+
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)
         self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
@@ -279,31 +294,31 @@ class SwerveDrive:
 
         return output
 
-    def setpointChooser(self, yaw, fiducialID, side):
+    def setpointChooser(self, yaw, resultsID, side):
 
         self.currentPose = Pose2d(self.odomPos[0], self.odomPos[1], yaw)
 
         if side == "left":
-            self.rot = Rotation2d(setpoints.tagLeft[fiducialID][2])
+            self.rot = Rotation2d(setpoints.tagLeft[resultsID][2])
             self.desiredPose = Pose2d(
-                setpoints.tagLeft[fiducialID][0],
-                setpoints.tagLeft[fiducialID][1],
+                setpoints.tagLeft[resultsID][0],
+                setpoints.tagLeft[resultsID][1],
                 self.rot,
             )
 
         elif side == "right":
-            self.rot = Rotation2d(setpoints.tagRight[fiducialID][2])
+            self.rot = Rotation2d(setpoints.tagRight[resultsID][2])
 
             self.desiredPose = Pose2d(
-                setpoints.tagRight[fiducialID][0],
-                setpoints.tagRight[fiducialID][1],
+                setpoints.tagRight[resultsID][0],
+                setpoints.tagRight[resultsID][1],
                 self.rot,
             )
         else:
             self.desiredPose = Pose2d(0, 0, 0)
 
-        if not (setpoints.tagRight[fiducialID][0] == 0) and not (
-            setpoints.tagRight[fiducialID][1] == 0
+        if not (setpoints.tagRight[resultsID][0] == 0) and not (
+            setpoints.tagRight[resultsID][1] == 0
         ):
             self.adjustedSpeeds = self.controller.calculate(
                 self.currentPose, self.desiredPose, 0, self.rot
@@ -356,7 +371,7 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-    def savePos(self, fiducialID: int, yaw: float):
+    def savePos(self, resultsID: int, yaw: float):
         with open("/home/lvuser/photon.txt", "a") as f:
             f.write("match: " + str(self.FMSData.getNumber("MatchNumber", 0)) + " ")
             if self.FMSData.getBoolean("IsRedAlliance", True):
@@ -367,7 +382,7 @@ class SwerveDrive:
                 " "
                 + str(self.FMSData.getNumber("StationNumber", 0))
                 + " tag: "
-                + str(fiducialID)
+                + str(resultsID)
                 + " X: "
                 + f"{self.odomPos[0]}"
                 + " Y: "
@@ -427,3 +442,16 @@ class SwerveDrive:
             swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
         )
         hal.driveBRSetpoint = BRModuleState.speed
+
+    def updateLimelight(self, hal: robotHAL.RobotHALBuffer):
+
+        validTarget = self.llTable.getNumber("tv", 0) == 1
+        if not validTarget:
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            return
+
+        tx = min(self.txValues[0], self.txValues[1])
+        chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
+        chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
+        self.updateWithoutSticks(hal, chassisSpeeds)
+        self.table.putNumber("Strafe Speed", chassisY)
