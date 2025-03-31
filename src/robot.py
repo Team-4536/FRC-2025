@@ -78,6 +78,8 @@ class Robot(wpilib.TimedRobot):
 
         # self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
 
+        self.driverOffset = 0
+
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
         self.hal.publish(self.table)
@@ -258,8 +260,6 @@ class Robot(wpilib.TimedRobot):
         self.table.putNumber(
             "manipulator update Time", wpilib.getTime() - startCameraUpdate
         )
-        if self.driveCtrlr.getStartButton():
-            self.hardware.resetGyroToAngle(0)
 
         # abs drive toggle
         if self.driveCtrlr.getLeftStickButtonPressed():

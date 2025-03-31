@@ -442,7 +442,7 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
-        buf.yaw = degreesToRadians(-self.gyro.getAngle())
+        # buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
