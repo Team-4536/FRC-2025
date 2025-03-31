@@ -50,7 +50,7 @@ class Robot(wpilib.TimedRobot):
         # 0.11747
         # 0.33337
         self.swerveDrive: SwerveDrive = SwerveDrive()
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)
 
         self.elevatorSubsystem = ElevatorSubsystem()
         self.manipulatorSubsystem = ManipulatorSubsystem()
@@ -118,17 +118,21 @@ class Robot(wpilib.TimedRobot):
                 self.photonCamera1.robotY,
                 self.photonCamera1.robotAngle,
             )
-            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+            self.swerveDrive.resetOdometry(
+                self.photonPose2d, self.hal, self.photonCamera1.ambiguity
+            )
         if self.photonCamera2.ambiguity < 0.2:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
                 self.photonCamera2.robotAngle,
             )
-            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+            self.swerveDrive.resetOdometry(
+                self.photonPose2d, self.hal, self.photonCamera2.ambiguity
+            )
 
     def teleopInit(self) -> None:
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
 
@@ -338,8 +342,8 @@ class Robot(wpilib.TimedRobot):
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
 
-        # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
-        # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal, -1)
+        # self.swerveDrive.resetOdometry(Pose2d(), self.hal,-1)
 
         if self.currentAuto >= len(self.autoKeys):
             self.autoFinished = True

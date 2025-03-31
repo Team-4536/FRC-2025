@@ -76,6 +76,7 @@ class RobotHALBuffer:
         self.elevServoAngle: float = 0.0
 
         self.yaw: float = 0
+        self.newYaw: float | None = None
 
         self.fieldOriented: bool = True
         self.rotPIDsetpoint: int = 0
@@ -442,7 +443,11 @@ class RobotHAL:
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
 
-        # buf.yaw = degreesToRadians(-self.gyro.getAngle())
+        if buf.newYaw != None:
+            self.resetGyroToAngle(buf.newYaw)
+            buf.newYaw = None
+
+        buf.yaw = degreesToRadians(-self.gyro.getAngle())
 
         drivePosFL = (
             (2 * math.pi)
