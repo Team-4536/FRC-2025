@@ -37,9 +37,23 @@ class ElevatorSubsystem:
             .getTable("telemetry")
             .getSubTable("Elevator Subsystem")
         )
-        self.table.putBoolean("Elevator Debug Mode", False)
-        self.table.putNumber("Elevator setpoint offset", 0)
-        self.table.putNumber("Elevator arbFF offset", 0)
+
+        self.elevatorDebugModeNT = self.table.getEntry("Elevator Debug Mode")
+        self.elevatorDebugModeNT.setBoolean(False)
+        self.elevatorSetpointOffsetNT = self.table.getEntry("Elevator Setpoint offset")
+        self.elevatorSetpointOffsetNT.setFloat(0)
+        self.elevatorArbFFOffsetNT = self.table.getEntry("Elevator arbFF offset")
+        self.elevatorArbFFOffsetNT.setFloat(0)
+
+        self.elevatorUpNT = self.table.getEntry("Elevator up")
+        self.elevatorDownNT = self.table.getEntry("Elevator down")
+
+        self.setpointNT = self.table.getEntry("Elevator Setpoint")
+        self.posSetpointNT = self.table.getEntry("Elevator Pos Setpoint")
+        self.velSetpointNT = self.table.getEntry("Elevator Vel Setpoint")
+        self.algaePosModeNT = self.table.getEntry("Algae Pos Mode")
+        self.moveArmDownNT = self.table.getEntry("Move Arm Down")
+        self.stateNT = self.table.getEntry("Elevator State")
 
         self.velSetpoint: float = 0.0
         self.posSetpoint: float = 0.0
@@ -69,9 +83,6 @@ class ElevatorSubsystem:
             up = 0
         if down < 0.1:
             down = 0
-        if self.debugMode:
-            self.table.putNumber("Elevator up", up)
-            self.table.putNumber("Elevator down", down)
 
         if toggleManualMode:
             if self.mode == ElevatorMode.MANUAL_MODE:
@@ -83,8 +94,8 @@ class ElevatorSubsystem:
                 self.velSetpoint = 0
                 self.posSetpoint = 0
 
-        hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-            "Elevator setpoint offset", 0
+        hal.elevatorSetpoint = (
+            self.velSetpoint + self.elevatorSetpointOffsetNT.getFloat(0)
         )
 
         if self.mode == ElevatorMode.POSITION_MODE:
@@ -107,8 +118,8 @@ class ElevatorSubsystem:
                 elif POVSetpoint == 0:
                     self.posSetpoint = self.ALGAE_L3_POS
 
-            hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-                "Elevator setpoint offset", 0
+            hal.elevatorSetpoint = (
+                self.posSetpoint + self.elevatorSetpointOffsetNT.getFloat(0)
             )
 
             if (
@@ -129,8 +140,8 @@ class ElevatorSubsystem:
             hal.elevatorSlot = ClosedLoopSlot.kSlot1
             # velocity logic on bottom and top
             self.velSetpoint = 90 * up + (-90 * down)  # moves the elevator
-            hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
-                "Elevator setpoint offset", 0
+            hal.elevatorSetpoint = (
+                self.velSetpoint + self.elevatorSetpointOffsetNT.getFloat(0)
             )
 
         if not hal.elevatorPos <= 0.8 or hal.secondManipulatorSensor:
@@ -138,17 +149,18 @@ class ElevatorSubsystem:
         else:
             hal.elevServoAngle = 0
 
-        self.debugMode = self.table.getBoolean("Elevator Debug Mode", False)
+        self.debugMode = self.elevatorDebugModeNT.getBoolean(False)
         if self.debugMode:
-            self.table.putNumber("Elevator up", up)
-            self.table.putNumber("Elevator down", down)
-            self.table.putNumber("Elevator Setpoint", hal.elevatorSetpoint)
-            self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
-            self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
-        self.table.putBoolean("Algae Pos Mode", algaePosMode)
-        self.table.putBoolean("Move Arm Down", self.moveArmDown)
-        self.table.putString("Elevator State", self.mode.name)
-        hal.elevatorArbFF = 0.5 + self.table.getNumber("Elevator arbFF offset", 0)
+            self.elevatorUpNT.setFloat(up)
+            self.elevatorDownNT.setFloat(down)
+            self.setpointNT.setFloat(hal.elevatorSetpoint)
+            self.posSetpointNT.setFloat(self.posSetpoint)
+            self.velSetpointNT.setFloat(self.velSetpoint)
+        self.moveArmDownNT.setBoolean(self.moveArmDown)
+        self.algaePosModeNT.setBoolean(self.algaePosMode)
+        self.stateNT.setString(self.mode.name)
+
+        hal.elevatorArbFF = 0.5 + self.elevatorArbFFOffsetNT.getFloat(0)
 
     def level4AutoUpdate(self, hal: RobotHALBuffer):
 
@@ -158,8 +170,8 @@ class ElevatorSubsystem:
         hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
         self.posSetpoint = self.L4_POS
-        hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-            "Elevator setpoint offset", 0
+        hal.elevatorSetpoint = (
+            self.posSetpoint + self.elevatorSetpointOffsetNT.getFloat(0)
         )
 
         if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
@@ -177,8 +189,8 @@ class ElevatorSubsystem:
         hal.elevatorSlot = ClosedLoopSlot.kSlot0
 
         self.posSetpoint = self.INTAKE_POS
-        hal.elevatorSetpoint = self.posSetpoint + self.table.getNumber(
-            "Elevator setpoint offset", 0
+        hal.elevatorSetpoint = (
+            self.posSetpoint + self.elevatorSetpointOffsetNT.getFloat(0)
         )
 
         if hal.elevatorSetpoint < 5 and not hal.backArmLimitSwitch:
