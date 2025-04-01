@@ -16,12 +16,16 @@ class ManipulatorState(Enum):
 
 class ManipulatorSubsystem:
 
-    debug = False
-
-    def __init__(self):
-
+    def __init__(self) -> None:
         self.state: ManipulatorState = ManipulatorState.IDLE
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Manipulator Subsystem")
+        )
+
+        self.debug = False
+        self.table.putBoolean("Manipulator Debug Mode", self.debug)
 
     def update(
         self,
@@ -72,6 +76,7 @@ class ManipulatorSubsystem:
             if LBumper:
                 self.state = ManipulatorState.IDLE
 
+        self.debug = self.table.getBoolean("Manipulator Debug Mode", False)
         if self.debug == True:
             self.table.putNumber("manipulator voltage", buf.manipulatorVolts)
         self.table.putString("maniState", self.state.name)

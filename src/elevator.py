@@ -1,4 +1,3 @@
-# imports
 from robotHAL import RobotHALBuffer
 from robotHAL import RobotHAL
 from ntcore import NetworkTableInstance
@@ -32,13 +31,18 @@ class ElevatorSubsystem:
     # this is an elevator position where it is safe for the arm to move
     ELEVATOR_CLEARS_BUMPERS_FOR_ARM = 7
 
-    def __init__(self):
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+    def __init__(self) -> None:
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Elevator Subsystem")
+        )
+        self.table.putBoolean("Elevator Debug Mode", False)
         self.table.putNumber("Elevator setpoint offset", 0)
         self.table.putNumber("Elevator arbFF offset", 0)
 
-        self.velSetpoint = 0
-        self.posSetpoint = 0
+        self.velSetpoint: float = 0.0
+        self.posSetpoint: float = 0.0
 
         self.mode = ElevatorMode.POSITION_MODE
         self.debugMode = False
@@ -68,6 +72,7 @@ class ElevatorSubsystem:
         if self.debugMode:
             self.table.putNumber("Elevator up", up)
             self.table.putNumber("Elevator down", down)
+
         if toggleManualMode:
             if self.mode == ElevatorMode.MANUAL_MODE:
                 self.mode = ElevatorMode.POSITION_MODE
@@ -77,6 +82,10 @@ class ElevatorSubsystem:
                 self.mode = ElevatorMode.MANUAL_MODE
                 self.velSetpoint = 0
                 self.posSetpoint = 0
+
+        hal.elevatorSetpoint = self.velSetpoint + self.table.getNumber(
+            "Elevator setpoint offset", 0
+        )
 
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition
@@ -129,8 +138,11 @@ class ElevatorSubsystem:
         else:
             hal.elevServoAngle = 0
 
+        self.debugMode = self.table.getBoolean("Elevator Debug Mode", False)
         if self.debugMode:
-            self.table.putNumber("Elevator Setpoint(e)", hal.elevatorSetpoint)
+            self.table.putNumber("Elevator up", up)
+            self.table.putNumber("Elevator down", down)
+            self.table.putNumber("Elevator Setpoint", hal.elevatorSetpoint)
             self.table.putNumber("Elevator Pos Setpoint", self.posSetpoint)
             self.table.putNumber("Elevator Vel Setpoint", self.velSetpoint)
         self.table.putBoolean("Algae Pos Mode", algaePosMode)

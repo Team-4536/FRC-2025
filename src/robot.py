@@ -20,6 +20,7 @@ from led import LEDSignals
 import pathplannerlib  # type: ignore
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
 import autoStages
+from profiler import Profiler
 
 
 class Robot(wpilib.TimedRobot):
@@ -36,6 +37,7 @@ class Robot(wpilib.TimedRobot):
             self.hardware = RobotSimHAL()
         else:
             self.hardware = robotHAL.RobotHAL()
+        # self.hardware = robotHAL.RobotHAL()
 
         self.hardware.update(self.hal, self.time)
 
@@ -82,10 +84,16 @@ class Robot(wpilib.TimedRobot):
         self.cam1TFID = -1
         self.cam2TFID = -1
 
+        self.hardwareProfiler = Profiler("HardwareUpdate")
+        self.swerveDriveProfiler = Profiler("SwerveDriveUpdate")
+        self.elevatorProfiler = Profiler("ElevatorUpdate")
+        self.intakeChuteProfiler = Profiler("IntakeChuteUpdate")
+        self.manipulatorProfiler = Profiler("ManipulatorUpdate")
+        self.cameraProfiler = Profiler("CameraUpdate")
+
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
-        self.hal.publish(self.table)
-        self.swerveDrive.updateOdometry(self.hal)
+        self.hal.publish()
         self.hal.stopMotors()
 
         self.ledSignals.update(
@@ -128,13 +136,13 @@ class Robot(wpilib.TimedRobot):
         self.hal.rotPIDToggle = False
 
     def teleopPeriodic(self) -> None:
-        startTeleopUpdate = wpilib.getTime()
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
         if self.photonCamera1.ambiguity < 0.05:
             self.cam1TFID = self.photonCamera1.TFID
         elif self.photonCamera2.ambiguity < 0.05:
             self.cam2TFID = self.photonCamera2.TFID
-        startCameraUpdate = wpilib.getTime()
+
+        self.swerveDriveProfiler.start()
         self.swerveDrive.update(
             self.hal,
             self.driveCtrlr.getLeftX(),
@@ -148,8 +156,9 @@ class Robot(wpilib.TimedRobot):
             self.cam2TFID,
             self.mechCtrlr.getAButton(),
         )
-        self.table.putNumber("swerve update Time", wpilib.getTime() - startCameraUpdate)
-        startCameraUpdate = wpilib.getTime()
+        self.swerveDriveProfiler.end()
+
+        self.elevatorProfiler.start()
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -159,11 +168,10 @@ class Robot(wpilib.TimedRobot):
             self.mechCtrlr.getXButtonPressed(),
             self.mechCtrlr.getBButton(),
         )
-        self.table.putNumber(
-            "elavator update Time", wpilib.getTime() - startCameraUpdate
-        )
+        self.elevatorProfiler.end()
+
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
-        startCameraUpdate = wpilib.getTime()
+        self.cameraProfiler.start()
         self.povLeftPressed = False
         self.povRightPressed = False
         if self.driveCtrlr.getPOV() == 270 and self.povPrev != 270:
@@ -171,10 +179,9 @@ class Robot(wpilib.TimedRobot):
         if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
             self.povRightPressed = True
         self.povPrev = self.driveCtrlr.getPOV()
-        self.table.putNumber(
-            "pov to bools update Time", wpilib.getTime() - startCameraUpdate
-        )
-        startCameraUpdate = wpilib.getTime()
+        self.cameraProfiler.end()
+
+        self.intakeChuteProfiler.start()
         self.intakeChute.update(
             self.hal,
             self.driveCtrlr.getPOV() == 180,
@@ -182,19 +189,18 @@ class Robot(wpilib.TimedRobot):
             self.povRightPressed,
             self.povLeftPressed,
         )
-        self.table.putNumber("intake update Time", wpilib.getTime() - startCameraUpdate)
-        startCameraUpdate = wpilib.getTime()
+        self.intakeChuteProfiler.end()
+
+        self.manipulatorProfiler.start()
         self.manipulatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getAButton(),
             self.mechCtrlr.getLeftBumperPressed(),
         )
-        self.table.putNumber("mani update Time", wpilib.getTime() - startCameraUpdate)
-        # abs drive toggle
+        self.manipulatorProfiler.end()
 
         if self.driveCtrlr.getLeftStickButtonPressed():
             self.hal.fieldOriented = not self.hal.fieldOriented
-        startCameraUpdate = wpilib.getTime()
         if self.driveCtrlr.getYButtonPressed():
             self.hal.rotPIDsetpoint = 240
             self.hal.rotPIDToggle = True
@@ -207,17 +213,12 @@ class Robot(wpilib.TimedRobot):
         elif self.driveCtrlr.getBButtonPressed():
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
-        self.table.putNumber("mani update Time", wpilib.getTime() - startCameraUpdate)
-        startCameraUpdate = wpilib.getTime()
         self.swerveDrive.updateOdometry(self.hal)
-        self.table.putNumber("odom update Time", wpilib.getTime() - startCameraUpdate)
-        # self.swerveDrive.updateOdometry(self.hal)
 
-        self.hal.publish(self.table)
-        startCameraUpdate = wpilib.getTime()
+        self.hal.publish()
+        self.hardwareProfiler.start()
         self.hardware.update(self.hal, self.time)
-        self.table.putNumber("hal update Time", wpilib.getTime() - startCameraUpdate)
-        self.table.putNumber("teleop update Time", wpilib.getTime() - startTeleopUpdate)
+        self.hardwareProfiler.end()
 
     def autonomousInit(self) -> None:
         self.hal.stopMotors()
@@ -242,6 +243,12 @@ class Robot(wpilib.TimedRobot):
         if not self.currentAuto == len(self.autoKeys):  ## TDOO Fix
 
             self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
+        # Keep the lines below at the bottom of teleopPeriodic
+        self.hal.publish()
+
+        self.hardwareProfiler.start()
+        self.hardware.update(self.hal, self.time)
+        self.hardwareProfiler.end()
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
@@ -264,6 +271,7 @@ class Robot(wpilib.TimedRobot):
                 if not self.currentAuto >= len(self.autoKeys):
                     self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
 
+        self.intakeChuteProfiler.start()
         self.intakeChute.update(
             self.hal,
             False,
@@ -271,22 +279,27 @@ class Robot(wpilib.TimedRobot):
             False,
             False,
         )
+        self.intakeChuteProfiler.end()
 
         # if (wpilib.getTime() - self.autoStartTime) < 5:
         #     self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.25, 0, 0))
         # else:
         #     self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(0, 0, 0))
 
+        self.hardwareProfiler.start()
         self.hardware.update(
             self.hal, self.time
         )  # Keep this at the bottom of autonomousPeriodic
+        self.hardwareProfiler.end()
 
     def disabledInit(self) -> None:
-        self.disabledPeriodic()
+        pass
 
     def disabledPeriodic(self) -> None:
         self.hal.stopMotors()
+        self.hardwareProfiler.start()
         self.hardware.update(self.hal, self.time)
+        self.hardwareProfiler.end()
 
 
 if __name__ == "__main__":

@@ -40,8 +40,13 @@ class SwerveDrive:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
 
         self.angle = Rotation2d(0)
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.FMSData = NetworkTableInstance.getDefault().getTable("FMSInfo")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Swerve Drive Subsystem")
+        )
+        self.debugMode = False
 
         oneftInMeters = feetToMeters(1)
 
@@ -88,6 +93,7 @@ class SwerveDrive:
         self.odometry = SwerveDrive4Odometry(
             self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
+        self.table.putBoolean("Swerve Drive Debug Mode", False)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer, ambiguity):
 
@@ -110,8 +116,6 @@ class SwerveDrive:
             hal.newYaw = -pose.rotation().degrees()
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
 
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-
     def update(
         self,
         hal: robotHAL.RobotHALBuffer,
@@ -126,10 +130,12 @@ class SwerveDrive:
         camera2TFID: int,
         savePos: bool,
     ):
-        self.table.putNumber("Drive Ctrl X", joystickX)
-        self.table.putNumber("Drive Ctrl Y", joystickY)
-        self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
-        # startCameraUpdate = wpilib.getTime()
+        self.debugMode = self.table.getBoolean("Swerve Drive Debug Mode", False)
+        if self.debugMode:
+            self.table.putNumber("Drive Ctrl X", joystickX)
+            self.table.putNumber("Drive Ctrl Y", joystickY)
+            self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
+
         if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
             joystickY = 0
@@ -202,18 +208,17 @@ class SwerveDrive:
             rotFinal,
         )
 
-        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber(
-            "SD ChassisSpeeds omega (rotFinal)", self.chassisSpeeds.omega
-        )
-        self.table.putNumber(
-            "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
-            adjustedSpeeds.omega,  # * (180 / math.pi)
-        )
-        self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
-        self.table.putNumber("z_target rotDeg", rotTarget.degrees())
-        self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
+        if self.debugMode:
+            self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+            self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+            self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+            self.table.putNumber(
+                "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
+                adjustedSpeeds.omega,  # * (180 / math.pi)
+            )
+            self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
+            self.table.putNumber("z_target rotDeg", rotTarget.degrees())
+            self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
@@ -331,7 +336,6 @@ class SwerveDrive:
             ),
         )
         self.odometry.update(Rotation2d(hal.yaw), modulePosList)
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
         self.OdomField.setRobotPose(self.odometry.getPose())

@@ -36,7 +36,7 @@ class LEDSignals:
         else:
             currentSetPoint = 99
 
-        elevatorSetPoint: int = elevator.posSetpoint
+        elevatorSetPoint = elevator.posSetpoint
         if elevatorSetPoint == ElevatorSubsystem.INTAKE_POS:
             simplifiedSetPoint = 0
         elif elevatorSetPoint == ElevatorSubsystem.L2_POS:

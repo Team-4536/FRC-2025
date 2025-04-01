@@ -14,8 +14,11 @@ class ChuteStates(Enum):
 class IntakeChute:
 
     def __init__(self):
-
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table = (
+            NetworkTableInstance.getDefault()
+            .getTable("telemetry")
+            .getSubTable("Chute Subsystem")
+        )
         self.chuteSpeed = 1
         self.state = ChuteStates.DOWN
         self.table.putString("Chute Control Mode", self.state.name)
@@ -25,6 +28,7 @@ class IntakeChute:
         self.setPoint = -115.1674728
         self.toggle = False
         self.table.putBoolean("Toggle Chute Mode", self.toggle)
+        self.table.putBoolean("Chute Debug Mode", False)
 
     def update(
         self,
@@ -78,3 +82,9 @@ class IntakeChute:
             else:
                 hal.setChuteVoltage = 0
                 self.state = ChuteStates.MANUAL
+
+        self.debug = self.table.getBoolean("Chute Debug Mode", False)
+        if self.debug:
+            self.table.putNumber("time", wpilib.getTime())
+            self.table.putNumber("Intake Chute Voltage", hal.chuteMotorVoltage)
+            self.table.putBoolean("limit switch", hal.chuteLimitSwitch)
