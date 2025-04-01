@@ -36,8 +36,9 @@ from profiler import Profiler
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
-    DESIRED_TX: float = 160  # for limelights
+    DESIRED_TX: float = 26  # for limelights
     ALLOWED_ERROR_LL = 5
+    ALLOWED_ERR_LINE_UP = 5 * math.pi / 180  # 5 degrees in radians
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
@@ -103,7 +104,7 @@ class SwerveDrive:
         self.swerveSticksMath = Profiler("Swerve Stick Math")
         # ==============================================================
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        self.reefPIDController = PIDController(0.01, 0, 0)
+        self.reefPIDController = PIDController(0.02, 0, 0)
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
@@ -148,52 +149,50 @@ class SwerveDrive:
         camera1TFID = cam1.TFID
         camera2TFID = cam2.TFID
 
-        if setPointLeft:
+        # if setPointLeft:
 
-            setpointActiveLeft = True
-            setpointActiveRight = False
-            # self.tempFidId = camera1.fiducialId
-            if camera2TFID > -1:
-                tempFidId = camera2TFID
-            elif camera1TFID > -1:
-                tempFidId = camera1TFID
-            else:
-                setpointActiveLeft = False
-        else:
-            setpointActiveLeft = False
-        if setPointRight:
-            setpointActiveRight = True
-            setpointActiveLeft = False
-            if camera1TFID > -1:
-                tempFidId = camera1TFID
-            elif camera2TFID > -1:
-                tempFidId = camera2TFID
-            else:
-                setpointActiveRight = False
-        else:
-            setpointActiveRight = False
-        if (not cam1.hasTargets and not cam2.hasTargets) and (
-            setPointLeft or setPointRight
-        ):
+        # setpointActiveLeft = True
+        # setpointActiveRight = False
+        # self.tempFidId = camera1.fiducialId
+        if camera2TFID > -1:
+            tempFidId = camera2TFID
+        elif camera1TFID > -1:
+            tempFidId = camera1TFID
+            # else:
+            #     setpointActiveLeft = False
+        # else:
+        #     setpointActiveLeft = False
+        # if setPointRight:
+        #     setpointActiveRight = True
+        #     setpointActiveLeft = False
+        if camera1TFID > -1:
+            tempFidId = camera1TFID
+        elif camera2TFID > -1:
+            tempFidId = camera2TFID
+        #     else:
+        #         setpointActiveRight = False
+        # else:
+        #     setpointActiveRight = False
+        if setPointLeft or setPointRight:
 
             self.updateLimelight(hal, setPointLeft, setPointRight)
 
-        elif setpointActiveLeft:
+        # elif setpointActiveLeft:
 
-            self.setpointChooser(
-                self.odometry.getPose().rotation().radians(),
-                tempFidId,
-                "left",
-            )
-            self.updateWithoutSticks(hal, self.adjustedSpeeds)
-        elif setpointActiveRight:
+        #     self.setpointChooser(
+        #         self.odometry.getPose().rotation().radians(),
+        #         tempFidId,
+        #         "left",
+        #     )
+        #     self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        # elif setpointActiveRight:
 
-            self.setpointChooser(
-                self.odometry.getPose().rotation().radians(),
-                tempFidId,
-                "right",
-            )
-            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        #     self.setpointChooser(
+        #         self.odometry.getPose().rotation().radians(),
+        #         tempFidId,
+        #         "right",
+        #     )
+        #     self.updateWithoutSticks(hal, self.adjustedSpeeds)
         else:
             self.updateWithSticks(
                 hal, joystickX, joystickY, joystickRotation, RTriggerScalar, resetOffset
@@ -312,7 +311,7 @@ class SwerveDrive:
             # self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
             pass
 
-        self.updateWithoutSticks(hal, chassisSpeeds)
+        self.updateWithoutSticks(hal, chassisSpeeds, False)
 
     def updateOdometry(self, hal: RobotHALBuffer):
 
@@ -389,7 +388,12 @@ class SwerveDrive:
                 self.currentPose, self.desiredPose, 0, self.rot
             )
 
-    def updateWithoutSticks(self, hal: RobotHALBuffer, chassisSpeeds: ChassisSpeeds):
+    def updateWithoutSticks(
+        self,
+        hal: RobotHALBuffer,
+        chassisSpeeds: ChassisSpeeds,
+        preciceLineUp: bool = False,
+    ):
 
         # self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         # self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
@@ -415,26 +419,46 @@ class SwerveDrive:
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
-        hal.driveFLSetpoint = FLModuleState.speed
+        if (
+            not preciceLineUp
+            or abs(FLModuleState.angle.radians() - hal.turnCCWFL)
+            < self.ALLOWED_ERR_LINE_UP
+        ):
+            hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
         # self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
             swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
         )
-        hal.driveFRSetpoint = FRModuleState.speed
+        if (
+            not preciceLineUp
+            or abs(FLModuleState.angle.radians() - hal.turnCCWFL)
+            < self.ALLOWED_ERR_LINE_UP
+        ):
+            hal.driveFRSetpoint = FRModuleState.speed
         hal.turnFRSetpoint = FRModuleState.angle.radians()
 
         BLModuleState = self.optimizeTarget(
             swerveModuleStates[2], Rotation2d(hal.turnCCWBL)
         )
-        hal.driveBLSetpoint = BLModuleState.speed
+        if (
+            not preciceLineUp
+            or abs(FLModuleState.angle.radians() - hal.turnCCWFL)
+            < self.ALLOWED_ERR_LINE_UP
+        ):
+            hal.driveBLSetpoint = BLModuleState.speed
         hal.turnBLSetpoint = BLModuleState.angle.radians()
 
         BRModuleState = self.optimizeTarget(
             swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
         )
-        hal.driveBRSetpoint = BRModuleState.speed
+        if (
+            not preciceLineUp
+            or abs(FLModuleState.angle.radians() - hal.turnCCWFL)
+            < self.ALLOWED_ERR_LINE_UP
+        ):
+            hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
         self.optimizeTargetProfiler.end()
 
@@ -512,7 +536,7 @@ class SwerveDrive:
 
         validTarget = self.llTable.getNumber("tv", 0) == 1
         if not validTarget:
-            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0), False)
             return
 
         txValues = self.llTable.getNumberArray("llpython", [])
@@ -525,10 +549,10 @@ class SwerveDrive:
                 tx = max(txValues[0], txValues[1])
 
         if abs(self.DESIRED_TX - tx) < self.ALLOWED_ERROR_LL:
-            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0), False)
             return
 
         chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
         chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
-        self.updateWithoutSticks(hal, chassisSpeeds)
+        self.updateWithoutSticks(hal, chassisSpeeds, True)
         self.table.putNumber("Strafe Speed", chassisY)
