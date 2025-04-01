@@ -105,21 +105,22 @@ class RobotHALBuffer:
         self.armVolts = 0
 
     def publish(self) -> None:
-        self.table.putNumber("Elevator Pos(rot)", self.elevatorPos)
-        self.table.putNumber("Turn CCW FL", self.turnCCWFL)
-        self.table.putNumber("Turn CCW FR", self.turnCCWFR)
-        self.table.putNumber("Turn CCW BL", self.turnCCWBL)
-        self.table.putNumber("Turn CCW BR", self.turnCCWBR)
+        # self.table.putNumber("Elevator Pos(rot)", self.elevatorPos)
+        # self.table.putNumber("Turn CCW FL", self.turnCCWFL)
+        # self.table.putNumber("Turn CCW FR", self.turnCCWFR)
+        # self.table.putNumber("Turn CCW BL", self.turnCCWBL)
+        # self.table.putNumber("Turn CCW BR", self.turnCCWBR)
 
-        self.table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
-        self.table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
+        # self.table.putBoolean("Manipulator sensor 2", self.secondManipulatorSensor)
+        # self.table.putBoolean("Manipulator sensor 1", self.firstManipulatorSensor)
 
-        self.table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
-        self.table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
+        # self.table.putBoolean("Front Arm Limit Switch", self.frontArmLimitSwitch)
+        # self.table.putBoolean("Reverse Arm Limit Switch", self.backArmLimitSwitch)
 
-        self.table.putBoolean("Move arm down", self.moveArmDown)
+        # self.table.putBoolean("Move arm down", self.moveArmDown)
 
-        self.table.putNumber("yaw", self.yaw)
+        # self.table.putNumber("yaw", self.yaw)
+        pass
 
 
 class RobotHAL:
@@ -367,66 +368,66 @@ class RobotHAL:
         self.BLSwerveModule.update(buf.driveBLSetpoint, buf.turnBLSetpoint)
         self.BRSwerveModule.update(buf.driveBRSetpoint, buf.turnBRSetpoint)
 
-        self.table.putNumber(
-            "BL Turning Pos Can",
-            self.turnMotorBLCANcoder.get_absolute_position().value_as_double,
-        )
-        self.table.putNumber(
-            "BR Turning Pos Can",
-            self.turnMotorBRCANcoder.get_absolute_position().value_as_double,
-        )
-        self.table.putNumber(
-            "FL Turning Pos Can",
-            self.turnMotorFLCANcoder.get_absolute_position().value_as_double,
-        )
-        self.table.putNumber(
-            "FR Turning Pos Can",
-            self.turnMotorFRCANcoder.get_absolute_position().value_as_double,
-        )
+        # self.table.putNumber(
+        #     "BL Turning Pos Can",
+        #     self.turnMotorBLCANcoder.get_absolute_position().value_as_double,
+        # )
+        # # self.table.putNumber(
+        #     "BR Turning Pos Can",
+        #     self.turnMotorBRCANcoder.get_absolute_position().value_as_double,
+        # )
+        # # self.table.putNumber(
+        #     "FL Turning Pos Can",
+        #     self.turnMotorFLCANcoder.get_absolute_position().value_as_double,
+        # )
+        # # self.table.putNumber(
+        #     "FR Turning Pos Can",
+        #     self.turnMotorFRCANcoder.get_absolute_position().value_as_double,
+        # )
 
-        self.table.putNumber(
-            "FL Turn Encoder Raw", self.turnMotorFLEncoder.getPosition()
-        )
-        self.table.putNumber(
-            "FR Turn Encoder Raw", self.turnMotorFREncoder.getPosition()
-        )
-        self.table.putNumber(
-            "BL Turn Encoder Raw", self.turnMotorBLEncoder.getPosition()
-        )
-        self.table.putNumber(
-            "BR Turn Encoder Raw", self.turnMotorBREncoder.getPosition()
-        )
+        # # self.table.putNumber(
+        #     "FL Turn Encoder Raw", self.turnMotorFLEncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "FR Turn Encoder Raw", self.turnMotorFREncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "BL Turn Encoder Raw", self.turnMotorBLEncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "BR Turn Encoder Raw", self.turnMotorBREncoder.getPosition()
+        # )
 
-        self.table.putNumber(
-            "FL Drive Encoder Raw", self.driveMotorFLEncoder.getPosition()
-        )
-        self.table.putNumber(
-            "FR Drive Encoder Raw", self.driveMotorFREncoder.getPosition()
-        )
-        self.table.putNumber(
-            "BL Drive Encoder Raw", self.driveMotorBLEncoder.getPosition()
-        )
-        self.table.putNumber(
-            "BR Drive Encoder Raw", self.driveMotorBREncoder.getPosition()
-        )
+        # # self.table.putNumber(
+        #     "FL Drive Encoder Raw", self.driveMotorFLEncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "FR Drive Encoder Raw", self.driveMotorFREncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "BL Drive Encoder Raw", self.driveMotorBLEncoder.getPosition()
+        # )
+        # # self.table.putNumber(
+        #     "BR Drive Encoder Raw", self.driveMotorBREncoder.getPosition()
+        # )
 
-        self.table.putNumber(
-            "FR Drive Vel(RPM)", self.driveMotorFREncoder.getVelocity()
-        )
-        self.table.putNumber(
-            "FL Drive Vel(RPM)", self.driveMotorFLEncoder.getVelocity()
-        )
-        self.table.putNumber(
-            "BR Drive Vel(RPM)", self.driveMotorBREncoder.getVelocity()
-        )
-        self.table.putNumber(
-            "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
-        )
-        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
+        # # self.table.putNumber(
+        #     "FR Drive Vel(RPM)", self.driveMotorFREncoder.getVelocity()
+        # )
+        # # self.table.putNumber(
+        #     "FL Drive Vel(RPM)", self.driveMotorFLEncoder.getVelocity()
+        # )
+        # # self.table.putNumber(
+        #     "BR Drive Vel(RPM)", self.driveMotorBREncoder.getVelocity()
+        # )
+        # # self.table.putNumber(
+        #     "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
+        # )
+        # # self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
-        self.table.putNumber(
-            "z_FLDRIVESPEEDEDDEDD", self.driveMotorFL.getAppliedOutput()
-        )
+        # # self.table.putNumber(
+        #     "z_FLDRIVESPEEDEDDEDD", self.driveMotorFL.getAppliedOutput()
+        # )
 
         buf.firstManipulatorSensor = self.firstManipulatorSensor.get()
         buf.secondManipulatorSensor = self.secondManipulatorSensor.get()
@@ -515,14 +516,14 @@ class RobotHAL:
         buf.armTopLimitSwitch = self.armTopLimitSwitch.get()
         buf.armBottomLimitSwitch = self.armBottomLimitSwitch.get()
 
-        self.table.putBoolean("Arm Top Limit Switch", buf.armTopLimitSwitch)
-        self.table.putBoolean("Arm Bottom Limit Switch", buf.armBottomLimitSwitch)
-        self.table.putNumber(
-            "Arm Voltage",
-            self.armMotor.getAppliedOutput() * self.armMotor.getBusVoltage(),
-        )
-        self.table.putNumber("Arm Pos", self.armMotorEncoder.getPosition())
-        self.table.putNumber("Arm Setpoint", buf.armSetpoint)
+        # self.table.putBoolean("Arm Top Limit Switch", buf.armTopLimitSwitch)
+        # self.table.putBoolean("Arm Bottom Limit Switch", buf.armBottomLimitSwitch)
+        # self.table.putNumber(
+        #     "Arm Voltage",
+        #     self.armMotor.getAppliedOutput() * self.armMotor.getBusVoltage(),
+        # )
+        # self.table.putNumber("Arm Pos", self.armMotorEncoder.getPosition())
+        # self.table.putNumber("Arm Setpoint", buf.armSetpoint)
 
         buf.chuteMotorVoltage = (
             self.chuteMotor.getAppliedOutput() * self.chuteMotor.getBusVoltage()
@@ -575,19 +576,19 @@ class SwerveModuleController:
         )
 
     def update(self, driveSetpoint: meters_per_second, turnSetpoint: radians) -> None:
-        self.table.putNumber("Drive Setpoint (m/s)", driveSetpoint)
-        self.table.putNumber("Turn Setpoint (rads)", turnSetpoint)
+        # self.table.putNumber("Drive Setpoint (m/s)", driveSetpoint)
+        # self.table.putNumber("Turn Setpoint (rads)", turnSetpoint)
         # converts to rotations
         self.driveMotor.update(
             driveSetpoint * self.DRIVE_GEARING * 60 / (2 * math.pi * self.WHEEL_RADIUS),
             0,
         )
         # converts to Rotations
-        self.table.putNumber("Before unwrap", turnSetpoint)
+        # self.table.putNumber("Before unwrap", turnSetpoint)
         newTurnSetpoint = self.unwrap(
             self.turnMotor.encoder.getPosition(), turnSetpoint
         )
-        self.table.putNumber("After unwrap", newTurnSetpoint)
+        # self.table.putNumber("After unwrap", newTurnSetpoint)
         self.turnMotor.update(newTurnSetpoint, 0)
 
     def unwrap(self, motorPos: float, targetPos: radians) -> radians:
@@ -610,7 +611,7 @@ class RevMotorController:
     ) -> None:
         self.name = name
         self.table = table.getSubTable(self.name + " Controller")
-        self.table.putBoolean("Debug Mode", False)
+        # self.table.putBoolean("Debug Mode", False)
         self.motor = motor
         self.encoder = motor.getEncoder()
         self.controller = motor.getClosedLoopController()
@@ -680,12 +681,12 @@ class RevMotorController:
                 self.motor.getAppliedOutput() * self.motor.getAppliedOutput()
             )
             measuredAmps = self.motor.getOutputCurrent()
-            self.table.putNumber("Voltage", measuredVoltage)
-            self.table.putNumber("Velocity (RPM)", measuredSpeed)
-            self.table.putNumber("Position (rot)", measuredPosition)
-            self.table.putNumber("percent voltage", measuredPercentVoltage)
-            self.table.putNumber("current", measuredAmps)
-            self.table.putNumber("setpoint", setpoint)
+            # self.table.putNumber("Voltage", measuredVoltage)
+            # self.table.putNumber("Velocity (RPM)", measuredSpeed)
+            # self.table.putNumber("Position (rot)", measuredPosition)
+            # self.table.putNumber("percent voltage", measuredPercentVoltage)
+            # self.table.putNumber("current", measuredAmps)
+            # self.table.putNumber("setpoint", setpoint)
 
         if controlType == None:
             controlType = self.controlType

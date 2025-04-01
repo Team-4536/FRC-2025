@@ -105,8 +105,7 @@ class Robot(wpilib.TimedRobot):
 
         self.photonCamera1.update()
         self.photonCamera2.update()
-        startCameraUpdate = wpilib.getTime()
-        if self.photonCamera1.ambiguity < 0.2:
+        if self.photonCamera1.ambiguity < 0.02:
             self.photonPose2d = Pose2d(
                 self.photonCamera1.robotX,
                 self.photonCamera1.robotY,
@@ -115,7 +114,7 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.resetOdometry(
                 self.photonPose2d, self.hal, self.photonCamera1.ambiguity
             )
-        if self.photonCamera2.ambiguity < 0.2:
+        if self.photonCamera2.ambiguity < 0.02:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
@@ -124,9 +123,6 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.resetOdometry(
                 self.photonPose2d, self.hal, self.photonCamera2.ambiguity
             )
-        self.table.putNumber(
-            "cam odometry update Time", wpilib.getTime() - startCameraUpdate
-        )
 
     def teleopInit(self) -> None:
         # self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)

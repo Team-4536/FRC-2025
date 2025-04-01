@@ -1,5 +1,5 @@
 import math
-import robotHAL
+from robotHAL import RobotHALBuffer
 import robot
 import math
 import wpilib
@@ -28,6 +28,7 @@ from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
 import setpoints
+from profiler import Profiler
 
 # from math import radians
 
@@ -70,9 +71,9 @@ class SwerveDrive:
 
         # ============================================================
         self.OdomField = Field2d()
-        self.table.putNumber("SD Joystick X offset", 0)
-        self.table.putNumber("SD Joystick Y offset", 0)
-        self.table.putNumber("SD Joystick Omega offset", 0)
+        # self.table.putNumber("SD Joystick X offset", 0)
+        # self.table.putNumber("SD Joystick Y offset", 0)
+        # self.table.putNumber("SD Joystick Omega offset", 0)
         self.pose = Pose2d(
             wpimath.units.meters(0), wpimath.units.meters(0), wpimath.units.radians(0)
         )
@@ -93,9 +94,13 @@ class SwerveDrive:
         self.odometry = SwerveDrive4Odometry(
             self.kinematics, self.angle, tuple(modulePosList), self.pose
         )
-        self.table.putBoolean("Swerve Drive Debug Mode", False)
+        # self.table.putBoolean("Swerve Drive Debug Mode", False)
 
-    def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer, ambiguity):
+        self.desaturateSpeedsProfiler = Profiler("Desaturate Wheel Speeds")
+        self.optimizeTargetProfiler = Profiler("Optimize Target")
+        self.swerveSticksMath = Profiler("Swerve Stick Math")
+
+    def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
         modulePosList = (
             SwerveModulePosition(
@@ -118,7 +123,7 @@ class SwerveDrive:
 
     def update(
         self,
-        hal: robotHAL.RobotHALBuffer,
+        hal: RobotHALBuffer,
         joystickX: float,
         joystickY: float,
         joystickRotation: float,
@@ -131,10 +136,76 @@ class SwerveDrive:
         savePos: bool,
     ):
         self.debugMode = self.table.getBoolean("Swerve Drive Debug Mode", False)
+
+        if setPointLeft:
+            setpointActiveLeft = True
+            setpointActiveRight = False
+            # self.tempFidId = camera1.fiducialId
+            if camera2TFID > -1:
+                tempFidId = camera2TFID
+            elif camera1TFID > -1:
+                tempFidId = camera1TFID
+            else:
+                setpointActiveLeft = False
+        else:
+            setpointActiveLeft = False
+        if setPointRight:
+            setpointActiveRight = True
+            setpointActiveLeft = False
+            if camera1TFID > -1:
+                tempFidId = camera1TFID
+            elif camera2TFID > -1:
+                tempFidId = camera2TFID
+            else:
+                setpointActiveRight = False
+        else:
+            setpointActiveRight = False
+        if setpointActiveLeft:
+
+            self.setpointChooser(
+                self.odometry.getPose().rotation().radians(),
+                tempFidId,
+                "left",
+            )
+            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        elif setpointActiveRight:
+
+            self.setpointChooser(
+                self.odometry.getPose().rotation().radians(),
+                tempFidId,
+                "right",
+            )
+            self.updateWithoutSticks(hal, self.adjustedSpeeds)
+        else:
+            self.updateWithSticks(
+                hal, joystickX, joystickY, joystickRotation, RTriggerScalar, resetOffset
+            )
+
+        if savePos:
+            if tempFidId > 0:
+                self.savePos(
+                    tempFidId,
+                    self.odometry.getPose().rotation().radians(),
+                )
+            else:
+                self.savePos(0, self.odometry.getPose().rotation().radians())
+
+    def updateWithSticks(
+        self,
+        hal: RobotHALBuffer,
+        joystickX: float,
+        joystickY: float,
+        joystickRotation: float,
+        RTriggerScalar: float,
+        resetOffset: bool,
+    ) -> None:
         if self.debugMode:
-            self.table.putNumber("Drive Ctrl X", joystickX)
-            self.table.putNumber("Drive Ctrl Y", joystickY)
-            self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
+            # self.table.putNumber("Drive Ctrl X", joystickX)
+            # self.table.putNumber("Drive Ctrl Y", joystickY)
+            # self.table.putNumber("Drive Ctrl Rotation", joystickRotation)
+            pass
+
+        self.swerveSticksMath.start()
 
         if math.sqrt(joystickX**2 + joystickY**2) < 0.08:
             joystickX = 0
@@ -142,42 +213,42 @@ class SwerveDrive:
         if abs(joystickRotation) < 0.06:
             joystickRotation = 0
 
-        self.offsetX = 0.05 * np.sign(joystickX)
-        self.offsetY = 0.05 * np.sign(joystickY)
-        self.offsetR = 0.05 * np.sign(joystickRotation)
+        offsetX = 0.05 * np.sign(joystickX)
+        offsetY = 0.05 * np.sign(joystickY)
+        offsetR = 0.05 * np.sign(joystickRotation)
 
-        self.proxyDeadZoneX = (joystickX - self.offsetX) * 3.5
-        self.proxyDeadZoneY = (joystickY - self.offsetY) * 3.5
-        self.proxyDeadZoneR = (joystickRotation - self.offsetR) * 10
-        # self.table.putNumber(
+        proxyDeadZoneX = (joystickX - offsetX) * 3.5
+        proxyDeadZoneY = (joystickY - offsetY) * 3.5
+        proxyDeadZoneR = (joystickRotation - offsetR) * 10
+        # # self.table.putNumber(
         #     "setting up dead zones stuff update Time",
         #     wpilib.getTime() - startCameraUpdate,
         # )
         # the controller's x axis the the ChassisSpeeds' y axis and same for the other x and y axies
         # the signes are flipped for the differences too
 
-        self.driveY = -self.proxyDeadZoneX
-        self.driveX = -self.proxyDeadZoneY
-        self.driveRotation = -self.proxyDeadZoneR
+        driveY = -proxyDeadZoneX
+        driveX = -proxyDeadZoneY
+        driveRotation = -proxyDeadZoneR
 
-        driveVector = Translation2d(self.driveX, self.driveY)
+        driveVector = Translation2d(driveX, driveY)
 
         if resetOffset:
             self.yawOffset = hal.yaw
 
-        self.table.putNumber("absDriveOffset", self.yawOffset)
+        # self.table.putNumber("absDriveOffset", self.yawOffset)
 
         # abs drive toggle
         if hal.fieldOriented:
             driveVector = driveVector.rotateBy(Rotation2d(-hal.yaw + self.yawOffset))
 
         # disable rotatioanl PID if turn stick is moved
-        if self.driveRotation != 0:
+        if driveRotation != 0:
             hal.rotPIDToggle = False
 
-        self.table.putNumber("z_PID Setpoint", hal.rotPIDsetpoint)
-        self.table.putBoolean("z_Absolute Drive", hal.fieldOriented)
-        # self.table.putNumber(
+        # self.table.putNumber("z_PID Setpoint", hal.rotPIDsetpoint)
+        # self.table.putBoolean("z_Absolute Drive", hal.fieldOriented)
+        # # self.table.putNumber(
         #     "unsure what this does update Time", wpilib.getTime() - startCameraUpdate
         # )
         # --------------EMMETT'S SCARY NEW STUFF-----------------------------------
@@ -196,130 +267,36 @@ class SwerveDrive:
         if hal.rotPIDToggle:
             rotFinal = rotPIDSpeed * 5
         else:
-            rotFinal = self.driveRotation  # copied from HCPA code
-        # self.table.putNumber(
+            rotFinal = driveRotation  # copied from HCPA code
+        # # self.table.putNumber(
         #     " Emmetts scary stuff update Time", wpilib.getTime() - startCameraUpdate
         # )
         # -------------------------------------------------------------------
 
-        self.chassisSpeeds = ChassisSpeeds(
+        chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
             rotFinal,
         )
 
+        self.swerveSticksMath.end()
+
         if self.debugMode:
-            self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-            self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-            self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
-            self.table.putNumber(
-                "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
-                adjustedSpeeds.omega,  # * (180 / math.pi)
-            )
-            self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
-            self.table.putNumber("z_target rotDeg", rotTarget.degrees())
-            self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
+            # self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+            # self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+            # self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+            # self.table.putNumber(
+            #     "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
+            #     adjustedSpeeds.omega,  # * (180 / math.pi)
+            # )
+            # self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
+            # self.table.putNumber("z_target rotDeg", rotTarget.degrees())
+            # self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
+            pass
 
-        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
-        swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
-            self.unleashedModules,
-            self.MAX_METERS_PER_SEC,
-        )
+        self.updateWithoutSticks(hal, chassisSpeeds)
 
-        self.table.putNumber(
-            "SD Module Original Turn Setpoint", swerveModuleStates[0].angle.radians()
-        )
-        # self.table.putNumber(
-        #     "setting up chassis speeds stuff update Time",
-        #     wpilib.getTime() - startCameraUpdate,
-        # )
-        FLModuleState = self.optimizeTarget(
-            swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
-        )
-        hal.driveFLSetpoint = FLModuleState.speed
-        hal.turnFLSetpoint = FLModuleState.angle.radians()
-
-        FRModuleState = self.optimizeTarget(
-            swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
-        )
-        hal.driveFRSetpoint = FRModuleState.speed
-        hal.turnFRSetpoint = FRModuleState.angle.radians()
-
-        BLModuleState = self.optimizeTarget(
-            swerveModuleStates[2], Rotation2d(hal.turnCCWBL)
-        )
-        hal.driveBLSetpoint = BLModuleState.speed
-        hal.turnBLSetpoint = BLModuleState.angle.radians()
-
-        BRModuleState = self.optimizeTarget(
-            swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
-        )
-        hal.driveBRSetpoint = BRModuleState.speed
-        hal.turnBRSetpoint = BRModuleState.angle.radians()
-        # self.table.putNumber(
-        #     "setting module states update time update Time",
-        #     wpilib.getTime() - startCameraUpdate,
-        # )
-        if setPointLeft:
-            self.setpointActiveLeft = True
-            self.setpointActiveRight = False
-            # self.tempFidId = camera1.fiducialId
-            if camera2TFID > -1:
-                self.tempFidId = camera2TFID
-            elif camera1TFID > -1:
-                self.tempFidId = camera1TFID
-            else:
-                self.setpointActiveLeft = False
-        else:
-            self.setpointActiveLeft = False
-        if setPointRight:
-            self.setpointActiveRight = True
-            self.setpointActiveLeft = False
-            if camera1TFID > -1:
-                self.tempFidId = camera1TFID
-            elif camera2TFID > -1:
-                self.tempFidId = camera2TFID
-            else:
-                self.setpointActiveRight = False
-        else:
-            self.setpointActiveRight = False
-        if self.setpointActiveLeft:
-
-            self.setpointChooser(
-                self.odometry.getPose().rotation().radians(),
-                self.tempFidId,
-                "left",
-            )
-            self.updateWithoutSticks(hal, self.adjustedSpeeds)
-        if self.setpointActiveRight:
-
-            self.setpointChooser(
-                self.odometry.getPose().rotation().radians(),
-                self.tempFidId,
-                "left",
-            )
-            self.updateWithoutSticks(hal, self.adjustedSpeeds)
-        if self.setpointActiveRight:
-
-            self.setpointChooser(
-                self.odometry.getPose().rotation().radians(),
-                self.tempFidId,
-                "right",
-            )
-            self.updateWithoutSticks(hal, self.adjustedSpeeds)
-        if savePos:
-            if self.tempFidId > 0:
-                self.savePos(
-                    self.tempFidId,
-                    self.odometry.getPose().rotation().radians(),
-                )
-            else:
-                self.savePos(0, self.odometry.getPose().rotation().radians())
-        # self.table.putNumber(
-        #     "setpoint update Time", wpilib.getTime() - startCameraUpdate
-        # )
-
-    def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
+    def updateOdometry(self, hal: RobotHALBuffer):
 
         modulePosList = (
             SwerveModulePosition(
@@ -340,8 +317,8 @@ class SwerveDrive:
         self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
         self.OdomField.setRobotPose(self.odometry.getPose())
 
-        self.table.putNumber("odomX", self.odomPos[0])
-        self.table.putNumber("odomy", self.odomPos[1])
+        # self.table.putNumber("odomX", self.odomPos[0])
+        # self.table.putNumber("odomy", self.odomPos[1])
         wpilib.SmartDashboard.putData("Odom", self.OdomField)
 
     def optimizeTarget(
@@ -394,34 +371,35 @@ class SwerveDrive:
                 self.currentPose, self.desiredPose, 0, self.rot
             )
 
-    def updateWithoutSticks(
-        self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
-    ):
+    def updateWithoutSticks(self, hal: RobotHALBuffer, chassisSpeeds: ChassisSpeeds):
 
-        self.chassisSpeeds = chassisSpeed
+        # self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+        # self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+        # self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
 
-        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+        self.desaturateSpeedsProfiler.start()
 
-        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
             self.unleashedModules,
             self.MAX_METERS_PER_SEC,
         )
 
-        self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
-        )
+        self.desaturateSpeedsProfiler.end()
 
-        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+        # self.table.putNumber(
+        #     "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+        # )
 
+        # self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+
+        self.optimizeTargetProfiler.start()
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
-        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
+        # self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
             swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
@@ -440,6 +418,7 @@ class SwerveDrive:
         )
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
+        self.optimizeTargetProfiler.end()
 
     def savePos(self, fiducialID: int, yaw: float):
         with open("/home/lvuser/photon.txt", "a") as f:
@@ -465,36 +444,34 @@ class SwerveDrive:
                 "\n"
             )
 
-    def updateForAutos(self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds):
-
-        self.chassisSpeeds = chassisSpeed
+    def updateForAutos(self, hal: RobotHALBuffer, chassisSpeeds: ChassisSpeeds):
 
         # temp = chassisSpeed.vx
         # chassisSpeed.vx = chassisSpeed.vy
         # chassisSpeed.vy = temp
 
-        self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
-        self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
-        self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
+        # self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
+        # self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)
+        # self.table.putNumber("SD ChassisSpeeds omega", self.chassisSpeeds.omega)
 
-        self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        self.unleashedModules = self.kinematics.toSwerveModuleStates(chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
             self.unleashedModules,
             self.MAX_METERS_PER_SEC,
         )
 
-        self.table.putNumber(
-            "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
-        )
+        # self.table.putNumber(
+        # "SD Original Turn Setpoint", swerveModuleStates[0].angle.radians()
+        # )
 
-        self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
+        # self.table.putNumber("SD Original Drive Setpoint", swerveModuleStates[0].speed)
 
         FLModuleState = self.optimizeTarget(
             swerveModuleStates[0], Rotation2d(hal.turnCCWFL)
         )
         hal.driveFLSetpoint = FLModuleState.speed
         hal.turnFLSetpoint = FLModuleState.angle.radians()
-        self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
+        # self.table.putNumber("SD Opimized Turn Setpoint", FLModuleState.angle.radians())
 
         FRModuleState = self.optimizeTarget(
             swerveModuleStates[1], Rotation2d(hal.turnCCWFR)
