@@ -27,9 +27,6 @@ from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
 import setpoints
-import json
-import requests
-import limelightresults  # type:ignore
 
 # from math import radians
 
@@ -38,7 +35,7 @@ import limelightresults  # type:ignore
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
     DESIRED_TX: float = 160  # for limelights
-    URL = "http://10.45.36.11:5807/results"
+    ALLOWED_ERROR_LL = 5
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
@@ -94,9 +91,8 @@ class SwerveDrive:
         )
         # ==============================================================
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        self.txValues = self.llTable.getNumberArray("llpython", [])
         self.allowedError: float = 1  # in degrees
-        self.reefPIDController = PIDController(0.1, 0, 0)
+        self.reefPIDController = PIDController(0.01, 0, 0)
 
     def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
 
@@ -450,7 +446,16 @@ class SwerveDrive:
             self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
             return
 
-        tx = min(self.txValues[0], self.txValues[1])
+        txValues = self.llTable.getNumberArray("llpython", [])
+        if len(txValues) < 2:
+            tx = txValues[0]
+        else:
+            tx = min(txValues[0], txValues[1])
+
+        if abs(self.DESIRED_TX - tx) < self.ALLOWED_ERROR_LL:
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            return
+
         chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
         chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
         self.updateWithoutSticks(hal, chassisSpeeds)
