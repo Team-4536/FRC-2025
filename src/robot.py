@@ -133,10 +133,6 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
-        if self.photonCamera1.ambiguity < 0.05:
-            self.cam1TFID = self.photonCamera1.TFID
-        elif self.photonCamera2.ambiguity < 0.05:
-            self.cam2TFID = self.photonCamera2.TFID
 
         self.swerveDriveProfiler.start()
         self.swerveDrive.update(
@@ -148,9 +144,9 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getStartButtonPressed(),
             self.driveCtrlr.getLeftBumperButton(),
             self.driveCtrlr.getRightBumperButton(),
-            self.cam1TFID,
-            self.cam2TFID,
             self.mechCtrlr.getAButton(),
+            self.photonCamera1,
+            self.photonCamera2,
         )
         self.swerveDriveProfiler.end()
 

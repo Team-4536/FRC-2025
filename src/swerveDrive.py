@@ -5,7 +5,7 @@ import math
 import wpilib
 from wpilib import SmartDashboard, Field2d
 import numpy as np
-import photonOdometry
+from photonOdometry import photonVision
 from ntcore import NetworkTableInstance
 from real import angleWrap
 import wpimath.units
@@ -36,6 +36,8 @@ from profiler import Profiler
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
+    DESIRED_TX: float = 160  # for limelights
+    ALLOWED_ERROR_LL = 5
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
@@ -99,6 +101,12 @@ class SwerveDrive:
         self.desaturateSpeedsProfiler = Profiler("Desaturate Wheel Speeds")
         self.optimizeTargetProfiler = Profiler("Optimize Target")
         self.swerveSticksMath = Profiler("Swerve Stick Math")
+        # ==============================================================
+        self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
+        self.reefPIDController = PIDController(0.01, 0, 0)
+        self.adjustedSpeeds = self.controller.calculate(
+            self.pose, self.pose, 0, self.pose.rotation()
+        )
 
     def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
@@ -117,8 +125,8 @@ class SwerveDrive:
             ),
         )
         # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
-        if ambiguity == 0:
-            hal.newYaw = -pose.rotation().degrees()
+        # if ambiguity == 0:
+        #     hal.newYaw = -pose.rotation().degrees()
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
 
     def update(
@@ -131,13 +139,17 @@ class SwerveDrive:
         resetOffset: bool,
         setPointLeft: bool,
         setPointRight: bool,
-        camera1TFID: int,
-        camera2TFID: int,
         savePos: bool,
+        cam1: photonVision,
+        cam2: photonVision,
     ):
         self.debugMode = self.table.getBoolean("Swerve Drive Debug Mode", False)
 
+        camera1TFID = cam1.TFID
+        camera2TFID = cam2.TFID
+
         if setPointLeft:
+
             setpointActiveLeft = True
             setpointActiveRight = False
             # self.tempFidId = camera1.fiducialId
@@ -160,7 +172,13 @@ class SwerveDrive:
                 setpointActiveRight = False
         else:
             setpointActiveRight = False
-        if setpointActiveLeft:
+        if (not cam1.hasTargets and not cam2.hasTargets) and (
+            setPointLeft or setPointRight
+        ):
+
+            self.updateLimelight(hal, setPointLeft, setPointRight)
+
+        elif setpointActiveLeft:
 
             self.setpointChooser(
                 self.odometry.getPose().rotation().radians(),
@@ -489,3 +507,28 @@ class SwerveDrive:
             swerveModuleStates[3], Rotation2d(hal.turnCCWBR)
         )
         hal.driveBRSetpoint = BRModuleState.speed
+
+    def updateLimelight(self, hal: RobotHALBuffer, right, left):
+
+        validTarget = self.llTable.getNumber("tv", 0) == 1
+        if not validTarget:
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            return
+
+        txValues = self.llTable.getNumberArray("llpython", [])
+        if len(txValues) < 2:
+            tx = txValues[0]
+        else:
+            if left:
+                tx = min(txValues[0], txValues[1])
+            elif right:
+                tx = max(txValues[0], txValues[1])
+
+        if abs(self.DESIRED_TX - tx) < self.ALLOWED_ERROR_LL:
+            self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0))
+            return
+
+        chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
+        chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
+        self.updateWithoutSticks(hal, chassisSpeeds)
+        self.table.putNumber("Strafe Speed", chassisY)
