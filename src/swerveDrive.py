@@ -532,7 +532,7 @@ class SwerveDrive:
         )
         hal.driveBRSetpoint = BRModuleState.speed
 
-    def updateLimelight(self, hal: RobotHALBuffer, right, left):
+    def updateLimelight(self, hal: RobotHALBuffer, left, right):
 
         validTarget = self.llTable.getNumber("tv", 0) == 1
         if not validTarget:
