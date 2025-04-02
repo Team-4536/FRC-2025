@@ -112,8 +112,8 @@ class SwerveDrive:
             ),
         )
         # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
-        if ambiguity == 0:
-            hal.newYaw = -pose.rotation().degrees()
+        # if ambiguity == 0:
+        #     hal.newYaw = -pose.rotation().degrees()
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
 
     def update(

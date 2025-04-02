@@ -139,10 +139,10 @@ class ASfollowPath(AutoStage):
 
     def autoInit(self, r):
         self.startTime = wpilib.getTime()
-        self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
         # self.r.hardware.resetGyroToAngle(
         #     self.traj.getInitialPose().rotation().radians()
         # )
+        self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
@@ -157,7 +157,7 @@ class ASfollowPath(AutoStage):
         end = self.traj.getEndState().pose
 
         error = meters(0.15)
-        rotError = radians(0.2)
+        rotError = radians(0.1)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("endstateX", self.traj.getEndState().pose.X())

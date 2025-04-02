@@ -106,7 +106,7 @@ class Robot(wpilib.TimedRobot):
         self.photonCamera1.update()
         self.photonCamera2.update()
         startCameraUpdate = wpilib.getTime()
-        if self.photonCamera1.ambiguity < 0.2:
+        if self.photonCamera1.ambiguity < 0.02:
             self.photonPose2d = Pose2d(
                 self.photonCamera1.robotX,
                 self.photonCamera1.robotY,
@@ -115,7 +115,7 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.resetOdometry(
                 self.photonPose2d, self.hal, self.photonCamera1.ambiguity
             )
-        if self.photonCamera2.ambiguity < 0.2:
+        if self.photonCamera2.ambiguity < 0.02:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
@@ -127,9 +127,13 @@ class Robot(wpilib.TimedRobot):
         self.table.putNumber(
             "cam odometry update Time", wpilib.getTime() - startCameraUpdate
         )
+        self.swerveDrive.updateOdometry(self.hal)
 
     def teleopInit(self) -> None:
         # self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)
+        self.hardware.resetGyroToAngle(
+            self.swerveDrive.odometry.getPose().rotation().radians()
+        )
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
 
@@ -213,7 +217,7 @@ class Robot(wpilib.TimedRobot):
         elif self.driveCtrlr.getBButtonPressed():
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
-        self.swerveDrive.updateOdometry(self.hal)
+        # self.swerveDrive.updateOdometry(self.hal)
 
         self.hal.publish()
         self.hardwareProfiler.start()
@@ -227,7 +231,7 @@ class Robot(wpilib.TimedRobot):
         self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
         self.autoStartTime = wpilib.getTime()
         self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(5, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
+            PIDConstants(2, 0, 0, 0), PIDConstants(0.3, 0, 0, 0)
         )
 
         self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
