@@ -104,7 +104,7 @@ class SwerveDrive:
         self.swerveSticksMath = Profiler("Swerve Stick Math")
         # ==============================================================
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
-        self.reefPIDController = PIDController(0.02, 0, 0)
+        self.reefPIDController = PIDController(0.012, 0, 0)
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
@@ -129,6 +129,7 @@ class SwerveDrive:
         # if ambiguity == 0:
         #     hal.newYaw = -pose.rotation().degrees()
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
+        self.table.putBoolean("Reef Target Locked", False)
 
     def update(
         self,
@@ -194,6 +195,10 @@ class SwerveDrive:
         #     )
         #     self.updateWithoutSticks(hal, self.adjustedSpeeds)
         else:
+            if (joystickX > 0.5 or joystickX < -0.5) or (
+                joystickY > 0.5 or joystickY < -0.5
+            ):
+                self.table.putBoolean("Reef Target Locked", False)
             self.updateWithSticks(
                 hal, joystickX, joystickY, joystickRotation, RTriggerScalar, resetOffset
             )
@@ -540,18 +545,18 @@ class SwerveDrive:
             return
 
         txValues = self.llTable.getNumberArray("llpython", [])
-        if len(txValues) < 2:
-            tx = txValues[0]
-        else:
-            if left:
-                tx = min(txValues[0], txValues[1])
-            elif right:
-                tx = max(txValues[0], txValues[1])
+
+        if left:
+            tx = min(txValues[0], txValues[1])
+        elif right:
+            tx = max(txValues[0], txValues[1])
 
         if abs(self.DESIRED_TX - tx) < self.ALLOWED_ERROR_LL:
+            self.table.putBoolean("Reef Target Locked", True)
             self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0), False)
             return
 
+        self.table.putBoolean("Reef Target Locked", False)
         chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
         chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
         self.updateWithoutSticks(hal, chassisSpeeds, True)
