@@ -18,8 +18,8 @@ class ElevatorMode(Enum):
 class ElevatorSubsystem:
 
     INTAKE_POS = 0
-    L2_POS = 11.71
-    L3_POS = 24.59
+    L2_POS = 11.71 + 1.5  # added 1.5 for north star
+    L3_POS = 24.59 + 1.5  # added 1.5 for north star
     L4_POS = 45.5  # changed from 45
     ALGAE_L2_POS = 13.78
     ALGAE_L3_POS = 24.52
