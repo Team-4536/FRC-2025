@@ -231,7 +231,7 @@ class Robot(wpilib.TimedRobot):
         self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
         self.autoStartTime = wpilib.getTime()
         self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(2, 0, 0, 0), PIDConstants(0.3, 0, 0, 0)
+            PIDConstants(4, 0, 0, 0), PIDConstants(1.5, 0, 0, 0)
         )
 
         self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
