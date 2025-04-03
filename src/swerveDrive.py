@@ -39,6 +39,7 @@ class SwerveDrive:
     DESIRED_TX: float = 26  # for limelights
     ALLOWED_ERROR_LL = 5
     ALLOWED_ERR_LINE_UP = 5 * math.pi / 180  # 5 degrees in radians
+    NOT_IN_LL_RANGE = -5000
 
     def __init__(self) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
@@ -105,6 +106,7 @@ class SwerveDrive:
         # ==============================================================
         self.llTable = NetworkTableInstance.getDefault().getTable("limelight")
         self.reefPIDController = PIDController(0.012, 0, 0)
+        self.lastTx = -1
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
@@ -198,6 +200,7 @@ class SwerveDrive:
                 joystickY > 0.5 or joystickY < -0.5
             ):
                 self.table.putBoolean("Reef Target Locked", False)
+            self.lastTx = self.NOT_IN_LL_RANGE
             self.updateWithSticks(
                 hal, joystickX, joystickY, joystickRotation, RTriggerScalar, resetOffset
             )
@@ -546,17 +549,28 @@ class SwerveDrive:
         txValues = self.llTable.getNumberArray("llpython", [])
 
         if left:
-            tx = min(txValues[0], txValues[1])
+            if self.lastTx == self.NOT_IN_LL_RANGE:
+                tx = min(txValues[0], txValues[1])
+            elif abs(txValues[0] - self.lastTx) < abs(txValues[1] - self.lastTx):
+                tx = txValues[0]
+            else:
+                tx = txValues[1]
+
         elif right:
-            tx = max(txValues[0], txValues[1])
+            if self.lastTx == self.NOT_IN_LL_RANGE:
+                tx = max(txValues[0], txValues[1])
+            elif abs(txValues[0] - self.lastTx) < abs(txValues[1] - self.lastTx):
+                tx = txValues[0]
+            else:
+                tx = txValues[1]
 
         if abs(self.DESIRED_TX - tx) < self.ALLOWED_ERROR_LL:
             self.table.putBoolean("Reef Target Locked", True)
             self.updateWithoutSticks(hal, ChassisSpeeds(0, 0, 0), False)
             return
-
         self.table.putBoolean("Reef Target Locked", False)
         chassisY = self.reefPIDController.calculate(tx, self.DESIRED_TX)
         chassisSpeeds = ChassisSpeeds(0, chassisY, 0)
         self.updateWithoutSticks(hal, chassisSpeeds, True)
         self.table.putNumber("Strafe Speed", chassisY)
+        self.lastTx = tx
