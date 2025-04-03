@@ -108,6 +108,9 @@ class SwerveDrive:
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
+        with open("/home/lvuser/photon.txt", "a") as f:
+
+            f.write("--------------------------------------------------------")
 
     def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
@@ -149,27 +152,23 @@ class SwerveDrive:
 
         camera1TFID = cam1.TFID
         camera2TFID = cam2.TFID
-
-        # if setPointLeft:
-
-        # setpointActiveLeft = True
-        # setpointActiveRight = False
-        # self.tempFidId = camera1.fiducialId
         if camera2TFID > -1:
             tempFidId = camera2TFID
         elif camera1TFID > -1:
             tempFidId = camera1TFID
-            # else:
-            #     setpointActiveLeft = False
+        # if setPointLeft:
+
+        # setpointActiveLeft = True
+        # setpointActiveRight = False
+        ## self.tempFidId = camera1.fiducialId
+        # else:
+        #     setpointActiveLeft = False
         # else:
         #     setpointActiveLeft = False
         # if setPointRight:
         #     setpointActiveRight = True
         #     setpointActiveLeft = False
-        if camera1TFID > -1:
-            tempFidId = camera1TFID
-        elif camera2TFID > -1:
-            tempFidId = camera2TFID
+
         #     else:
         #         setpointActiveRight = False
         # else:
