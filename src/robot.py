@@ -136,6 +136,7 @@ class Robot(wpilib.TimedRobot):
         self.setpointActiveRight = False
 
         self.hal.rotPIDToggle = False
+        self.autoBn = False
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -216,9 +217,9 @@ class Robot(wpilib.TimedRobot):
         if self.mechCtrlr.getStartButtonPressed():
             self.telAutos = TeleopAutos()
             self.telAutos.TeleopAutonomousInit(self)
-            autoBn = True
+            self.autoBn = True
 
-        if autoBn == True:
+        if self.autoBn == True:
             self.telAutos.update(self)
 
         self.hal.publish()

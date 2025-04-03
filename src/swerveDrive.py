@@ -108,9 +108,9 @@ class SwerveDrive:
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
-        with open("/home/lvuser/photon.txt", "a") as f:
+        # with open("/home/lvuser/photon.txt", "a") as f:
 
-            f.write("--------------------------------------------------------")
+        #     f.write("--------------------------------------------------------")
 
     def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
