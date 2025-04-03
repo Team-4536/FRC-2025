@@ -110,9 +110,9 @@ def runPipeline(croppedImage, llrobot):
                 largestContour = []
             else:
                 largestX, y, w, h = cv2.boundingRect(largestContour)
-            cv2.rectangle(
-                croppedImage, (largestX, y), (largestX + w, y + h), (0, 255, 255), 2
-            )
+                cv2.rectangle(
+                    croppedImage, (largestX, y), (largestX + w, y + h), (0, 255, 255), 2
+                )
             if guessLeft:
                 leftRightest = largestX - 150
 
