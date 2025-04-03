@@ -110,9 +110,9 @@ class SwerveDrive:
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
-        with open("/home/lvuser/photon.txt", "a") as f:
+        # with open("/home/lvuser/photon.txt", "a") as f:
 
-            f.write("--------------------------------------------------------")
+        #     f.write("--------------------------------------------------------")
 
     def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
@@ -470,28 +470,29 @@ class SwerveDrive:
         self.optimizeTargetProfiler.end()
 
     def savePos(self, fiducialID: int, yaw: float):
-        with open("/home/lvuser/photon.txt", "a") as f:
-            f.write("match: " + str(self.FMSData.getNumber("MatchNumber", 0)) + " ")
-            if self.FMSData.getBoolean("IsRedAlliance", True):
-                f.write("Red")
-            else:
-                f.write("Blue")
-            f.write(
-                " "
-                + str(self.FMSData.getNumber("StationNumber", 0))
-                + " tag: "
-                + str(fiducialID)
-                + " X: "
-                + f"{self.odomPos[0]}"
-                + " Y: "
-                + f"{self.odomPos[1]}"
-                + " Rot: "
-                + f"{yaw}"
-                + "   -->   "
-                + " Time: "
-                + f"{wpilib.getTime()}"
-                "\n"
-            )
+        # with open("/home/lvuser/photon.txt", "a") as f:
+        #     f.write("match: " + str(self.FMSData.getNumber("MatchNumber", 0)) + " ")
+        #     if self.FMSData.getBoolean("IsRedAlliance", True):
+        #         f.write("Red")
+        #     else:
+        #         f.write("Blue")
+        #     f.write(
+        #         " "
+        #         + str(self.FMSData.getNumber("StationNumber", 0))
+        #         + " tag: "
+        #         + str(fiducialID)
+        #         + " X: "
+        #         + f"{self.odomPos[0]}"
+        #         + " Y: "
+        #         + f"{self.odomPos[1]}"
+        #         + " Rot: "
+        #         + f"{yaw}"
+        #         + "   -->   "
+        #         + " Time: "
+        #         + f"{wpilib.getTime()}"
+        #         "\n"
+        #     )
+        pass
 
     def updateForAutos(self, hal: RobotHALBuffer, chassisSpeeds: ChassisSpeeds):
 
