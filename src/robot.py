@@ -21,6 +21,7 @@ import pathplannerlib  # type: ignore
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
 import autoStages
 from profiler import Profiler
+from teleopAutos import TeleopAutos
 
 
 class Robot(wpilib.TimedRobot):
@@ -211,6 +212,14 @@ class Robot(wpilib.TimedRobot):
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
         # self.swerveDrive.updateOdometry(self.hal)
+
+        if self.mechCtrlr.getStartButtonPressed():
+            self.telAutos = TeleopAutos()
+            self.telAutos.TeleopAutonomousInit(self)
+            autoBn = True
+
+        if autoBn == True:
+            self.telAutos.update(self)
 
         self.hal.publish()
         self.hardwareProfiler.start()
