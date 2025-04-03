@@ -123,9 +123,7 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.resetOdometry(
                 self.photonPose2d, self.hal, self.photonCamera2.ambiguity
             )
-        self.table.putNumber(
-            "cam odometry update Time", wpilib.getTime() - startCameraUpdate
-        )
+
         self.swerveDrive.updateOdometry(self.hal)
 
     def teleopInit(self) -> None:
@@ -236,8 +234,6 @@ class Robot(wpilib.TimedRobot):
         self.autoKeys = list(self.auto.keys())
         self.currentAuto = 0
         self.autoFinished = False
-
-        self.table.putString("Chosen Auto is", "temp")
 
         if not self.currentAuto == len(self.autoKeys):  ## TDOO Fix
 
