@@ -40,7 +40,7 @@ class SwerveDrive:
     ALLOWED_ERROR_LL = 5
     ALLOWED_ERR_LINE_UP = 5 * math.pi / 180  # 5 degrees in radians
 
-    def __init__(self) -> None:
+    def __init__(self, isSim: bool) -> None:
         self.setpointsTable = NetworkTableInstance.getDefault().getTable("setpoints")
 
         self.angle = Rotation2d(0)
@@ -108,9 +108,10 @@ class SwerveDrive:
         self.adjustedSpeeds = self.controller.calculate(
             self.pose, self.pose, 0, self.pose.rotation()
         )
-        with open("/home/lvuser/photon.txt", "a") as f:
-
-            f.write("--------------------------------------------------------")
+        self.tempFidId = 0
+        if not isSim:
+            with open("/home/lvuser/photon.txt", "a") as f:
+                f.write("----------------------------------------------------------")
 
     def resetOdometry(self, pose: Pose2d, hal: RobotHALBuffer, ambiguity):
 
@@ -153,9 +154,9 @@ class SwerveDrive:
         camera1TFID = cam1.TFID
         camera2TFID = cam2.TFID
         if camera2TFID > -1:
-            tempFidId = camera2TFID
+            self.tempFidId = camera2TFID
         elif camera1TFID > -1:
-            tempFidId = camera1TFID
+            self.tempFidId = camera1TFID
         # if setPointLeft:
 
         # setpointActiveLeft = True
@@ -203,9 +204,9 @@ class SwerveDrive:
             )
 
         if savePos:
-            if tempFidId > 0:
+            if self.tempFidId > 0:
                 self.savePos(
-                    tempFidId,
+                    self.tempFidId,
                     self.odometry.getPose().rotation().radians(),
                 )
             else:

@@ -156,7 +156,7 @@ class ASfollowPath(AutoStage):
 
         end = self.traj.getEndState().pose
 
-        error = meters(0.05)
+        error = meters(0.025)
         rotError = radians(0.1)
 
         table = NetworkTableInstance.getDefault().getTable("autos")

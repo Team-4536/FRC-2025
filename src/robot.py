@@ -24,10 +24,10 @@ from profiler import Profiler
 
 
 class Robot(wpilib.TimedRobot):
-    def robotInit(self) -> None:
+    AUTO_SIDE_RED = "red"
+    AUTO_SIDE_BLUE = "blue"
 
-        AUTO_SIDE_RED = "red"
-        AUTO_SIDE_BLUE = "blue"
+    def robotInit(self) -> None:
         AUTO_SIDE_FMS = "FMS side"
 
         self.time = TimeData(None)
@@ -51,7 +51,8 @@ class Robot(wpilib.TimedRobot):
         self.photonCamera2 = photonVision("Camera2", -30, 0.11747, 0.33337, 0.2889)
         # 0.11747
         # 0.33337
-        self.swerveDrive: SwerveDrive = SwerveDrive()
+
+        self.swerveDrive: SwerveDrive = SwerveDrive(self.isSimulation())
         self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)
 
         self.elevatorSubsystem = ElevatorSubsystem()
@@ -74,11 +75,12 @@ class Robot(wpilib.TimedRobot):
 
         self.autoSideChooser = wpilib.SendableChooser()
         # self.autoSideChooser.setDefaultOption(AUTO_SIDE_FMS, AUTO_SIDE_FMS)
-        self.autoSideChooser.setDefaultOption(AUTO_SIDE_RED, AUTO_SIDE_RED)
-        self.autoSideChooser.addOption(AUTO_SIDE_BLUE, AUTO_SIDE_BLUE)
+        self.autoSideChooser.setDefaultOption(self.AUTO_SIDE_RED, self.AUTO_SIDE_RED)
+        self.autoSideChooser.addOption(self.AUTO_SIDE_BLUE, self.AUTO_SIDE_BLUE)
         wpilib.SmartDashboard.putData("auto side chooser", self.autoSideChooser)
 
-        # self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        self.onRedSide: bool = self.autoSideChooser.getSelected() == self.AUTO_SIDE_RED
+        self.table.putBoolean("Is red", self.onRedSide)
 
         self.driverOffset = 0
         self.cam1TFID = -1
@@ -90,6 +92,8 @@ class Robot(wpilib.TimedRobot):
         self.intakeChuteProfiler = Profiler("IntakeChuteUpdate")
         self.manipulatorProfiler = Profiler("ManipulatorUpdate")
         self.cameraProfiler = Profiler("CameraUpdate")
+
+        self.rotPIDoffset = 0
 
     def robotPeriodic(self) -> None:
         self.time = TimeData(self.time)
@@ -124,6 +128,8 @@ class Robot(wpilib.TimedRobot):
                 self.photonPose2d, self.hal, self.photonCamera2.ambiguity
             )
 
+        self.table.putBoolean("Is red", self.onRedSide)
+
         self.swerveDrive.updateOdometry(self.hal)
 
     def teleopInit(self) -> None:
@@ -135,6 +141,21 @@ class Robot(wpilib.TimedRobot):
         self.setpointActiveRight = False
 
         self.hal.rotPIDToggle = False
+        # AUTO_SIDE_RED = "red"
+        # self.onRedSide = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        # if self.onRedSide:
+        self.swerveDrive.yawOffset = math.pi
+        # else:
+        #     self.swerveDrive.yawOffset = 0
+
+        self.onRedSide = self.autoSideChooser.getSelected() == self.AUTO_SIDE_RED
+        if self.onRedSide:
+            self.rotPIDoffset = (
+                180  # this is here so that the rotation setpoints are not flipped
+            )
+        else:
+            self.rotPIDoffset = 0
+        self.table.putBoolean("Is red", self.onRedSide)
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
@@ -199,16 +220,16 @@ class Robot(wpilib.TimedRobot):
         if self.driveCtrlr.getLeftStickButtonPressed():
             self.hal.fieldOriented = not self.hal.fieldOriented
         if self.driveCtrlr.getYButtonPressed():
-            self.hal.rotPIDsetpoint = 240
+            self.hal.rotPIDsetpoint = 240 + self.rotPIDoffset
             self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getXButtonPressed():
-            self.hal.rotPIDsetpoint = 300
+            self.hal.rotPIDsetpoint = 300 + self.rotPIDoffset
             self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getAButtonPressed():
-            self.hal.rotPIDsetpoint = 60
+            self.hal.rotPIDsetpoint = 60 + self.rotPIDoffset
             self.hal.rotPIDToggle = True
         elif self.driveCtrlr.getBButtonPressed():
-            self.hal.rotPIDsetpoint = 120
+            self.hal.rotPIDsetpoint = 120 + self.rotPIDoffset
             self.hal.rotPIDToggle = True
         # self.swerveDrive.updateOdometry(self.hal)
 
@@ -219,9 +240,7 @@ class Robot(wpilib.TimedRobot):
 
     def autonomousInit(self) -> None:
         self.hal.stopMotors()
-        AUTO_SIDE_RED = "red"
-        AUTO_SIDE_BLUE = "blue"
-        self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        self.onRedSide = self.autoSideChooser.getSelected() == self.AUTO_SIDE_RED
         self.autoStartTime = wpilib.getTime()
         self.holonomicDriveController = PPHolonomicDriveController(
             PIDConstants(9.5, 0, 0, 0), PIDConstants(3, 0, 0, 0)
