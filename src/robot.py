@@ -136,12 +136,12 @@ class Robot(wpilib.TimedRobot):
         self.setpointActiveRight = False
 
         self.hal.rotPIDToggle = False
-        AUTO_SIDE_RED = "red"
-        self.onRedSide = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
-        if self.onRedSide:
-            self.swerveDrive.yawOffset = math.pi
-        else:
-            self.swerveDrive.yawOffset = 0
+        # AUTO_SIDE_RED = "red"
+        # self.onRedSide = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        # if self.onRedSide:
+        self.swerveDrive.yawOffset = math.pi
+        # else:
+        #     self.swerveDrive.yawOffset = 0
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
