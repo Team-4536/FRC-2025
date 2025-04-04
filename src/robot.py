@@ -144,7 +144,6 @@ class Robot(wpilib.TimedRobot):
         # AUTO_SIDE_RED = "red"
         # self.onRedSide = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
         # if self.onRedSide:
-        self.swerveDrive.yawOffset = math.pi
         # else:
         #     self.swerveDrive.yawOffset = 0
 
@@ -153,8 +152,10 @@ class Robot(wpilib.TimedRobot):
             self.rotPIDoffset = (
                 180  # this is here so that the rotation setpoints are not flipped
             )
+            self.swerveDrive.yawOffset = 0
         else:
             self.rotPIDoffset = 0
+            self.swerveDrive.yawOffset = math.pi
         self.table.putBoolean("Is red", self.onRedSide)
 
     def teleopPeriodic(self) -> None:
