@@ -107,26 +107,26 @@ class Robot(wpilib.TimedRobot):
             self.hal.elevatorPos,
         )
 
-        self.photonCamera1.update()
-        self.photonCamera2.update()
-        if self.photonCamera1.ambiguity < 0.02:
-            self.photonPose2d = Pose2d(
-                self.photonCamera1.robotX,
-                self.photonCamera1.robotY,
-                self.photonCamera1.robotAngle,
-            )
-            self.swerveDrive.resetOdometry(
-                self.photonPose2d, self.hal, self.photonCamera1.ambiguity
-            )
-        if self.photonCamera2.ambiguity < 0.02:
-            self.photonPose2d = Pose2d(
-                self.photonCamera2.robotX,
-                self.photonCamera2.robotY,
-                self.photonCamera2.robotAngle,
-            )
-            self.swerveDrive.resetOdometry(
-                self.photonPose2d, self.hal, self.photonCamera2.ambiguity
-            )
+        # self.photonCamera1.update()
+        # self.photonCamera2.update()
+        # if self.photonCamera1.ambiguity < 0.02:
+        #     self.photonPose2d = Pose2d(
+        #         self.photonCamera1.robotX,
+        #         self.photonCamera1.robotY,
+        #         self.photonCamera1.robotAngle,
+        #     )
+        #     self.swerveDrive.resetOdometry(
+        #         self.photonPose2d, self.hal, self.photonCamera1.ambiguity
+        #     )
+        # if self.photonCamera2.ambiguity < 0.02:
+        #     self.photonPose2d = Pose2d(
+        #         self.photonCamera2.robotX,
+        #         self.photonCamera2.robotY,
+        #         self.photonCamera2.robotAngle,
+        #     )
+        #     self.swerveDrive.resetOdometry(
+        #         self.photonPose2d, self.hal, self.photonCamera2.ambiguity
+        #     )
 
         self.table.putBoolean("Is red", self.onRedSide)
 
@@ -156,6 +156,27 @@ class Robot(wpilib.TimedRobot):
         else:
             self.rotPIDoffset = 0
         self.table.putBoolean("Is red", self.onRedSide)
+
+        self.photonCamera1.update()
+        self.photonCamera2.update()
+        if self.photonCamera1.ambiguity < 0.02:
+            self.photonPose2d = Pose2d(
+                self.photonCamera1.robotX,
+                self.photonCamera1.robotY,
+                self.photonCamera1.robotAngle,
+            )
+            self.swerveDrive.resetOdometry(
+                self.photonPose2d, self.hal, self.photonCamera1.ambiguity
+            )
+        if self.photonCamera2.ambiguity < 0.02:
+            self.photonPose2d = Pose2d(
+                self.photonCamera2.robotX,
+                self.photonCamera2.robotY,
+                self.photonCamera2.robotAngle,
+            )
+            self.swerveDrive.resetOdometry(
+                self.photonPose2d, self.hal, self.photonCamera2.ambiguity
+            )
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
