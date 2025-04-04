@@ -51,7 +51,8 @@ class Robot(wpilib.TimedRobot):
         self.photonCamera2 = photonVision("Camera2", -30, 0.11747, 0.33337, 0.2889)
         # 0.11747
         # 0.33337
-        self.swerveDrive: SwerveDrive = SwerveDrive()
+
+        self.swerveDrive: SwerveDrive = SwerveDrive(self.isSimulation())
         self.swerveDrive.resetOdometry(Pose2d(), self.hal, -1)
 
         self.elevatorSubsystem = ElevatorSubsystem()
@@ -135,6 +136,12 @@ class Robot(wpilib.TimedRobot):
         self.setpointActiveRight = False
 
         self.hal.rotPIDToggle = False
+        AUTO_SIDE_RED = "red"
+        self.onRedSide = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
+        if self.onRedSide:
+            self.swerveDrive.yawOffset = math.pi
+        else:
+            self.swerveDrive.yawOffset = 0
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
