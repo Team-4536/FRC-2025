@@ -46,6 +46,7 @@ class RobotAutos(Enum):
     PIECE2_AUTO = "2 piece auto"
     ROTATION_TEST = "rotation test"
     FROMLEFT_PLACE = "place from left"
+    LAST_RESORT = "last Resort"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -180,6 +181,28 @@ class ASfollowPath(AutoStage):
             and (rot < end.rotation().radians() + rotError)
         ):
             self.done = True
+            return True
+
+
+class ASforwardDrive(AutoStage):
+    def __init__(self):
+        self.adjustedSpeed = ChassisSpeeds(0.45, 0, 0)
+
+    def autoInit(self, r: "Robot"):
+        self.done = False
+        self.StartTime = wpilib.getTime()
+
+    def run(self, r: "Robot"):
+        r.swerveDrive.updateForAutos(r.hal, self.adjustedSpeed)
+        if self.done == True:
+            r.swerveDrive.updateForAutos(r.hal, ChassisSpeeds(0, 0, 0))
+
+    def isDone(self, r):
+        time = wpilib.getTime()
+        if (time - self.StartTime) > 7:
+            self.done = True
+            r.swerveDrive.updateForAutos(r.hal, ChassisSpeeds(0, 0, 0))
+
             return True
 
 
@@ -318,6 +341,12 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
     elif stageChooser == RobotAutos.FROMLEFT_PLACE.value:
         ret["intake-coral"] = ASintakeCoraL()
         ret["leftCorner-reef6"] = ASfollowPath("leftCorner-reef6", r.onRedSide, r)
+        ret["elevator-level4"] = ASelevator4()
+        ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
+        ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.LAST_RESORT.value:
+        ret["intake-coral"] = ASintakeCoraL()
+        ret["drive-Forward"] = ASforwardDrive()
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
         ret["elevator-level0"] = ASelvator0()
