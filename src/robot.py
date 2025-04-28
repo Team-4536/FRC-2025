@@ -241,10 +241,6 @@ class Robot(wpilib.TimedRobot):
         startCameraUpdate = wpilib.getTime()
         self.intakeChute.update(
             self.hal,
-            self.driveCtrlr.getPOV() == 180,
-            self.driveCtrlr.getPOV() == 0,
-            self.povRightPressed,
-            self.povLeftPressed,
         )
         self.table.putNumber(
             "Intake chute update Time", wpilib.getTime() - startCameraUpdate
@@ -358,10 +354,6 @@ class Robot(wpilib.TimedRobot):
 
         self.intakeChute.update(
             self.hal,
-            False,
-            False,
-            False,
-            False,
         )
 
         # if (wpilib.getTime() - self.autoStartTime) < 5:
