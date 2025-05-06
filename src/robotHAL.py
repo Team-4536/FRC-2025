@@ -21,46 +21,10 @@ from wpimath.units import meters_per_second, radians
 
 class RobotHALBuffer:
     def __init__(self) -> None:
-        self.elevatorArbFF: float = 0
-        self.elevatorSetpoint: float = 0
-        # Rotations
-        self.elevatorPos: float = 0
-        # These Values are in CCW Radians, (-pi, pi]
-        self.turnCCWFL: radians = 0
-        self.turnCCWFR: radians = 0
-        self.turnCCWBL: radians = 0
-        self.turnCCWBR: radians = 0
-
-        self.elevatorSlot: ClosedLoopSlot = ClosedLoopSlot.kSlot0
-        self.elevatorControl: SparkMax.ControlType = SparkMax.ControlType.kPosition
-
-        self.driveFLSetpoint: meters_per_second = 0
-        self.driveFRSetpoint: meters_per_second = 0
-        self.driveBLSetpoint: meters_per_second = 0
-        self.driveBRSetpoint: meters_per_second = 0
-
-        self.turnFLSetpoint: radians = 0
-        self.turnFRSetpoint: radians = 0
-        self.turnBLSetpoint: radians = 0
-        self.turnBRSetpoint: radians = 0
-
-        self.secondManipulatorSensor: bool = False
-        self.firstManipulatorSensor: bool = False
-        self.manipulatorVolts: float = 0
-
-        self.frontArmLimitSwitch: bool = False
-        self.backArmLimitSwitch: bool = False
-        self.armVolts: float = 0
-
-        self.elevServoAngle = 0
-
-        self.yaw: float = 0
-
-        self.setChuteVoltage = 0
-        self.chuteLimitSwitch = 0
-        self.chuteMotorVoltage = 0.0
-
-        self.moveArmDown = False
+        self.HALBuf = HALBuffer()
+        self.armBuf = ArmBuffer()
+        self.elevatorBuf = ElevatorBuffer()
+        self.chuteBuf = ChuteBuffer()
 
     def resetEncoders(self) -> None:
         pass
@@ -85,6 +49,61 @@ class RobotHALBuffer:
         table.putBoolean("Move arm down", self.moveArmDown)
 
         table.putNumber("yaw", self.yaw)
+
+
+# buffer thing
+class HALBuffer:
+    def __init__(self):
+        # These Values are in CCW Radians, (-pi, pi]
+        self.turnCCWFL: radians = 0
+        self.turnCCWFR: radians = 0
+        self.turnCCWBL: radians = 0
+        self.turnCCWBR: radians = 0
+
+        self.driveFLSetpoint: meters_per_second = 0
+        self.driveFRSetpoint: meters_per_second = 0
+        self.driveBLSetpoint: meters_per_second = 0
+        self.driveBRSetpoint: meters_per_second = 0
+
+        self.turnFLSetpoint: radians = 0
+        self.turnFRSetpoint: radians = 0
+        self.turnBLSetpoint: radians = 0
+        self.turnBRSetpoint: radians = 0
+
+        self.yaw: float = 0
+
+
+class ManipulatorBuffer:
+    def __init__(self):
+        self.secondManipulatorSensor: bool = False
+        self.firstManipulatorSensor: bool = False
+        self.manipulatorVolts: float = 0
+
+
+class ElevatorBuffer:
+    def __init__(self) -> None:
+        self.elevatorArbFF: float = 0
+        self.elevatorSetpoint: float = 0
+        self.elevatorSlot: ClosedLoopSlot = ClosedLoopSlot.kSlot0
+        self.elevatorControl: SparkMax.ControlType = SparkMax.ControlType.kPosition
+        # Rotations
+        self.elevatorPos: float = 0
+        self.elevServoAngle = 0
+
+
+class ChuteBuffer:
+    def __init__(self):
+        self.setChuteVoltage = 0
+        self.chuteLimitSwitch = 0
+        self.chuteMotorVoltage = 0.0
+
+
+class ArmBuffer:
+    def __init__(self):
+        self.frontArmLimitSwitch: bool = False
+        self.backArmLimitSwitch: bool = False
+        self.armVolts: float = 0
+        self.moveArmDown = False
 
 
 debugMode = False
