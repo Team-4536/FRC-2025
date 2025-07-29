@@ -29,9 +29,12 @@ class ManipulatorSubsystem:
         AButton: bool,
         LBumper: bool,
     ):
-        if LBumper and self.state != ManipulatorState.MANUAL:
-            self.state = ManipulatorState.MANUAL
-            LBumper = False
+        #=========================================================
+        if buf.controlMode == 0 or buf.controlMode == 1:
+            if LBumper and self.state != ManipulatorState.MANUAL:
+                self.state = ManipulatorState.MANUAL
+                LBumper = False
+        #=========================================================
 
         if self.state == ManipulatorState.IDLE:
             buf.manipulatorVolts = 0
@@ -53,6 +56,11 @@ class ManipulatorSubsystem:
 
             if AButton:
                 self.state = ManipulatorState.SHOOT
+
+            #=====================================================================
+            if not buf.firstManipulatorSensor and not buf.secondManipulatorSensor:
+                self.state = ManipulatorState.IDLE
+            #=====================================================================
 
         elif self.state == ManipulatorState.SHOOT:
             buf.manipulatorVolts = 8

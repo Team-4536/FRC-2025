@@ -180,11 +180,25 @@ class SwerveDrive:
 
         # -------------------------------------------------------------------
 
-        self.chassisSpeeds = ChassisSpeeds(
-            driveVector.X() * 0.5 * 4**RTriggerScalar,
-            driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            rotFinal,
-        )
+        #==================================================
+        if hal.controlMode == 0:
+            self.chassisSpeeds = ChassisSpeeds(
+                driveVector.X() * 0.5 * 4**RTriggerScalar,
+                driveVector.Y() * 0.5 * 4**RTriggerScalar,
+                rotFinal,
+            )
+        elif hal.controlMode == 1:
+            self.chassisSpeeds = ChassisSpeeds(
+                driveVector.X() * 0.5 * 4**RTriggerScalar,
+                driveVector.Y() * 0.5 * 4**RTriggerScalar,
+                rotFinal * 0.5,
+            )        
+        elif hal.controlMode == 2:
+            self.chassisSpeeds = ChassisSpeeds(
+                driveVector.X() * 0.3,
+                driveVector.Y() * 0.3,
+                rotFinal * 0.3,
+            )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
         self.table.putNumber("SD ChassisSpeeds vy", self.chassisSpeeds.vy)

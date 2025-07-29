@@ -90,6 +90,10 @@ class RobotHALBuffer:
         self.chutePosition: float = 0.0
         self.resetChuteEncoder: bool = False
 
+        #==============================
+        self.controlMode: int = 0
+        #==============================
+
     def resetEncoders(self) -> None:
         pass
 

@@ -21,12 +21,12 @@ class ElevatorSubsystem:
     INTAKE_POS = 0
     L2_POS = 11.71
     L3_POS = 24.59
-    L4_POS = 45.5  # changed from 45
+    L4_POS = 45.8  # changed from 45
     ALGAE_L2_POS = 13.78
     ALGAE_L3_POS = 24.52
 
     ARM_UP_POS = 28
-    ARM_DEALGAE_POS = 12
+    ARM_DEALGAE_POS = 13 # changed from 12
     ARM_BOTTOM_POS = -1  # changed from 0
 
     # this is an elevator position where it is safe for the arm to move
@@ -68,7 +68,9 @@ class ElevatorSubsystem:
         if self.debugMode:
             self.table.putNumber("Elevator up", up)
             self.table.putNumber("Elevator down", down)
-        if toggleManualMode:
+
+        #========================================================================
+        if toggleManualMode and (hal.controlMode == 0 or hal.controlMode == 1):
             if self.mode == ElevatorMode.MANUAL_MODE:
                 self.mode = ElevatorMode.POSITION_MODE
                 self.posSetpoint = hal.elevatorPos
@@ -77,6 +79,9 @@ class ElevatorSubsystem:
                 self.mode = ElevatorMode.MANUAL_MODE
                 self.velSetpoint = 0
                 self.posSetpoint = 0
+        elif hal.controlMode == 2:
+            self.mode = ElevatorMode.POSITION_MODE
+        #========================================================================
 
         if self.mode == ElevatorMode.POSITION_MODE:
             hal.elevatorControl = SparkMax.ControlType.kPosition

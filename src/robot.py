@@ -60,6 +60,16 @@ class Robot(wpilib.TimedRobot):
 
         self.povPrev = 0
 
+        #====================================================
+        self.controlModeChooser = wpilib.SendableChooser()
+        self.controlModeChooser.setDefaultOption("Comp", 0)
+        self.controlModeChooser.addOption("MNSF Driver", 1)
+        self.controlModeChooser.addOption("MNSF CHILD", 2)
+        self.controlModeChooser.addOption("MNSF VIP", 2)
+
+        wpilib.SmartDashboard.putData("ControlModeChooser", self.controlModeChooser)
+        #====================================================
+
         self.autoRoutineChooser = wpilib.SendableChooser()
         self.autoRoutineChooser.setDefaultOption(
             autoStages.RobotAutos.DO_NOTHING.value,
@@ -125,6 +135,12 @@ class Robot(wpilib.TimedRobot):
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
 
+        #===========================================================
+        self.hal.controlMode = self.controlModeChooser.getSelected()
+
+        self.table.putNumber("halControlMode", self.hal.controlMode)
+        #===========================================================
+
     def teleopInit(self) -> None:
         self.swerveDrive.resetOdometry(Pose2d(), self.hal)
         self.setpointActiveLeft = False
@@ -154,6 +170,9 @@ class Robot(wpilib.TimedRobot):
             self.table.putNumber(
                 "Swerve drive update Time", wpilib.getTime() - startCameraUpdate
             )
+        
+        #CAMERA CODE===============================
+        """
         if self.driveCtrlr.getLeftBumperButton():
             self.setpointActiveLeft = True
             self.setpointActiveRight = False
@@ -216,7 +235,10 @@ class Robot(wpilib.TimedRobot):
             self.setpointActiveLeft = False
             self.setpointActiveRight = False
             # self.tempFidId = -1
+        """
+
         startCameraUpdate = wpilib.getTime()
+
         self.elevatorSubsystem.update(
             self.hal,
             self.mechCtrlr.getRightTriggerAxis(),
@@ -238,6 +260,7 @@ class Robot(wpilib.TimedRobot):
         if self.driveCtrlr.getPOV() == 90 and self.povPrev != 90:
             self.povRightPressed = True
         self.povPrev = self.driveCtrlr.getPOV()
+
         startCameraUpdate = wpilib.getTime()
         self.intakeChute.update(
             self.hal,
@@ -262,26 +285,34 @@ class Robot(wpilib.TimedRobot):
             self.hardware.resetGyroToAngle(0)
 
         # abs drive toggle
-        if self.driveCtrlr.getLeftStickButtonPressed():
+        if self.driveCtrlr.getBackButtonPressed():
             self.hal.fieldOriented = not self.hal.fieldOriented
 
-        if self.driveCtrlr.getYButtonPressed():
-            self.hal.rotPIDsetpoint = 240
-            self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getXButtonPressed():
-            self.hal.rotPIDsetpoint = 300
-            self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getAButtonPressed():
-            self.hal.rotPIDsetpoint = 60
-            self.hal.rotPIDToggle = True
-        elif self.driveCtrlr.getBButtonPressed():
-            self.hal.rotPIDsetpoint = 120
-            self.hal.rotPIDToggle = True
+        #============================================================
+        if self.hal.controlMode == 0 or self.hal.controlMode == 1:
+            if self.driveCtrlr.getYButtonPressed():
+                self.hal.rotPIDsetpoint = 240
+                self.hal.rotPIDToggle = True
+            elif self.driveCtrlr.getXButtonPressed():
+                self.hal.rotPIDsetpoint = 300
+                self.hal.rotPIDToggle = True
+            elif self.driveCtrlr.getAButtonPressed():
+                self.hal.rotPIDsetpoint = 60
+                self.hal.rotPIDToggle = True
+            elif self.driveCtrlr.getBButtonPressed():
+                self.hal.rotPIDsetpoint = 120
+                self.hal.rotPIDToggle = True
+        else:
+            self.hal.rotPIDToggle = False
+        #=============================================================
+
         startCameraUpdate = wpilib.getTime()
         self.swerveDrive.updateOdometry(self.hal)
         self.table.putNumber(
             "odometry update Time", wpilib.getTime() - startCameraUpdate
         )
+
+        """
         if self.mechCtrlr.getAButtonPressed():
             self.swerveDrive.savePos(
                 self.tempFidId, self.swerveDrive.odometry.getPose().rotation().radians()
@@ -303,6 +334,7 @@ class Robot(wpilib.TimedRobot):
                 self.swerveDrive.savePos(
                     0, self.swerveDrive.odometry.getPose().rotation().radians()
                 )
+        """
 
         self.hal.publish(self.table)
         startCameraUpdate = wpilib.getTime()
@@ -374,6 +406,7 @@ class Robot(wpilib.TimedRobot):
         )  # Keep this at the bottom of autonomousPeriodic
 
     def disabledInit(self) -> None:
+        self.hal.rotPIDToggle = False
         self.disabledPeriodic()
 
     def disabledPeriodic(self) -> None:
