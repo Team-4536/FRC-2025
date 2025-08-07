@@ -92,6 +92,7 @@ class RobotHALBuffer:
 
         #==============================
         self.controlMode: int = 0
+        self.armMode: int = 0
         #==============================
 
     def resetEncoders(self) -> None:

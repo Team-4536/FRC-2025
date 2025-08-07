@@ -110,12 +110,14 @@ class ElevatorSubsystem:
             if (
                 self.posSetpoint > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
                 and hal.elevatorPos > self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM
+                and hal.armMode != 2
             ):
                 hal.armSetpoint = self.ARM_UP_POS
                 if self.moveArmDown:
                     hal.armSetpoint = self.ARM_DEALGAE_POS
 
-            if self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM:
+
+            if (self.posSetpoint < self.ELEVATOR_CLEARS_BUMPERS_FOR_ARM) and (hal.armMode != 1):
                 hal.armSetpoint = self.ARM_BOTTOM_POS
                 if not hal.armBottomLimitSwitch:
                     hal.elevatorSetpoint = hal.elevatorPos

@@ -66,8 +66,16 @@ class Robot(wpilib.TimedRobot):
         self.controlModeChooser.addOption("MNSF Driver", 1)
         self.controlModeChooser.addOption("MNSF CHILD", 2)
         self.controlModeChooser.addOption("MNSF VIP", 2)
+        wpilib.SmartDashboard.putData("ControlModeChooser", self.controlModeChooser)        
+        
+        self.armModeChooser = wpilib.SendableChooser()
+        self.armModeChooser.setDefaultOption("Dynamic", 0)
+        self.armModeChooser.addOption("Always Up", 1)
+        self.armModeChooser.addOption("Always Down", 2)
 
-        wpilib.SmartDashboard.putData("ControlModeChooser", self.controlModeChooser)
+        wpilib.SmartDashboard.putData("ArmModeChooser", self.armModeChooser)
+
+        self.hal.rotPIDToggle = False
         #====================================================
 
         self.autoRoutineChooser = wpilib.SendableChooser()
@@ -137,8 +145,10 @@ class Robot(wpilib.TimedRobot):
 
         #===========================================================
         self.hal.controlMode = self.controlModeChooser.getSelected()
+        self.hal.armMode = self.armModeChooser.getSelected()
 
         self.table.putNumber("halControlMode", self.hal.controlMode)
+        self.table.putNumber("halArmMode", self.hal.armMode)
         #===========================================================
 
     def teleopInit(self) -> None:
