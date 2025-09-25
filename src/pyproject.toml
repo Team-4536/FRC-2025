@@ -17,4 +17,5 @@ requires = [
     "robotpy-rev==2025.0.2",
     "phoenix6==25.1.0",
     "robotpy-pathplannerlib==2025.2.5",
+cv
 ]
