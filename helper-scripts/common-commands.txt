@@ -1,6 +1,11 @@
 All of these commands should be run while in the directory 'C:\repos\FRC-2025\src'
 
+
+run once per cloned repository (git clone): 'uv tool run pre-commit'
+
+from the 'src' directory (i.e, Repos/FRC-2025/src)
+
+sync packages: 'uv run robotpy src sync'
 run simulation: 'uv run robotpy sim'
 deploy code: 'uv run robotpy src deploy'
 undeploy code: 'uv run robotpy src undeploy'
-sync packages: 'uv run robotpy src sync'

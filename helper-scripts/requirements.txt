@@ -1,1 +1,5 @@
-See https://minutebots4536.slack.com/docs/T8UT95SH5/F09NJHWRRUM
+For workstation (computer) setup in structions go to:
+Slack --> Programming Channel --> Programming Workstation Setup
+  Or try this link https://minutebots4536.slack.com/docs/T8UT95SH5/F09NJHWRRUM
+
+  
