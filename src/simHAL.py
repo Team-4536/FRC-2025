@@ -22,13 +22,7 @@ class RobotSimHAL:
         self.table.putNumber("manipulator voltage", 0)
 
     def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
-        buf.secondManipulatorSensor = self.table.getBoolean(
-            "second manipulator sensor", False
-        )
-        buf.firstManipulatorSensor = self.table.getBoolean(
-            "first manipulator sensor", False
-        )
-        buf.manipulatorVolts = self.table.getNumber("manipulator voltage", 0)
+        pass
 
     def resetGyroToAngle(self, ang: float) -> None:
         pass
