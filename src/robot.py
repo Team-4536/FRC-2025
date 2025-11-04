@@ -19,7 +19,7 @@ from IntakeChute import IntakeChute
 from led import LEDSignals
 import pathplannerlib  # type: ignore
 from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
-import autoStages
+import djoAuto
 
 
 class Robot(wpilib.TimedRobot):
@@ -61,14 +61,7 @@ class Robot(wpilib.TimedRobot):
         self.povPrev = 0
 
         self.autoRoutineChooser = wpilib.SendableChooser()
-        self.autoRoutineChooser.setDefaultOption(
-            autoStages.RobotAutos.DO_NOTHING.value,
-            autoStages.RobotAutos.DO_NOTHING.value,
-        )
-        for stage in autoStages.RobotAutos:
-            self.autoRoutineChooser.addOption(stage.value, stage.value)
-
-        wpilib.SmartDashboard.putData("auto routine chooser", self.autoRoutineChooser)
+        
 
         self.autoSideChooser = wpilib.SendableChooser()
         # self.autoSideChooser.setDefaultOption(AUTO_SIDE_FMS, AUTO_SIDE_FMS)
@@ -315,25 +308,9 @@ class Robot(wpilib.TimedRobot):
         self.hal.stopMotors()
         AUTO_SIDE_RED = "red"
         AUTO_SIDE_BLUE = "blue"
-        self.onRedSide: bool = self.autoSideChooser.getSelected() == AUTO_SIDE_RED
-        self.autoStartTime = wpilib.getTime()
-        self.holonomicDriveController = PPHolonomicDriveController(
-            PIDConstants(5, 0, 0, 0), PIDConstants(0.15, 0, 0, 0)
-        )
 
-        self.auto: dict[str, autoStages.AutoStage] = autoStages.chooseAuto(
-            self.autoRoutineChooser.getSelected(), self
-        )
-
-        self.autoKeys = list(self.auto.keys())
-        self.currentAuto = 0
-        self.autoFinished = False
-
-        self.table.putString("Chosen Auto is", "temp")
-
-        if not self.currentAuto == len(self.autoKeys):  ## TDOO Fix
-
-            self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
+        djoAuto.curAutoStage.autoInit(self)
+        self.table.putNumber("test", 2)
 
     def autonomousPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of autonomousPeriodic
@@ -341,28 +318,13 @@ class Robot(wpilib.TimedRobot):
         # self.swerveDrive.resetOdometry(self, Pose2d(0, 0, Rotation2d(radians(0))), self.hal)
         # self.swerveDrive.resetOdometry(Pose2d(), self.hal)
 
-        if self.currentAuto >= len(self.autoKeys):
-            self.autoFinished = True
+        if djoAuto.curAutoStage.isDone(self) == False:
+            djoAuto.curAutoStage.run(self)
         else:
-            self.table.putString("Current Stage", self.autoKeys[self.currentAuto])
-            self.table.putNumber("Current Stage Number", self.currentAuto)
+            djoAuto.curAutoStage = djoAuto.curAutoStage.getNext(self)
+            self.table.putString("NextStage", djoAuto.curAutoStage.getNext(self))
 
-        self.table.putBoolean("Auto finished", self.autoFinished)
-
-        if not self.autoFinished:
-            self.auto[self.autoKeys[self.currentAuto]].run(self)
-            if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
-                self.currentAuto += 1
-                if not self.currentAuto >= len(self.autoKeys):
-                    self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
-
-        self.intakeChute.update(
-            self.hal,
-            False,
-            False,
-            False,
-            False,
-        )
+            djoAuto.curAutoStage.autoInit(self)
 
         # if (wpilib.getTime() - self.autoStartTime) < 5:
         #     self.swerveDrive.updateWithoutSticks(self.hal, ChassisSpeeds(-0.25, 0, 0))
