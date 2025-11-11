@@ -110,14 +110,20 @@ class Robot(wpilib.TimedRobot):
         self.photonCamera1.update()
         self.photonCamera2.update()
         self.table.putNumber("Camera update Time", wpilib.getTime() - startCameraUpdate)
-        if self.photonCamera1.ambiguity < 0.2:
+        if(self.photonCamera1.ambiguity < 0.15) and (self.photonCamera2.ambiguity < 0.15):
+            self.comboCamX = (self.photonCamera1.robotX + self.photonCamera2.robotX)/2
+            self.comboCamY = (self.photonCamera1.robotY + self.photonCamera2.robotY)/2
+            self.comboCamTheta = (self.photonCamera1.robotAngle + self.photonCamera2.robotAngle)/2
+            self.photonPose2d = Pose2d(self.comboCamX,self.comboCamY,self.comboCamTheta)
+            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+        elif self.photonCamera1.ambiguity < 0.15:
             self.photonPose2d = Pose2d(
                 self.photonCamera1.robotX,
                 self.photonCamera1.robotY,
                 self.photonCamera1.robotAngle,
             )
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
-        if self.photonCamera2.ambiguity < 0.2:
+        elif self.photonCamera2.ambiguity < 0.15:
             self.photonPose2d = Pose2d(
                 self.photonCamera2.robotX,
                 self.photonCamera2.robotY,
