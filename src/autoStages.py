@@ -6,10 +6,10 @@ from swerveDrive import SwerveDrive
 from wpimath.geometry import Translation2d
 import rev
 from rev import SparkMax
-from pathplannerlib.path import PathPlannerPath, PathPlannerTrajectory  # type: ignore
+from pathplannerlib.path import PathPlannerPath, PathPlannerTrajectory  
 from pathplannerlib.config import RobotConfig, ModuleConfig, DCMotor  # type: ignore
 from robotHAL import RobotHAL as r
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds
 from wpimath import units
 from wpimath.units import seconds
@@ -56,29 +56,37 @@ def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
         * mass
         * (oneftInMeters * oneftInMeters + oneftInMeters * oneftInMeters)
     )
+    print("*MOI", moi)
     # motor = SparkMax(1, rev.SparkMax.MotorType.kBrushless)
     motor = DCMotor(12, 2.6, 105, 1.8, 5676, 1)
-    modConfig = ModuleConfig(0.05, 1.1, 9.5, motor, 42, 1)
+    modConfig = ModuleConfig(0.05, 4.1, 1.2, motor, 42, 3)
     RConfig = RobotConfig(
         mass,
         moi,
         modConfig,
         [
-            Translation2d(-oneftInMeters, oneftInMeters),
             Translation2d(oneftInMeters, oneftInMeters),
-            Translation2d(-oneftInMeters, -oneftInMeters),
             Translation2d(oneftInMeters, -oneftInMeters),
+            Translation2d(-oneftInMeters, +oneftInMeters),
+            Translation2d(-oneftInMeters, -oneftInMeters),
         ],
     )
+    
     p = PathPlannerPath.fromPathFile(fileName)
     if flipped:
         p = p.flipPath()
 
-    t = p.generateTrajectory(
-        ChassisSpeeds(),
-        p.getStartingHolonomicPose().rotation(),
-        RConfig,
-    )
+    # t = p.generateTrajectory(
+    #     ChassisSpeeds(),
+    #     p.getStartingHolonomicPose().rotation(),
+    #     RConfig,
+    # )
+    
+    
+    t = PathPlannerTrajectory(p, ChassisSpeeds(0,0), Rotation2d(0), RConfig)
+    
+
+    print("*total time", t.getTotalTimeSeconds())
     return t
 
 
@@ -109,6 +117,7 @@ class ASfollowPath(AutoStage):
         self.currentTime = wpilib.getTime()
         self.time = self.currentTime - self.startTime
         goal = self.traj.sample(self.time)
+        print(goal.pose)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         # table.putNumber("pathGoalX", goal.getTargetHolonomicPose().X())
