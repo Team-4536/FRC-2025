@@ -106,8 +106,10 @@ class SwerveDrive:
         )
         # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
         self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
+    
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
+        self.table.putNumber("Bea-odometry-rotation-@-reset", self.odometry.getPose().rotation().radians())
 
     def update(
         self,

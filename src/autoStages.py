@@ -46,6 +46,8 @@ class RobotAutos(Enum):
     PIECE2_AUTO = "2 piece auto"
     ROTATION_TEST = "rotation test"
     FROMLEFT_PLACE = "place from left"
+    TEST_2 = "Test 2"
+    TEST_3 = "Test 3"
 
 
 def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
@@ -58,8 +60,8 @@ def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
     )
     print("*MOI", moi)
     # motor = SparkMax(1, rev.SparkMax.MotorType.kBrushless)
-    motor = DCMotor(12, 2.6, 105, 1.8, 5676, 1)
-    modConfig = ModuleConfig(0.05, 4.1, 1.2, motor, 42, 3)
+    motor = DCMotor(12, 2.42, 100, 1.1, 594, 1)
+    modConfig = ModuleConfig(0.05, 12, 1.2, motor, 42, 4)
     RConfig = RobotConfig(
         mass,
         moi,
@@ -83,7 +85,7 @@ def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
     # )
     
     
-    t = PathPlannerTrajectory(p, ChassisSpeeds(0,0), Rotation2d(0), RConfig)
+    t = PathPlannerTrajectory(p, ChassisSpeeds(0,0), p.getStartingHolonomicPose().rotation(), RConfig)
     
 
     print("*total time", t.getTotalTimeSeconds())
@@ -103,13 +105,29 @@ class AutoStage:
     def autoInit(self, r: "Robot"):
         pass
 
+class ASstopMotors(AutoStage):
+    def __init__(self, r: "Robot"):
+        self.r = r
+
+    def run(self, r: "Robot"):
+        r.hal.stopMotors()
+
+    def isDone(self, r: "Robot") -> bool:
+        return False
+
+    def autoInit(self, r: "Robot"):
+        pass
+
+
 
 class ASfollowPath(AutoStage):
 
     def __init__(self, trajName: str, flipped: bool, r: "Robot"):
         self.r = r
         self.done = False
-        self.traj: PathPlannerTrajectory = loadTrajectory(trajName, flipped)
+        self.trajName = trajName
+        self.flipped = flipped
+        
 
         # self.traj = PathPlannerTrajectory()
 
@@ -117,7 +135,7 @@ class ASfollowPath(AutoStage):
         self.currentTime = wpilib.getTime()
         self.time = self.currentTime - self.startTime
         goal = self.traj.sample(self.time)
-        print(goal.pose)
+        print(goal.pose.rotation().degrees())
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         # table.putNumber("pathGoalX", goal.getTargetHolonomicPose().X())
@@ -147,8 +165,10 @@ class ASfollowPath(AutoStage):
         self.r.swerveDrive.updateForAutos(self.r.hal, adjustedSpeeds)
 
     def autoInit(self, r):
+        self.traj: PathPlannerTrajectory = loadTrajectory(self.trajName, self.flipped)
         self.startTime = wpilib.getTime()
         self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
+        self.r.hardware.resetGyroToAngle(self.traj.getInitialPose().rotation().radians())
         # self.r.hardware.resetGyroToAngle(
         #     self.traj.getInitialPose().rotation().radians()
         # )
@@ -157,6 +177,7 @@ class ASfollowPath(AutoStage):
         table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
         table.putNumber("djoInitPoseY", self.traj.getInitialPose().y)
         table.putNumber("djoInitPoseR", self.traj.getInitialPose().rotation().radians())
+        print("*r*", self.traj.getInitialPose().rotation().degrees())
 
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
@@ -330,6 +351,10 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["elevator-level4"] = ASelevator4()
         ret["shoot-stored"] = ASShootStored(r, wpilib.getTime())
         ret["elevator-level0"] = ASelvator0()
+    elif stageChooser == RobotAutos.TEST_2.value:
+        ret["test-2"] = ASfollowPath("Test-2", r.onRedSide, r)
+    elif stageChooser == RobotAutos.TEST_3.value:
+        ret["test-3"] = ASfollowPath("Algae1Dropoff", r.onRedSide, r)
 
     # elif stageChooser == RobotAutos.HIGH4_CENTER:
     #     ret["elevator up"] = ASelevatorHigh(r)

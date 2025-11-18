@@ -126,7 +126,7 @@ class Robot(wpilib.TimedRobot):
             self.swerveDrive.odometry.resetPose(self.photonPose2d)
 
     def teleopInit(self) -> None:
-        self.swerveDrive.resetOdometry(Pose2d(), self.hal)
+        self.swerveDrive.resetOdometry(Pose2d(), self.hal) # TO_DO: Really? (set pose to 0,0 at teleop beginning)
         self.setpointActiveLeft = False
         self.setpointActiveRight = False
 
