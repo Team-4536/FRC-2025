@@ -97,6 +97,7 @@ class RobotHALBuffer:
         self.manipulatorVolts = 0
         self.armVolts = 0
 
+
     def publish(self, table: ntcore.NetworkTable) -> None:
         table.putNumber("Elevator Pos(rot)", self.elevatorPos)
         table.putNumber("Turn CCW FL", self.turnCCWFL)

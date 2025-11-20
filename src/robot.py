@@ -353,7 +353,9 @@ class Robot(wpilib.TimedRobot):
             self.auto[self.autoKeys[self.currentAuto]].run(self)
             if self.auto[self.autoKeys[self.currentAuto]].isDone(self):
                 self.currentAuto += 1
+                print("*-* going to next stage")
                 if not self.currentAuto >= len(self.autoKeys):
+                    print("*-* at next stage")
                     self.auto[self.autoKeys[self.currentAuto]].autoInit(self)
 
         self.intakeChute.update(

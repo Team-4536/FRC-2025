@@ -58,7 +58,7 @@ def loadTrajectory(fileName: str, flipped: bool) -> PathPlannerTrajectory:
         * mass
         * (oneftInMeters * oneftInMeters + oneftInMeters * oneftInMeters)
     )
-    print("*MOI", moi)
+    
     # motor = SparkMax(1, rev.SparkMax.MotorType.kBrushless)
     motor = DCMotor(12, 2.42, 100, 1.1, 594, 1)
     modConfig = ModuleConfig(0.05, 12, 1.2, motor, 42, 4)
@@ -111,14 +111,16 @@ class ASstopMotors(AutoStage):
 
     def run(self, r: "Robot"):
         r.hal.stopMotors()
+        self.r.swerveDrive.updateForAutos(self.r.hal, ChassisSpeeds())
+
 
     def isDone(self, r: "Robot") -> bool:
         return False
 
     def autoInit(self, r: "Robot"):
         pass
-
-
+        
+    
 
 class ASfollowPath(AutoStage):
 
@@ -127,6 +129,7 @@ class ASfollowPath(AutoStage):
         self.done = False
         self.trajName = trajName
         self.flipped = flipped
+        # print("-initializing-")
         
 
         # self.traj = PathPlannerTrajectory()
@@ -157,18 +160,22 @@ class ASfollowPath(AutoStage):
 
         adjustedSpeeds.omega = adjustedSpeeds.omega
         table.putNumber("pathVelX", adjustedSpeeds.vx)
+        print(adjustedSpeeds.vx)
         table.putNumber("pathVelY", adjustedSpeeds.vy)
         table.putNumber("pathVelR", adjustedSpeeds.omega)
 
         table.putNumber("gyro", self.r.hal.yaw)
 
         self.r.swerveDrive.updateForAutos(self.r.hal, adjustedSpeeds)
+        table.putNumber("Bea-Autos_Time", self.time)
+    
 
     def autoInit(self, r):
+        # print("-running traj:", self.trajName)
         self.traj: PathPlannerTrajectory = loadTrajectory(self.trajName, self.flipped)
         self.startTime = wpilib.getTime()
         self.r.swerveDrive.odometry.resetPose(self.traj.getInitialPose())
-        self.r.hardware.resetGyroToAngle(self.traj.getInitialPose().rotation().radians())
+        # self.r.hardware.resetGyroToAngle(self.traj.getInitialPose().rotation().radians())
         # self.r.hardware.resetGyroToAngle(
         #     self.traj.getInitialPose().rotation().radians()
         # )
@@ -177,7 +184,8 @@ class ASfollowPath(AutoStage):
         table.putNumber("djoInitPoseX", self.traj.getInitialPose().x)
         table.putNumber("djoInitPoseY", self.traj.getInitialPose().y)
         table.putNumber("djoInitPoseR", self.traj.getInitialPose().rotation().radians())
-        print("*r*", self.traj.getInitialPose().rotation().degrees())
+        table.putNumber("djoTotalTime", self.traj.getTotalTimeSeconds())
+        #print("*Time*", self.traj.getTotalTimeSeconds())
 
     def isDone(self, r: "Robot"):
         x = self.r.swerveDrive.odometry.getPose().X()
@@ -186,8 +194,8 @@ class ASfollowPath(AutoStage):
 
         end = self.traj.getEndState().pose
 
-        error = meters(0.15)
-        rotError = radians(0.2)
+        error = meters(0.05)
+        rotError = radians(0.1)
 
         table = NetworkTableInstance.getDefault().getTable("autos")
         table.putNumber("endstateX", self.traj.getEndState().pose.X())
@@ -210,8 +218,20 @@ class ASfollowPath(AutoStage):
             and (rot < end.rotation().radians() + rotError)
         ):
             self.done = True
+            print("-done from pose-")
+            table.putNumber("Bea-Autos_Time", 10000000000000)
+            self.r.swerveDrive.updateForAutos(self.r.hal, ChassisSpeeds())
             return True
 
+        if self.time > (self.traj.getTotalTimeSeconds()):
+            self.done = True
+            print("-done from time-")
+            table.putNumber("Bea-Autos_Time", -10000000000000)
+            self.r.swerveDrive.updateForAutos(self.r.hal, ChassisSpeeds())
+            return True
+        
+        
+        return False
 
 class ASelevator4(AutoStage):
     def __init__(self):
@@ -220,6 +240,7 @@ class ASelevator4(AutoStage):
     def run(self, r: "Robot"):
 
         r.elevatorSubsystem.level4AutoUpdate(r.hal)
+        # print("-running-")
 
     def isDone(self, r: "Robot"):
 
@@ -353,6 +374,7 @@ def chooseAuto(stageChooser: str, r: "Robot") -> dict[str, AutoStage]:
         ret["elevator-level0"] = ASelvator0()
     elif stageChooser == RobotAutos.TEST_2.value:
         ret["test-2"] = ASfollowPath("Test-2", r.onRedSide, r)
+        ret["stop-motors"] = ASstopMotors(r)
     elif stageChooser == RobotAutos.TEST_3.value:
         ret["test-3"] = ASfollowPath("Algae1Dropoff", r.onRedSide, r)
 
