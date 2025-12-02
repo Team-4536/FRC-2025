@@ -1,16 +1,5 @@
-[project]
-name = "FRC-2025"
-version = "1.0"
-requires-python = ">=3.13,<3.14"
-dependencies = [
-    "robotpy[navx,rev,phoenix6,pathplannerlib]==2025.3.2.2",
-    "photonlibpy",
-    "mypy",
-]
-
-
 [tool.uv]
-python-preference = "managed"
+python-preference = "only-managed"
 
 #
 # Use this configuration file to control what RobotPy packages are installed
