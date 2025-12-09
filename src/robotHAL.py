@@ -6,7 +6,6 @@ import ntcore
 import rev
 import wpilib
 from phoenix6.hardware import CANcoder
-from timing import TimeData
 from ntcore import NetworkTableInstance
 from rev import (
     SparkMax,
@@ -193,7 +192,7 @@ class RobotHAL:
     def resetCamEncoderPos(self, nPos: float) -> None:
         pass
 
-    def update(self, buf: RobotHALBuffer, time: TimeData) -> None:
+    def update(self, buf: RobotHALBuffer) -> None:
 
         self.prev = copy.copy(buf)
 
@@ -274,7 +273,6 @@ class RobotHAL:
         self.table.putNumber(
             "BL Drive Vel(RPM)", self.driveMotorBLEncoder.getVelocity()
         )
-        self.table.putNumber("elevator servo angle", self.elevServo.getAngle())
 
         self.table.putNumber(
             "z_FLDRIVESPEEDEDDEDD", self.driveMotorFL.getAppliedOutput()

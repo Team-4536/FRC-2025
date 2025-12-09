@@ -12,7 +12,6 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
     ChassisSpeeds,
     SwerveDrive4Kinematics,
-    SwerveDrive4Odometry,
     SwerveModulePosition,
     SwerveModuleState,
 )
@@ -84,31 +83,7 @@ class SwerveDrive:
             ModulePos,
             ModulePos,
         ]
-        self.odometry = SwerveDrive4Odometry(
-            self.kinematics, self.angle, tuple(modulePosList), self.pose
-        )
-
-    def resetOdometry(self, pose: Pose2d, hal: robotHAL.RobotHALBuffer):
-
-        modulePosList = (
-            SwerveModulePosition(
-                hal.drivePositionsList[0], Rotation2d(radians(hal.steerPositionList[0]))
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[1], Rotation2d(radians(hal.steerPositionList[1]))
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[2], Rotation2d(radians(hal.steerPositionList[2]))
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[3], Rotation2d(radians(hal.steerPositionList[3]))
-            ),
-        )
-        # modulePosList = (hal.moduleFL, hal.moduleFR, hal.moduleBL, hal.moduleBR)
-        self.odometry.resetPosition(Rotation2d(hal.yaw), modulePosList, pose)
-
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-
+        
     def update(
         self,
         hal: robotHAL.RobotHALBuffer,
@@ -233,32 +208,7 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-    def updateOdometry(self, hal: robotHAL.RobotHALBuffer):
-
-        modulePosList = (
-            SwerveModulePosition(
-                hal.drivePositionsList[0], Rotation2d(hal.steerPositionList[0])
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[1], Rotation2d(hal.steerPositionList[1])
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[2], Rotation2d(hal.steerPositionList[2])
-            ),
-            SwerveModulePosition(
-                hal.drivePositionsList[3], Rotation2d(hal.steerPositionList[3])
-            ),
-        )
-        self.odometry.update(Rotation2d(hal.yaw), modulePosList)
-        self.table = NetworkTableInstance.getDefault().getTable("telemetry")
-
-        self.odomPos = [self.odometry.getPose().X(), self.odometry.getPose().Y()]
-        self.OdomField.setRobotPose(self.odometry.getPose())
-
-        self.table.putNumber("odomX", self.odomPos[0])
-        self.table.putNumber("odomy", self.odomPos[1])
-        wpilib.SmartDashboard.putData("Odom", self.OdomField)
-
+    
     def optimizeTarget(
         self, target: SwerveModuleState, moduleAngle: Rotation2d
     ) -> SwerveModuleState:
