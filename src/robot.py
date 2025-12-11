@@ -13,7 +13,6 @@ from wpimath.units import radians
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
 
-       
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware = robotHAL.RobotHAL()
 
@@ -27,7 +26,7 @@ class Robot(wpilib.TimedRobot):
         self.povPrev = 0
 
     def robotPeriodic(self) -> None:
-        
+
         self.hal.publish(self.table)
         self.hal.stopMotors()
 
@@ -43,9 +42,9 @@ class Robot(wpilib.TimedRobot):
         if not self.setpointActiveLeft and not self.setpointActiveRight:
             self.swerveDrive.update(
                 self.hal,
-                self.driveCtrlr.getLeftX(),
-                self.driveCtrlr.getLeftY(),
-                self.driveCtrlr.getRightX(),
+                self.driveCtrlr.getLeftX() * 0.01,
+                self.driveCtrlr.getLeftY() * 0.01,
+                self.driveCtrlr.getRightX() * 0.01,
                 self.driveCtrlr.getRightTriggerAxis(),
                 self.driveCtrlr.getStartButtonPressed(),
             )
@@ -61,7 +60,7 @@ class Robot(wpilib.TimedRobot):
             # self.tempFidId = -1
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
-        
+
         if self.driveCtrlr.getStartButton():
             self.hardware.resetGyroToAngle(0)
 
@@ -81,19 +80,6 @@ class Robot(wpilib.TimedRobot):
         elif self.driveCtrlr.getBButtonPressed():
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
-        startCameraUpdate = wpilib.getTime()
-        self.table.putNumber(
-        )
-
- 
-        
-
-        self.hal.publish(self.table)
-        startCameraUpdate = wpilib.getTime()
-        self.hardware.update(self.hal, self.time)
-        self.table.putNumber(
-            "hardware update Time", wpilib.getTime() - startCameraUpdate
-        )
 
     def autonomousInit(self) -> None:
         pass
