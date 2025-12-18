@@ -39,24 +39,24 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
-        if not self.setpointActiveLeft and not self.setpointActiveRight:
-            self.swerveDrive.update(
-                self.hal,
-                self.driveCtrlr.getLeftX() * 0.01,
-                self.driveCtrlr.getLeftY() * 0.01,
-                self.driveCtrlr.getRightX() * 0.01,
-                self.driveCtrlr.getRightTriggerAxis(),
-                self.driveCtrlr.getStartButtonPressed(),
-            )
+       # if not self.setpointActiveLeft and not self.setpointActiveRight:
+        self.swerveDrive.update(
+            self.hal,
+            self.driveCtrlr.getLeftX() * 0.1,
+            self.driveCtrlr.getLeftY() * 0.1,
+            self.driveCtrlr.getRightX()* 0.1,
+            self.driveCtrlr.getRightTriggerAxis(),
+            self.driveCtrlr.getStartButtonPressed(),
+        )
 
-        if (
-            abs(self.driveCtrlr.getLeftX()) > 0.07
-            or abs(self.driveCtrlr.getLeftY()) > 0.07
-            or abs(self.driveCtrlr.getRightX()) > 0.07
-            or abs(self.driveCtrlr.getRightY()) > 0.07
-        ):
-            self.setpointActiveLeft = False
-            self.setpointActiveRight = False
+        # if (
+        #     abs(self.driveCtrlr.getLeftX()) > 0.07
+        #     or abs(self.driveCtrlr.getLeftY()) > 0.07
+        #     or abs(self.driveCtrlr.getRightX()) > 0.07
+        #     or abs(self.driveCtrlr.getRightY()) > 0.07
+        # ):
+        #     self.setpointActiveLeft = False
+        #     self.setpointActiveRight = False
             # self.tempFidId = -1
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
