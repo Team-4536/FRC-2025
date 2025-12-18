@@ -14,14 +14,13 @@ from time import sleep
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-        # turnMotorFL = rev.SparkMax(2, rev.SparkMax.MotorType.kBrushless)
         self.hal = robotHAL.RobotHALBuffer()
 
         sleep(1)
 
         self.hardware = robotHAL.RobotHAL()
 
-        # self.hardware.update(self.hal)
+        self.hardware.update(self.hal)
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
@@ -34,7 +33,7 @@ class Robot(wpilib.TimedRobot):
 
         # self.hal.publish(self.table)
         # self.hal.stopMotors()
-        pass
+        self.hardware.update(self.hal)
 
     def teleopInit(self) -> None:
         self.setpointActiveLeft = False
@@ -45,30 +44,19 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         # self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
-        if not self.setpointActiveLeft and not self.setpointActiveRight:
-            self.swerveDrive.update(
-                self.hal,
-                self.driveCtrlr.getLeftX() * 0.01,
-                self.driveCtrlr.getLeftY() * 0.01,
-                self.driveCtrlr.getRightX() * 0.01,
-                self.driveCtrlr.getRightTriggerAxis(),
-                self.driveCtrlr.getStartButtonPressed(),
-            )
-
-        if (
-            abs(self.driveCtrlr.getLeftX()) > 0.07
-            or abs(self.driveCtrlr.getLeftY()) > 0.07
-            or abs(self.driveCtrlr.getRightX()) > 0.07
-            or abs(self.driveCtrlr.getRightY()) > 0.07
-        ):
-            self.setpointActiveLeft = False
-            self.setpointActiveRight = False
-            # self.tempFidId = -1
+        self.swerveDrive.update(
+            self.hal,
+            self.driveCtrlr.getLeftX(),
+            self.driveCtrlr.getLeftY(),
+            self.driveCtrlr.getRightX(),
+            self.driveCtrlr.getRightTriggerAxis(),
+            self.driveCtrlr.getStartButtonPressed(),
+        )
 
         # convert POV buttons to bool values (sorry michael this code may be hard to look at)
 
-        # if self.driveCtrlr.getStartButton():
-        #     self.hardware.resetGyroToAngle(0)
+        if self.driveCtrlr.getStartButton():
+            self.hardware.resetGyroToAngle(0)
 
         # abs drive toggle
         # if self.driveCtrlr.getLeftStickButtonPressed():
@@ -100,6 +88,3 @@ class Robot(wpilib.TimedRobot):
         # self.hal.stopMotors()
         # self.hardware.update(self.hal)
         pass
-
-    def testInit(self):
-        self.turnMotorFL = rev.SparkMax(2, rev.SparkMax.MotorType.kBrushless)
