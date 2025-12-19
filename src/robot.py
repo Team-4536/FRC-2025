@@ -1,18 +1,29 @@
+import math
+from photonOdometry import photonVision
+import rev
 import robotHAL
 import wpilib
+import swerveDrive
 from ntcore import NetworkTableInstance
 from real import angleWrap, lerp
 from simHAL import RobotSimHAL
+
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+
 from robotHAL import RobotHAL, RobotHALBuffer
 from swerveDrive import SwerveDrive
 from wpimath.units import radians
 
+import pathplannerlib  # type: ignore
+from pathplannerlib.controller import PPHolonomicDriveController, PIDConstants  # type: ignore
+
+
+
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-
+        
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware = robotHAL.RobotHAL()
 
@@ -42,9 +53,9 @@ class Robot(wpilib.TimedRobot):
        # if not self.setpointActiveLeft and not self.setpointActiveRight:
         self.swerveDrive.update(
             self.hal,
-            self.driveCtrlr.getLeftX() * 0.1,
-            self.driveCtrlr.getLeftY() * 0.1,
-            self.driveCtrlr.getRightX()* 0.1,
+            self.driveCtrlr.getLeftX() * 0.5,
+            self.driveCtrlr.getLeftY() * 0.5,
+            self.driveCtrlr.getRightX()* 0.5,
             self.driveCtrlr.getRightTriggerAxis(),
             self.driveCtrlr.getStartButtonPressed(),
         )
@@ -80,6 +91,14 @@ class Robot(wpilib.TimedRobot):
         elif self.driveCtrlr.getBButtonPressed():
             self.hal.rotPIDsetpoint = 120
             self.hal.rotPIDToggle = True
+
+        self.swerveDrive.updateOdometry(self.hal)
+        
+
+        self.hal.publish(self.table)
+
+        self.hardware.update(self.hal)
+       
 
     def autonomousInit(self) -> None:
         pass
