@@ -114,23 +114,14 @@ class photonVision:
         self.robotAngle = False
         self.TFID = 0
 
-        # self.photonTable.putNumber(self.cameraNameReal + "Rot :", 0)
-        # self.photonTable.putNumber(self.cameraNameReal + "X :", 0)
-        # self.photonTable.putNumber(self.cameraNameReal + "Y :", 0)
-        # self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", 1)
 
     def update(self):
-        # startCameraUpdate = wpilib.getTime()
+        
+        self.camEstPose = None
         self.result = self.camera.getLatestResult()
-        # self.photonTable.putNumber(
-        #    "result update time", wpilib.getTime() - startCameraUpdate
-        # )
-        # startCameraUpdate = wpilib.getTime()
+       
         self.hasTargets = self.result.hasTargets()
-        # self.photonTable.putNumber(
-        #     "hasTargests update time", wpilib.getTime() - startCameraUpdate
-        # )
-        # startCameraUpdate = wpilib.getTime()
+      
         self.target = self.result.getTargets()
         # self.photonTable.putNumber("getTargets", wpilib.getTime() - startCameraUpdate)
         if self.hasTargets:
@@ -158,9 +149,3 @@ class photonVision:
         # self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
         # self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", self.ambiguity)
 
-    # def savePos(self):
-    #     with open("pyTest.txt", "a") as f:
-    #         f.write(self.cameraNameReal + " X = " + f"{self.robotX}" "\n")
-    #         f.write(self.cameraNameReal + " Y = " + f"{self.robotY}" "\n")
-    #         f.write(self.cameraNameReal + " Angle = " + f"{self.robotAngle}" "\n")
-    #     # Test.close()

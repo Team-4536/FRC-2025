@@ -7,7 +7,7 @@ import swerveDrive
 from ntcore import NetworkTableInstance
 from real import angleWrap, lerp
 from simHAL import RobotSimHAL
-
+import photonOdometry
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
@@ -35,11 +35,38 @@ class Robot(wpilib.TimedRobot):
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
         self.povPrev = 0
+        self.photonCamera1 = photonVision("Camera1", 30, 0.17938, 0.33337, 0.2889)
+        self.photonCamera2 = photonVision("Camera2", -30, 0.11747, 0.33337, 0.2889)
+        self.currentSetpointFidID = -1
+        self.setpointActive = 0 #0 is no setpoints active, 1 is right setpoint active, 2 is left setpoint active
 
     def robotPeriodic(self) -> None:
 
         self.hal.publish(self.table)
         self.hal.stopMotors()
+        self.photonCamera1.update()
+        self.photonCamera2.update()
+        if(self.photonCamera1.ambiguity < 0.15) and (self.photonCamera2.ambiguity < 0.15):
+            self.comboCamX = (self.photonCamera1.robotX + self.photonCamera2.robotX)/2
+            self.comboCamY = (self.photonCamera1.robotY + self.photonCamera2.robotY)/2
+            self.comboCamTheta = (self.photonCamera1.robotAngle + self.photonCamera2.robotAngle)/2
+            self.photonPose2d = Pose2d(self.comboCamX,self.comboCamY,self.comboCamTheta)
+            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+        elif self.photonCamera1.ambiguity < 0.15:
+            self.photonPose2d = Pose2d(
+                self.photonCamera1.robotX,
+                self.photonCamera1.robotY,
+                self.photonCamera1.robotAngle,
+            )
+            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+        elif self.photonCamera2.ambiguity < 0.15:
+            self.photonPose2d = Pose2d(
+                self.photonCamera2.robotX,
+                self.photonCamera2.robotY,
+                self.photonCamera2.robotAngle,
+            )
+            self.swerveDrive.odometry.resetPose(self.photonPose2d)
+
 
     def teleopInit(self) -> None:
         self.setpointActiveLeft = False
@@ -49,18 +76,24 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
-
+        self.currYaw = self.swerveDrive.odometry.getPose().rotation().radians()
        # if not self.setpointActiveLeft and not self.setpointActiveRight:
-        self.swerveDrive.update(
-            self.hal,
-            self.driveCtrlr.getLeftX() * 0.5,
-            self.driveCtrlr.getLeftY() * 0.5,
-            self.driveCtrlr.getRightX()* 0.5,
-            self.driveCtrlr.getRightTriggerAxis(),
-            self.driveCtrlr.getStartButtonPressed(),
-        )
-
-        # if (
+        if(self.setpointActive == 0):
+            self.swerveDrive.update(
+                self.hal,
+                self.driveCtrlr.getLeftX() * 0.5,
+                self.driveCtrlr.getLeftY() * 0.5,
+                self.driveCtrlr.getRightX()* 0.5,
+                self.driveCtrlr.getRightTriggerAxis(),
+                self.driveCtrlr.getStartButtonPressed(),
+            )
+        elif((self.setpointActive == 1) and (self.photonCamera2.TFID != -1)):
+            self.swerveDrive.setpointChooser(self.currYaw, self.photonCamera2.TFID, "right")
+            self.swerveDrive.updateWithoutSticks(self.hal, self.swerveDrive.adjustedSpeeds)
+        elif((self.setpointActive == 2) and (self.photonCamera1.TFID != -1)):
+            self.swerveDrive.setpointChooser(self.currYaw, self.photonCamera1.TFID, "left")
+            self.swerveDrive.updateWithoutSticks(self.hal, self.swerveDrive.adjustedSpeeds)
+            # if (
         #     abs(self.driveCtrlr.getLeftX()) > 0.07
         #     or abs(self.driveCtrlr.getLeftY()) > 0.07
         #     or abs(self.driveCtrlr.getRightX()) > 0.07

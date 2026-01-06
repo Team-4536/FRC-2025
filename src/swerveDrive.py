@@ -308,6 +308,8 @@ class SwerveDrive:
             self.adjustedSpeeds = self.controller.calculate(
                 self.currentPose, self.desiredPose, 0, self.rot
             )
+    def convertToChassisSpeeds(self):
+        pass
 
     def updateWithoutSticks(
         self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds
@@ -356,29 +358,7 @@ class SwerveDrive:
         hal.driveBRSetpoint = BRModuleState.speed
         hal.turnBRSetpoint = BRModuleState.angle.radians()
 
-    def savePos(self, fiducialID: int, yaw: float):
-        with open("/home/lvuser/photon.txt", "a") as f:
-            f.write("match: " + str(self.FMSData.getNumber("MatchNumber", 0)) + " ")
-            if self.FMSData.getBoolean("IsRedAlliance", True):
-                f.write("Red")
-            else:
-                f.write("Blue")
-            f.write(
-                " "
-                + str(self.FMSData.getNumber("StationNumber", 0))
-                + " tag: "
-                + str(fiducialID)
-                + " X: "
-                + f"{self.odomPos[0]}"
-                + " Y: "
-                + f"{self.odomPos[1]}"
-                + " Rot: "
-                + f"{yaw}"
-                + "   -->   "
-                + " Time: "
-                + f"{wpilib.getTime()}"
-                "\n"
-            )
+
 
     def updateForAutos(self, hal: robotHAL.RobotHALBuffer, chassisSpeed: ChassisSpeeds):
 
