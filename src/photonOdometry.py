@@ -114,14 +114,13 @@ class photonVision:
         self.robotAngle = False
         self.TFID = 0
 
-
     def update(self):
-        
+
         self.camEstPose = None
         self.result = self.camera.getLatestResult()
-       
+
         self.hasTargets = self.result.hasTargets()
-      
+
         self.target = self.result.getTargets()
         # self.photonTable.putNumber("getTargets", wpilib.getTime() - startCameraUpdate)
         if self.hasTargets:
@@ -142,10 +141,10 @@ class photonVision:
                     #     self.cameraNameReal + "Rot :", self.robotAngle
                     # )
             else:
-                self.TFID = -1
+                # self.TFID = -1
+                pass
         else:
             self.ambiguity = 1
             self.fiducialId = -1
         # self.photonTable.putNumber("Setpoint Fid Id", self.TFID)
         # self.photonTable.putNumber(self.cameraNameReal + "ambiguity :", self.ambiguity)
-
