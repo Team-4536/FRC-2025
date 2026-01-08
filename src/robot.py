@@ -29,6 +29,7 @@ class Robot(wpilib.TimedRobot):
         AUTO_SIDE_BLUE = "blue"
         AUTO_SIDE_FMS = "FMS side"
 
+        # edit
         self.time = TimeData(None)
         self.hal = robotHAL.RobotHALBuffer()
         self.hardware: robotHAL.RobotHAL | RobotSimHAL
