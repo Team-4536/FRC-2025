@@ -23,6 +23,9 @@ from wpimath.units import feetToMeters, radians
 from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
+from robot import Robot
+from rev import SparkMax
+import navx
 
 # from math import radians
 
@@ -36,6 +39,16 @@ class SwerveDrive:
         self.angle = Rotation2d(0)
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
         self.FMSData = NetworkTableInstance.getDefault().getTable("FMSInfo")
+
+        self.driveMotorFL = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.driveMotorFR = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.driveMotorBL = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.driveMotorBR = SparkMax(2, SparkMax.MotorType.kBrushless) #change numbers they aren't correct
+
+        self.turnMotorFL = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.turnMotorFR = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.turnMotorBL = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.turnMotorBR = SparkMax(2, SparkMax.MotorType.kBrushless)
 
         oneftInMeters = feetToMeters(1)
 
@@ -56,6 +69,9 @@ class SwerveDrive:
         self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
         self.yawOffset = 0.0
 
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
+        self.yaw = self.gyro.getAngle()
+
         self.fieldOriented = True
 
         # ============================================================
@@ -66,7 +82,7 @@ class SwerveDrive:
         joystickY: float,
         joystickRotation: float,
         RTriggerScalar: float,
-        resetOffset: bool,
+        resetOffset: bool
     ):
         self.table.putNumber("Drive Ctrl X", joystickX)
         self.table.putNumber("Drive Ctrl Y", joystickY)

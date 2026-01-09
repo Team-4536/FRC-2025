@@ -1,32 +1,26 @@
-import robotHAL
 import wpilib
 from ntcore import NetworkTableInstance
 from real import angleWrap, lerp
-from simHAL import RobotSimHAL
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
-from robotHAL import RobotHAL, RobotHALBuffer
 from swerveDrive import SwerveDrive
 from wpimath.units import radians
 import rev
+from rev import SparkMax
 from time import sleep
 
 
 class Robot(wpilib.TimedRobot):
     def robotInit(self) -> None:
-        self.hal = robotHAL.RobotHALBuffer()
 
         sleep(1)
-
-        self.hardware = robotHAL.RobotHAL()
-
-        self.hardware.update(self.hal)
 
         self.table = NetworkTableInstance.getDefault().getTable("telemetry")
 
         self.driveCtrlr = wpilib.XboxController(0)
 
         self.swerveDrive: SwerveDrive = SwerveDrive()
+
         self.povPrev = 0
 
     def robotPeriodic(self) -> None:
@@ -45,7 +39,7 @@ class Robot(wpilib.TimedRobot):
         # self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
 
         self.swerveDrive.update(
-            self.hal,
+            self,
             self.driveCtrlr.getLeftX(),
             self.driveCtrlr.getLeftY(),
             self.driveCtrlr.getRightX(),
