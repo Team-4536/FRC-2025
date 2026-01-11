@@ -8,6 +8,7 @@ from wpimath.units import radians
 import rev
 from rev import SparkMax
 from time import sleep
+import navx
 
 
 class Robot(wpilib.TimedRobot):
@@ -22,6 +23,9 @@ class Robot(wpilib.TimedRobot):
         self.swerveDrive: SwerveDrive = SwerveDrive()
 
         self.povPrev = 0
+
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
+        self.yaw = self.gyro.getAngle()
 
     def robotPeriodic(self) -> None:
 
