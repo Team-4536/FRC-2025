@@ -19,11 +19,10 @@ from wpimath.controller import (
     ProfiledPIDControllerRadians,
 )
 from wpimath.trajectory import TrapezoidProfileRadians
-from wpimath.units import feetToMeters, radians
+from wpimath.units import inchesToMeters, radians
 from ntcore import NetworkTableInstance
 from wpimath.units import feetToMeters
 from ntcore import NetworkTableInstance
-from robot import Robot
 import rev
 from rev import (
     SparkMax,
@@ -34,11 +33,18 @@ from rev import (
     LimitSwitchConfig,
 )
 import navx
+from enum import Enum
+from phoenix6.hardware import CANcoder
 
 # from math import radians
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
+class SetPointType(Enum):
+    DRIVE = 1
+    ROTATION = 2
+
+
 class SwerveDrive:
     MAX_METERS_PER_SEC = 8.0  # stolen from lastyears code
 
@@ -49,21 +55,28 @@ class SwerveDrive:
         self.FMSData = NetworkTableInstance.getDefault().getTable("FMSInfo")
 
         self.driveMotorFL = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.driveMotorFR = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.driveMotorBL = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.driveMotorBR = SparkMax(2, SparkMax.MotorType.kBrushless) #change numbers they aren't correct
+        self.driveMotorFR = SparkMax(8, SparkMax.MotorType.kBrushless)
+        self.driveMotorBL = SparkMax(4, SparkMax.MotorType.kBrushless)
+        self.driveMotorBR = SparkMax(6, SparkMax.MotorType.kBrushless)
+        # change numbers they aren't correct
 
-        self.turnMotorFL = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.turnMotorFR = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.turnMotorBL = SparkMax(2, SparkMax.MotorType.kBrushless)
-        self.turnMotorBR = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.turnMotorFL = SparkMax(1, SparkMax.MotorType.kBrushless)
+        self.turnMotorFR = SparkMax(7, SparkMax.MotorType.kBrushless)
+        self.turnMotorBL = SparkMax(3, SparkMax.MotorType.kBrushless)
+        self.turnMotorBR = SparkMax(5, SparkMax.MotorType.kBrushless)
 
-        self.turnPosFL = self.turnMotorFL.getAbsoluteEncoder().getPosition() #in CCW radians
-        self.turnPosFR = self.turnMotorFR.getAbsoluteEncoder().getPosition()
-        self.turnPosBL = self.turnMotorBL.getAbsoluteEncoder().getPosition()
-        self.turnPosBR = self.turnMotorBR.getAbsoluteEncoder().getPosition()
+        self.turnMotorFLEncoder = CANcoder(21)
+        self.turnMotorFREncoder = CANcoder(24)
+        self.turnMotorBLEncoder = CANcoder(22)
+        self.turnMotorBREncoder = CANcoder(23)
 
-        oneftInMeters = feetToMeters(1)
+        # CANcoder returns rotations
+        self.turnPosFL = self.turnMotorFLEncoder.get_absolute_position().value * math.pi
+        self.turnPosFR = self.turnMotorFREncoder.get_absolute_position().value * math.pi
+        self.turnPosBL = self.turnMotorBLEncoder.get_absolute_position().value * math.pi
+        self.turnPosBR = self.turnMotorBREncoder.get_absolute_position().value * math.pi
+
+        oneftInMeters = inchesToMeters(11)
 
         frontLeftLocation = Translation2d(oneftInMeters, oneftInMeters)
         frontRightLocation = Translation2d(oneftInMeters, -oneftInMeters)
@@ -75,74 +88,75 @@ class SwerveDrive:
 
         self.yawOffset = 0.0
 
-        self.fieldOriented = True
+        self.fieldOriented = False
 
         # =======NEW, NOT TUNED=======================================
-        constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
-        xPID = PIDController(0, 0, 0)
-        yPID = PIDController(0, 0, 0)
-        rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
+        # constraints = TrapezoidProfileRadians.Constraints(4 * math.pi, 20 * math.pi)
+        # xPID = PIDController(0, 0, 0)
+        # yPID = PIDController(0, 0, 0)
+        # rotPID = ProfiledPIDControllerRadians(1.4, 0, 0, constraints)
 
-        self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
-        
+        # self.holonomicController = HolonomicDriveController(xPID, yPID, rotPID)
 
         # ============================================================
 
-        driveMotorPIDConfig = SparkMaxConfig()
-        driveMotorPIDConfig.smartCurrentLimit(40)
-        driveMotorPIDConfig.closedLoop.pidf(0.00019, 0, 0, 0.00002).setFeedbackSensor(
+        self.driveMotorPIDConfig = SparkMaxConfig()
+        self.driveMotorPIDConfig.smartCurrentLimit(40)
+        self.driveMotorPIDConfig.closedLoop.pidf(
+            0.00019, 0, 0, 0.00002
+        ).setFeedbackSensor(
             ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-1.0, 1.0, rev.ClosedLoopSlot.kSlot0)
-
-        driveMotorPIDConfig.disableFollowerMode()
-
-        driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(
-            2000, rev.ClosedLoopSlot.kSlot0
-        ).maxAcceleration(50000, rev.ClosedLoopSlot.kSlot0).allowedClosedLoopError(1)
-        driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-
-        
-
-
-        self.FLSwerveModule = SwerveModuleController(
-            "FL",
-            self.driveMotorFL,
-            driveMotorPIDConfig,
-            self.turnMotorFL,
-            turnMotorPIDConfig,
+        ).outputRange(
+            -1.0, 1.0
         )
-        self.FRSwerveModule = SwerveModuleController(
-            "FR",
-            self.driveMotorFR,
-            driveMotorPIDConfig,
-            self.turnMotorFR,
-            turnMotorPIDConfig,
-        )
-        self.BLSwerveModule = SwerveModuleController(
-            "BL",
-            self.driveMotorBL,
-            driveMotorPIDConfig,
-            self.turnMotorBL,
-            turnMotorPIDConfig,
-        )
-        self.BRSwerveModule = SwerveModuleController(
-            "BR",
-            self.driveMotorBR,
-            driveMotorPIDConfig,
-            self.turnMotorBR,
-            turnMotorPIDConfig,
-        )
+
+        self.driveMotorPIDConfig.disableFollowerMode()
+
+        self.driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(2000).maxAcceleration(
+            50000
+        ).allowedClosedLoopError(1)
+        self.driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+
+        self.turnMotorPIDConfig = SparkMaxConfig()
+        self.turnMotorPIDConfig.smartCurrentLimit(40)
+        self.turnMotorPIDConfig.closedLoop.pidf(0.15, 0, 0, 0).setFeedbackSensor(
+            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
+        ).outputRange(-1.0, 1.0)
+        self.turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000)
+        self.turnMotorPIDConfig.closedLoop.maxMotion.maxAcceleration(10000)
+        self.turnMotorPIDConfig.closedLoop.maxMotion.allowedClosedLoopError(0.2)
+        self.turnMotorPIDConfig.closedLoop.positionWrappingEnabled(False)
+        # self.turnMotorPIDConfig.closedLoop.positionWrappingInputRange(
+        #     False
+        # )
+        # self.turnMotorPIDConfig.closedLoop.positionWrappingInputRange(-math.pi, math.pi)
+        self.turnMotorPIDConfig.inverted(True)
+        self.turnMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+
+        configurePID(self.driveMotorFL, self.driveMotorPIDConfig)
+        configurePID(self.driveMotorFR, self.driveMotorPIDConfig)
+        configurePID(self.driveMotorBL, self.driveMotorPIDConfig)
+        configurePID(self.driveMotorBR, self.driveMotorPIDConfig)
+
+        configurePID(self.turnMotorFL, self.turnMotorPIDConfig)
+        configurePID(self.turnMotorFR, self.turnMotorPIDConfig)
+        configurePID(self.turnMotorBL, self.turnMotorPIDConfig)
+        configurePID(self.turnMotorBR, self.turnMotorPIDConfig)
+
+        table = NetworkTableInstance.getDefault()
+        topic = table.getStructArrayTopic("/SwerveStates", SwerveModuleState)
+        self.pub = topic.publish()
 
     def update(
         self,
-        robot: Robot,
+        robot,
         joystickX: float,
         joystickY: float,
         joystickRotation: float,
         RTriggerScalar: float,
-        resetOffset: bool
+        resetOffset: bool,
     ):
-        
+
         yaw = robot.yaw
 
         self.table.putNumber("Drive Ctrl X", joystickX)
@@ -182,37 +196,12 @@ class SwerveDrive:
         if self.fieldOriented:
             driveVector = driveVector.rotateBy(Rotation2d(-yaw + self.yawOffset))
 
-        # disable rotatioanl PID if turn stick is moved
-        # if self.driveRotation != 0:
-        #     hal.rotPIDToggle = False
-
-        # self.table.putNumber("z_PID Setpoint", hal.rotPIDsetpoint)
-        self.table.putBoolean("z_Absolute Drive", self.fieldOriented)
-
-        # --------------EMMETT'S SCARY NEW STUFF-----------------------------------
-        rotPos = Rotation2d(hal.yaw)
-        fakeBotPos = Pose2d(0, 0, rotPos)
-        rotTarget = Rotation2d.fromDegrees(hal.rotPIDsetpoint)
-
-        # returns chassis speeds
-        adjustedSpeeds = self.holonomicController.calculate(
-            fakeBotPos, fakeBotPos, 0, rotTarget
-        )
-        # take only rotational speed
-        rotPIDSpeed = adjustedSpeeds.omega
-
-        # only use rotational PID if it's activated
-        if hal.rotPIDToggle:
-            rotFinal = rotPIDSpeed * 5
-        else:
-            rotFinal = self.driveRotation  # copied from HCPA code
-
-        # -------------------------------------------------------------------
+        self.table.putBoolean("feildOriented", self.fieldOriented)
 
         self.chassisSpeeds = ChassisSpeeds(
             driveVector.X() * 0.5 * 4**RTriggerScalar,
             driveVector.Y() * 0.5 * 4**RTriggerScalar,
-            rotFinal,
+            self.driveRotation,
         )
 
         self.table.putNumber("SD ChassisSpeeds vx", self.chassisSpeeds.vx)
@@ -220,13 +209,21 @@ class SwerveDrive:
         self.table.putNumber(
             "SD ChassisSpeeds omega (rotFinal)", self.chassisSpeeds.omega
         )
-        self.table.putNumber(
-            "SD RotPIDSpeed omega (adjustedSpeedsOmega)",
-            adjustedSpeeds.omega,  # * (180 / math.pi)
+
+        self.turnPosFL = (
+            self.turnMotorFLEncoder.get_absolute_position().value * math.pi * 2
         )
-        self.table.putBoolean("rotPIDToggle", hal.rotPIDToggle)
-        self.table.putNumber("z_target rotDeg", rotTarget.degrees())
-        self.table.putNumber("z_current rotDeg", fakeBotPos.rotation().degrees())
+        self.turnPosFR = (
+            self.turnMotorFREncoder.get_absolute_position().value * math.pi * 2
+        )
+        self.turnPosBL = (
+            self.turnMotorBLEncoder.get_absolute_position().value * math.pi * 2
+        )
+        self.turnPosBR = (
+            self.turnMotorBREncoder.get_absolute_position().value * math.pi * 2
+        )
+
+        self.table.putNumber("Fl CANcoder", self.turnPosFL)
 
         self.unleashedModules = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
         swerveModuleStates = self.kinematics.desaturateWheelSpeeds(
@@ -238,38 +235,63 @@ class SwerveDrive:
             "SD Module Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
-        swerveModuleStates[0].optimize(Rotation2d(self.turnPosFL))
+        # swerveModuleStates[0].optimize(Rotation2d(self.turnPosFL))
 
         FLModuleState = swerveModuleStates[0]
 
-        hal.driveFLSetpoint = FLModuleState.speed
-        self.turnMotorFL.getClosedLoopController().setReference(swerveModuleStates[0].angle.radians())
+        # self.driveMotorFL.getClosedLoopController().setReference(
+        #     0.5, SparkMax.ControlType.kMAXMotionVelocityControl
+        # )
+        # return
+        setPoint(self.driveMotorFL, FLModuleState, SetPointType.DRIVE)
+        setPoint(self.turnMotorFL, FLModuleState, SetPointType.ROTATION)
 
-        swerveModuleStates[1].optimize(Rotation2d(self.turnMotorFR))
+        return
+        swerveModuleStates[1].optimize(Rotation2d(self.turnPosFR))
 
         FRModuleState = swerveModuleStates[1]
 
-        hal.driveFRSetpoint = FRModuleState.speed
-        hal.turnFRSetpoint = FRModuleState.angle.radians()
+        setPoint(self.driveMotorFR, FRModuleState, SetPointType.DRIVE)
+        setPoint(self.turnMotorFR, FRModuleState, SetPointType.ROTATION)
 
-        swerveModuleStates[2].optimize(Rotation2d(self.turnMotorBL))
+        swerveModuleStates[2].optimize(Rotation2d(self.turnPosBL))
         BLModuleState = swerveModuleStates[2]
 
-        hal.driveBLSetpoint = BLModuleState.speed
-        hal.turnBLSetpoint = BLModuleState.angle.radians()
+        setPoint(self.driveMotorBL, BLModuleState, SetPointType.DRIVE)
+        setPoint(self.turnMotorBL, BLModuleState, SetPointType.ROTATION)
 
         swerveModuleStates[3].optimize(Rotation2d(self.turnPosBR))
         BRModuleState = swerveModuleStates[3]
 
-        hal.driveBRSetpoint = BRModuleState.speed
-        hal.turnBRSetpoint = BRModuleState.angle.radians()
+        setPoint(self.driveMotorBR, BRModuleState, SetPointType.DRIVE)
+        setPoint(self.turnMotorBR, BRModuleState, SetPointType.ROTATION)
 
-class SwerveModuleController:
-    def __init__(
-            self,
-            driveMotor: SparkMax,
-            drivePID: PIDController,
-            turnMotor: SparkMax,
-            turnPID: PIDController
-    ) -> None:
-        
+        self.table.putNumber("FL Drive setpoint", FLModuleState.speed)
+        self.table.putNumber("FL Turn setpoint", FLModuleState.angle.radians())
+
+        self.pub.set(list(swerveModuleStates))
+
+
+def configurePID(motor: SparkMax, config: SparkMaxConfig):
+
+    motor.configure(
+        config,
+        SparkMax.ResetMode.kResetSafeParameters,
+        SparkMax.PersistMode.kNoPersistParameters,
+    )
+
+
+def setPoint(
+    motor: SparkMax,
+    swerveModuleState: SwerveModuleState,
+    setPointType: SetPointType = SetPointType.DRIVE,
+):
+
+    controlType = SparkMax.ControlType.kMAXMotionVelocityControl
+    setPoint = swerveModuleState.speed * 60
+
+    if setPointType == SetPointType.ROTATION:
+        controlType = SparkMax.ControlType.kMAXMotionPositionControl
+        setPoint = swerveModuleState.angle.radians()
+
+    motor.getClosedLoopController().setReference(setPoint / (2 * math.pi), controlType)

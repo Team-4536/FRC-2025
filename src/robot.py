@@ -31,7 +31,7 @@ class Robot(wpilib.TimedRobot):
 
         # self.hal.publish(self.table)
         # self.hal.stopMotors()
-        self.hardware.update(self.hal)
+        pass
 
     def teleopInit(self) -> None:
         self.setpointActiveLeft = False
@@ -41,7 +41,7 @@ class Robot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         # self.hal.stopMotors()  # Keep this at the top of teleopPeriodic
-
+        self.table.putNumber("Controller x", self.driveCtrlr.getLeftX())
         self.swerveDrive.update(
             self,
             self.driveCtrlr.getLeftX(),
@@ -50,28 +50,6 @@ class Robot(wpilib.TimedRobot):
             self.driveCtrlr.getRightTriggerAxis(),
             self.driveCtrlr.getStartButtonPressed(),
         )
-
-        # convert POV buttons to bool values (sorry michael this code may be hard to look at)
-
-        if self.driveCtrlr.getStartButton():
-            self.hardware.resetGyroToAngle(0)
-
-        # abs drive toggle
-        # if self.driveCtrlr.getLeftStickButtonPressed():
-        #     self.hal.fieldOriented = not self.hal.fieldOriented
-
-        # if self.driveCtrlr.getYButtonPressed():
-        #     self.hal.rotPIDsetpoint = 240
-        #     self.hal.rotPIDToggle = True
-        # elif self.driveCtrlr.getXButtonPressed():
-        #     self.hal.rotPIDsetpoint = 300
-        #     self.hal.rotPIDToggle = True
-        # elif self.driveCtrlr.getAButtonPressed():
-        #     self.hal.rotPIDsetpoint = 60
-        #     self.hal.rotPIDToggle = True
-        # elif self.driveCtrlr.getBButtonPressed():
-        #     self.hal.rotPIDsetpoint = 120
-        #     self.hal.rotPIDToggle = True
 
     def autonomousInit(self) -> None:
         pass
