@@ -24,7 +24,7 @@ class Robot(wpilib.TimedRobot):
 
         self.povPrev = 0
 
-        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kUSB1)
+        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
         self.yaw = self.gyro.getAngle()
 
     def robotPeriodic(self) -> None:

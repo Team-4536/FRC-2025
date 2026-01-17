@@ -31,6 +31,8 @@ from rev import (
     ClosedLoopConfig,
     ClosedLoopSlot,
     LimitSwitchConfig,
+    MAXMotionConfig,
+    SparkBaseConfig,
 )
 import navx
 from enum import Enum
@@ -40,6 +42,11 @@ from phoenix6.hardware import CANcoder
 
 
 # adapted from here: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/swervebot/Drivetrain.java
+WHEEL_CIRCUMFRENCE = 0.1016 * math.pi
+TURN_GEARING = 21.4
+DRIVE_GEARING = 6.12
+
+
 class SetPointType(Enum):
     DRIVE = 1
     ROTATION = 2
@@ -65,16 +72,29 @@ class SwerveDrive:
         self.turnMotorBL = SparkMax(3, SparkMax.MotorType.kBrushless)
         self.turnMotorBR = SparkMax(5, SparkMax.MotorType.kBrushless)
 
-        self.turnMotorFLEncoder = CANcoder(21)
-        self.turnMotorFREncoder = CANcoder(24)
-        self.turnMotorBLEncoder = CANcoder(22)
-        self.turnMotorBREncoder = CANcoder(23)
+        self.turnMotorFLEncoder = self.turnMotorFL.getEncoder()
+        self.turnMotorFREncoder = self.turnMotorFR.getEncoder()
+        self.turnMotorBLEncoder = self.turnMotorBL.getEncoder()
+        self.turnMotorBREncoder = self.turnMotorBR.getEncoder()
+        self.turnMotorFLEncoder.setPosition(
+            CANcoder(21).get_absolute_position().value * TURN_GEARING
+        )
+        self.turnMotorFREncoder.setPosition(
+            CANcoder(24).get_absolute_position().value * TURN_GEARING
+        )
+        self.turnMotorBLEncoder.setPosition(
+            CANcoder(22).get_absolute_position().value * TURN_GEARING
+        )
+        self.turnMotorBREncoder.setPosition(
+            CANcoder(23).get_absolute_position().value * TURN_GEARING
+        )
 
-        # CANcoder returns rotations
-        self.turnPosFL = self.turnMotorFLEncoder.get_absolute_position().value * math.pi
-        self.turnPosFR = self.turnMotorFREncoder.get_absolute_position().value * math.pi
-        self.turnPosBL = self.turnMotorBLEncoder.get_absolute_position().value * math.pi
-        self.turnPosBR = self.turnMotorBREncoder.get_absolute_position().value * math.pi
+        self.turnPosFL = self.turnMotorFLEncoder.getPosition() * math.tau
+        self.turnPosFR = self.turnMotorFREncoder.getPosition() * math.tau
+        self.turnPosBL = self.turnMotorBLEncoder.getPosition() * math.tau
+        self.turnPosBR = self.turnMotorBREncoder.getPosition() * math.tau
+
+        # returns rotations
 
         oneftInMeters = inchesToMeters(11)
 
@@ -100,48 +120,54 @@ class SwerveDrive:
 
         # ============================================================
 
-        self.driveMotorPIDConfig = SparkMaxConfig()
-        self.driveMotorPIDConfig.smartCurrentLimit(40)
-        self.driveMotorPIDConfig.closedLoop.pidf(
-            0.00019, 0, 0, 0.00002
-        ).setFeedbackSensor(
-            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(
-            -1.0, 1.0
+        self.driveConfig = (
+            SparkMaxConfig()
+            .smartCurrentLimit(40)
+            .disableFollowerMode()
+            .setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+            .apply(
+                ClosedLoopConfig()
+                .pidf(0.00019, 0, 0, 0.00002)
+                .setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
+                .outputRange(-1, 1, ClosedLoopSlot.kSlot0)
+                .apply(
+                    MAXMotionConfig()
+                    .maxVelocity(2000, ClosedLoopSlot.kSlot0)
+                    .maxAcceleration(50000, ClosedLoopSlot.kSlot0)
+                    .allowedClosedLoopError(1)
+                )
+            )
         )
 
-        self.driveMotorPIDConfig.disableFollowerMode()
+        self.turnConfig = (
+            SparkMaxConfig()
+            .smartCurrentLimit(40)
+            .inverted(True)
+            .setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+            .apply(
+                ClosedLoopConfig()
+                .pidf(0.15, 0, 0, 0)
+                .setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
+                .outputRange(-1, 1, ClosedLoopSlot.kSlot0)
+                .positionWrappingEnabled(False)
+                .apply(
+                    MAXMotionConfig()
+                    .maxVelocity(5000, ClosedLoopSlot.kSlot0)
+                    .maxAcceleration(10000, ClosedLoopSlot.kSlot0)
+                    .allowedClosedLoopError(0.2)
+                )
+            )
+        )
 
-        self.driveMotorPIDConfig.closedLoop.maxMotion.maxVelocity(2000).maxAcceleration(
-            50000
-        ).allowedClosedLoopError(1)
-        self.driveMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+        configurePID(self.driveMotorFL, self.driveConfig)
+        configurePID(self.driveMotorFR, self.driveConfig)
+        configurePID(self.driveMotorBL, self.driveConfig)
+        configurePID(self.driveMotorBR, self.driveConfig)
 
-        self.turnMotorPIDConfig = SparkMaxConfig()
-        self.turnMotorPIDConfig.smartCurrentLimit(40)
-        self.turnMotorPIDConfig.closedLoop.pidf(0.15, 0, 0, 0).setFeedbackSensor(
-            ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder
-        ).outputRange(-1.0, 1.0)
-        self.turnMotorPIDConfig.closedLoop.maxMotion.maxVelocity(5000)
-        self.turnMotorPIDConfig.closedLoop.maxMotion.maxAcceleration(10000)
-        self.turnMotorPIDConfig.closedLoop.maxMotion.allowedClosedLoopError(0.2)
-        self.turnMotorPIDConfig.closedLoop.positionWrappingEnabled(False)
-        # self.turnMotorPIDConfig.closedLoop.positionWrappingInputRange(
-        #     False
-        # )
-        # self.turnMotorPIDConfig.closedLoop.positionWrappingInputRange(-math.pi, math.pi)
-        self.turnMotorPIDConfig.inverted(True)
-        self.turnMotorPIDConfig.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-
-        configurePID(self.driveMotorFL, self.driveMotorPIDConfig)
-        configurePID(self.driveMotorFR, self.driveMotorPIDConfig)
-        configurePID(self.driveMotorBL, self.driveMotorPIDConfig)
-        configurePID(self.driveMotorBR, self.driveMotorPIDConfig)
-
-        configurePID(self.turnMotorFL, self.turnMotorPIDConfig)
-        configurePID(self.turnMotorFR, self.turnMotorPIDConfig)
-        configurePID(self.turnMotorBL, self.turnMotorPIDConfig)
-        configurePID(self.turnMotorBR, self.turnMotorPIDConfig)
+        configurePID(self.turnMotorFL, self.turnConfig)
+        configurePID(self.turnMotorFR, self.turnConfig)
+        configurePID(self.turnMotorBL, self.turnConfig)
+        configurePID(self.turnMotorBR, self.turnConfig)
 
         table = NetworkTableInstance.getDefault()
         topic = table.getStructArrayTopic("/SwerveStates", SwerveModuleState)
@@ -210,18 +236,10 @@ class SwerveDrive:
             "SD ChassisSpeeds omega (rotFinal)", self.chassisSpeeds.omega
         )
 
-        self.turnPosFL = (
-            self.turnMotorFLEncoder.get_absolute_position().value * math.pi * 2
-        )
-        self.turnPosFR = (
-            self.turnMotorFREncoder.get_absolute_position().value * math.pi * 2
-        )
-        self.turnPosBL = (
-            self.turnMotorBLEncoder.get_absolute_position().value * math.pi * 2
-        )
-        self.turnPosBR = (
-            self.turnMotorBREncoder.get_absolute_position().value * math.pi * 2
-        )
+        self.turnPosFL = self.turnMotorFLEncoder.getPosition() * math.tau / TURN_GEARING
+        self.turnPosFR = self.turnMotorFREncoder.getPosition() * math.tau / TURN_GEARING
+        self.turnPosBL = self.turnMotorBLEncoder.getPosition() * math.tau / TURN_GEARING
+        self.turnPosBR = self.turnMotorBREncoder.getPosition() * math.tau / TURN_GEARING
 
         self.table.putNumber("Fl CANcoder", self.turnPosFL)
 
@@ -235,18 +253,13 @@ class SwerveDrive:
             "SD Module Original Turn Setpoint", swerveModuleStates[0].angle.radians()
         )
 
-        # swerveModuleStates[0].optimize(Rotation2d(self.turnPosFL))
+        swerveModuleStates[0].optimize(Rotation2d(self.turnPosFL))
 
         FLModuleState = swerveModuleStates[0]
 
-        # self.driveMotorFL.getClosedLoopController().setReference(
-        #     0.5, SparkMax.ControlType.kMAXMotionVelocityControl
-        # )
-        # return
         setPoint(self.driveMotorFL, FLModuleState, SetPointType.DRIVE)
         setPoint(self.turnMotorFL, FLModuleState, SetPointType.ROTATION)
 
-        return
         swerveModuleStates[1].optimize(Rotation2d(self.turnPosFR))
 
         FRModuleState = swerveModuleStates[1]
@@ -266,18 +279,21 @@ class SwerveDrive:
         setPoint(self.driveMotorBR, BRModuleState, SetPointType.DRIVE)
         setPoint(self.turnMotorBR, BRModuleState, SetPointType.ROTATION)
 
-        self.table.putNumber("FL Drive setpoint", FLModuleState.speed)
-        self.table.putNumber("FL Turn setpoint", FLModuleState.angle.radians())
+        self.table.putNumber("expected FL Drive setpoint", FLModuleState.speed * 60)
+        self.table.putNumber(
+            "Actual turn setpoint FL",
+            FLModuleState.angle.radians() / (math.tau) * TURN_GEARING,
+        )
 
         self.pub.set(list(swerveModuleStates))
 
 
-def configurePID(motor: SparkMax, config: SparkMaxConfig):
+def configurePID(motor: SparkMax, config: SparkBaseConfig):
 
     motor.configure(
         config,
         SparkMax.ResetMode.kResetSafeParameters,
-        SparkMax.PersistMode.kNoPersistParameters,
+        SparkMax.PersistMode.kPersistParameters,
     )
 
 
@@ -288,10 +304,14 @@ def setPoint(
 ):
 
     controlType = SparkMax.ControlType.kMAXMotionVelocityControl
-    setPoint = swerveModuleState.speed * 60
+    setPoint = swerveModuleState.speed / WHEEL_CIRCUMFRENCE * DRIVE_GEARING * 60
 
     if setPointType == SetPointType.ROTATION:
         controlType = SparkMax.ControlType.kMAXMotionPositionControl
-        setPoint = swerveModuleState.angle.radians()
+        setPoint = swerveModuleState.angle.radians() / (math.tau) * TURN_GEARING
 
-    motor.getClosedLoopController().setReference(setPoint / (2 * math.pi), controlType)
+    motor.getClosedLoopController().setReference(
+        setPoint,
+        controlType,
+        ClosedLoopSlot.kSlot0,
+    )
